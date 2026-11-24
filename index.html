@@ -20,13 +20,7 @@
     --muted: #94A3B8;
     --vvf: #DC2626;
     --vvf-dark: #991B1B;
-    --pc: #EA580C;
-    --cri: #16A34A;
-    --cnsas: #2563EB;
-    --pol: #0284C7;
     --accent: #38BDF8;
-    --ok: #22C55E;
-    --warn: #EAB308;
   }
 
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
@@ -203,6 +197,10 @@
     font-size: 12px;
     font-weight: 700;
     cursor: pointer;
+    text-decoration: none;
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
   }
 
   .composer {
@@ -268,6 +266,20 @@
     padding: 2px 7px;
     border-radius: 999px;
   }
+  .mode-pill {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    background: rgba(56, 189, 248, 0.15);
+    color: #7DD3FC;
+    border: 1px solid rgba(56, 189, 248, 0.35);
+  }
+  .mode-pill.upload {
+    background: rgba(16, 185, 129, 0.16);
+    color: #6EE7B7;
+    border-color: rgba(16, 185, 129, 0.4);
+  }
 
   .post-card, .report-card, .form-card {
     background: var(--surface);
@@ -285,6 +297,19 @@
   .ev-body { font-size: 13px; color: #E2E8F0; white-space: pre-wrap; }
   .ev-img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
   .ev-actions, .user-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+
+  .file-chip {
+    background: rgba(15, 23, 42, 0.9);
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 8px 10px;
+    font-size: 12px;
+    color: #E2E8F0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+  }
 
   .drive-note {
     background: rgba(30, 41, 59, 0.75);
@@ -319,7 +344,49 @@
     padding: 4px;
   }
 
-  /* PWA BANNER & NOTIFICHE IN-APP */
+  /* MODAL PERMESSI CLASSICO (CONSENTI / NON CONSENTIRE) */
+  .perm-modal-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.82);
+    backdrop-filter: blur(4px);
+    z-index: 400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .perm-modal-backdrop.open { display: flex; }
+  .perm-modal-card {
+    width: 100%;
+    max-width: 390px;
+    background: #161E29;
+    border: 1.5px solid #38BDF8;
+    border-radius: 14px;
+    padding: 16px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.85);
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .perm-list-box {
+    background: #0B0F15;
+    border: 1px solid #2D3B4E;
+    border-radius: 10px;
+    padding: 10px 12px;
+    font-size: 12px;
+    color: #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .perm-modal-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 8px;
+    margin-top: 4px;
+  }
+
   .pwa-install-bar {
     display: none;
     background: linear-gradient(135deg, #172554 0%, #1E293B 100%);
@@ -467,6 +534,26 @@
     </div>
   </header>
 
+  <!-- POP-UP PERMESSI INIZIALE (CONSENTI / NON CONSENTIRE) -->
+  <div id="permModalBackdrop" class="perm-modal-backdrop">
+    <div class="perm-modal-card">
+      <div style="font-size:15px; font-weight:800; color:#7DD3FC;">🔐 Permessi Richiesti dall'Applicazione</div>
+      <div style="font-size:12px; color:#CBD5E1; line-height:1.4;">
+        Per funzionare correttamente su Android e inviarti avvisi operativi, l'app richiede l'accesso a:
+      </div>
+      <div class="perm-list-box">
+        <div>🔔 <strong>Notifiche &amp; Avvisi</strong>: per ricevere segnalazioni, emergenze e richieste utenti.</div>
+        <div>🔊 <strong>Suonerie &amp; Audio</strong>: per riprodurre toni differenziati o file audio caricati.</div>
+        <div>📁 <strong>File &amp; Foto</strong>: per allegare manuali, procedure e immagini del tesserino.</div>
+        <div>📳 <strong>Vibrazione</strong>: per allerta tattile sulle comunicazioni operative.</div>
+      </div>
+      <div class="perm-modal-actions">
+        <button type="button" class="reject-btn" onclick="denyPermissionsPrompt()">Non consentire</button>
+        <button type="button" class="approve-btn" onclick="allowPermissionsPrompt()">Consenti</button>
+      </div>
+    </div>
+  </div>
+
   <div id="inappNotifBanner" class="inapp-notif-banner" onclick="closeInAppNotif()">
     <div class="inapp-notif-top">
       <span id="inappNotifCategory" style="color:#7DD3FC;">NOTIFICA</span>
@@ -479,15 +566,15 @@
   <div id="drawer" class="drawer">
     <div class="drawer-item" onclick="switchView('home')"><span>🏠 Bacheca Principale</span></div>
     <div class="drawer-item" onclick="openTopic('EMERGENZE')"><span>🚨 Chat Emergenze</span></div>
-    <div class="drawer-item" onclick="openTopic('MANUALI E PROCEDURE')"><span>📘 Manuali & PDF</span></div>
+    <div class="drawer-item" onclick="openTopic('MANUALI E PROCEDURE')"><span>📘 Manuali &amp; PDF</span></div>
     <div class="drawer-item" onclick="switchView('corpi')"><span>🏛️ Corpi Trentino</span></div>
-    <div class="drawer-item" onclick="switchView('suonerie')"><span>🔔 Suonerie & Notifiche App</span></div>
+    <div class="drawer-item" onclick="switchView('suonerie')"><span>🔔 Suonerie &amp; Notifiche App</span></div>
     <div class="drawer-item" onclick="switchView('profilo')"><span>🪪 Profilo Operatore</span></div>
     <div class="drawer-item" onclick="switchView('privacy')"><span>🔒 Trattamento Privacy</span></div>
     <div id="drawerAdminApprovals" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('approvazioni')"><span>✅ Approvazione Nuovi Utenti</span></div>
     <div id="drawerAdminBoard" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('bacheca')"><span>📋 Gestione Bacheca</span></div>
-    <div id="drawerAdminUsers" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('utenti')"><span>👥 Gestione Utenti & Ruoli</span></div>
-    <div id="drawerAdminReports" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('segnalazioni')"><span>🚩 Segnalazioni & Accessi</span></div>
+    <div id="drawerAdminUsers" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('utenti')"><span>👥 Gestione Utenti &amp; Ruoli</span></div>
+    <div id="drawerAdminReports" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('segnalazioni')"><span>🚩 Segnalazioni &amp; Accessi</span></div>
     <div class="drawer-item" onclick="logoutToLogin()"><span>🚪 Esci / Cambia Utente</span></div>
     <div class="drawer-item" onclick="resetDemo()"><span>🔄 Ripristina Stato Vuoto</span></div>
   </div>
@@ -504,7 +591,7 @@
 
     <div id="authLoginBox" class="form-card">
       <div class="field">
-        <label>Seleziona Utente o Inserisci Telefono / Nome</label>
+        <label>Seleziona Utente</label>
         <select id="loginUserSelect"></select>
       </div>
       <button type="button" class="approve-btn" style="width:100%; padding:10px;" onclick="performLogin()">Entra nell'Applicazione</button>
@@ -566,20 +653,14 @@
     <div id="pwaInstallBar" class="pwa-install-bar">
       <div>
         <div style="font-size:12px; font-weight:800; color:#BAE6FD;">📲 Installa App su Android / Desktop</div>
-        <div id="pwaInstallHint" style="font-size:11px; color:#CBD5E1;">Aggiungi alla schermata Home per uso rapido e notifiche</div>
+        <div id="pwaInstallHint" style="font-size:11px; color:#CBD5E1;">Aggiungi alla schermata Home per uso rapido</div>
       </div>
       <button type="button" id="pwaInstallBtn" class="pwa-install-btn" onclick="triggerPwaInstall()">Installa App</button>
     </div>
 
     <div class="composer">
       <textarea id="quickPostInput" rows="2" placeholder="Scrivi una comunicazione o emergenza nella bacheca..."></textarea>
-      <div class="cat-row" id="quickCatChips">
-        <button type="button" class="cat-chip active" data-cat="EMERGENZE" onclick="selectQuickCat('EMERGENZE')">🚨 Emergenze</button>
-        <button type="button" class="cat-chip" data-cat="ALLERTE PC" onclick="selectQuickCat('ALLERTE PC')">🟠 Allerte PC</button>
-        <button type="button" class="cat-chip" data-cat="EVENTI & TURNI" onclick="selectQuickCat('EVENTI & TURNI')">📅 Eventi & Turni</button>
-        <button type="button" class="cat-chip" data-cat="DISCUSSIONE OPERATIVA" onclick="selectQuickCat('DISCUSSIONE OPERATIVA')">💬 Discussione</button>
-        <button type="button" class="cat-chip" data-cat="MANUALI E PROCEDURE" onclick="selectQuickCat('MANUALI E PROCEDURE')">📘 Manuali</button>
-      </div>
+      <div class="cat-row" id="quickCatChips"></div>
       <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
         <div style="display:flex; gap:6px; align-items:center;">
           <button type="button" class="photo-btn" onclick="document.getElementById('quickPhotoInput').click()">📷 Foto</button>
@@ -593,19 +674,41 @@
     <div id="channelsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
   </div>
 
-  <!-- VISTA TOPIC / CHAT -->
+  <!-- VISTA TOPIC / CHAT FORUM / CHAT CARICAMENTO DATI -->
   <div id="view-topic" class="view">
     <div class="subbar">
       <button class="back-btn" onclick="switchView('home')">← Home</button>
       <span id="topicTitle" class="subbar-title">CANALE</span>
-      <span id="topicModTag" style="font-size:11px; color:#7DD3FC;"></span>
+      <span id="topicModeBadge" class="mode-pill">CHAT FORUM</span>
     </div>
-    <div class="composer">
-      <textarea id="newTopicPostInput" rows="2" placeholder="Scrivi un nuovo messaggio in questo canale..."></textarea>
+
+    <!-- MODULO DEDICATO PER CHAT IN MODALITÀ CARICAMENTO DATI (FILE + DESCRIZIONE + RICERCA) -->
+    <div id="manualsSection" class="form-card" style="display:none; border-color:#10B981;">
+      <h3 style="color:#6EE7B7;">📂 Carica File / Documento con Descrizione</h3>
+      <div class="field">
+        <label>Seleziona file (PDF, DOC, TXT, immagine, ecc.) *</label>
+        <input type="file" id="manualFileInput" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,image/*,application/pdf" onchange="handleManualFileSelect(event)">
+        <span id="manualSelectedFileLabel" style="font-size:11px; color:#94A3B8;">Nessun file selezionato</span>
+      </div>
+      <div class="field">
+        <label>Descrizione del file / procedura / dato caricato *</label>
+        <textarea id="manualDescInput" rows="2" placeholder="Descrivi il contenuto del file caricato..."></textarea>
+      </div>
+      <button type="button" class="approve-btn" style="width:100%; padding:9px;" onclick="uploadManualDocument()">📤 Carica File e Descrizione</button>
+
+      <div class="field" style="margin-top:12px; margin-bottom:2px;">
+        <label>🔍 Cerca tra i file e le descrizioni caricati</label>
+        <input type="text" id="manualSearchInput" placeholder="Digita parola chiave, nome file o descrizione..." oninput="renderTopic()">
+      </div>
+    </div>
+
+    <div id="standardTopicComposer" class="composer">
+      <textarea id="newTopicPostInput" rows="2" placeholder="Scrivi un nuovo messaggio in questa chat forum..."></textarea>
       <div style="display:flex; justify-content:flex-end;">
         <button type="button" class="approve-btn" onclick="addTopicPost()">Invia Messaggio</button>
       </div>
     </div>
+
     <div id="topicPostsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
   </div>
 
@@ -619,7 +722,7 @@
     <div class="form-card">
       <h3>Aggiungi o Modifica Corpi del Trentino</h3>
       <div class="drive-note">
-        Qui puoi aggiungere, rinominare, attivare/disattivare o eliminare tutti i Corpi del Trentino. L'elenco viene salvato e aggiornato subito nel form di registrazione.
+        Qui puoi aggiungere, rinominare o eliminare tutti i Corpi del Trentino. L'elenco viene salvato e aggiornato subito nel form di registrazione.
       </div>
       <div class="field" style="margin-top:8px;">
         <label>Nome Nuovo Corpo / Ente del Trentino</label>
@@ -633,22 +736,22 @@
     <div id="corpiTrentinoList" style="display:flex; flex-direction:column; gap:8px;"></div>
   </div>
 
-  <!-- VISTA SUONERIE E NOTIFICHE APP / ANDROID -->
+  <!-- VISTA SUONERIE & PERMESSI APP / ANDROID -->
   <div id="view-suonerie" class="view">
     <div class="subbar">
       <button class="back-btn" onclick="switchView('home')">← Indietro</button>
-      <span class="subbar-title" style="color:#7DD3FC;">🔔 SUONERIE & NOTIFICHE APP</span>
+      <span class="subbar-title" style="color:#7DD3FC;">🔔 PERMESSI &amp; SUONERIE APP</span>
       <span id="notifPermStatus" style="font-size:11px; color:#94A3B8;">Browser</span>
     </div>
 
-    <div class="form-card">
-      <h3>📲 Installazione PWA & Notifiche Dispositivo</h3>
-      <div class="drive-note">
-        Su <strong>Android (Chrome)</strong> puoi installare l'app tramite il pulsante <strong>Installa App</strong> oppure dal menu del browser <em>"Aggiungi a schermata Home"</em>. Attiva i permessi di notifica per ricevere avvisi e suonerie ogni volta che arriva una notifica.
+    <div class="form-card" style="border-color:#38BDF8;">
+      <h3 style="color:#7DD3FC;">🔐 Permessi Applicazione (Android &amp; Browser)</h3>
+      <div class="drive-note" id="permSummaryBox">
+        Controlla o richiedi i permessi necessari per notifiche, suonerie, vibrazione e allegati.
       </div>
       <div class="ringtone-preview-row">
-        <button type="button" class="test-sound-btn" onclick="requestDeviceNotificationPermission()">🔔 Attiva Notifiche Dispositivo</button>
-        <button type="button" class="mini-btn switch-user" onclick="triggerPwaInstall()">📲 Installa / Guida Android</button>
+        <button type="button" class="test-sound-btn" onclick="openPermissionsModal(true)">🔐 Apri Richiesta Permessi (Consenti / Non consentire)</button>
+        <button type="button" class="mini-btn" onclick="requestDeviceNotificationPermission()">🔔 Richiedi Permesso Notifiche</button>
       </div>
     </div>
 
@@ -702,7 +805,7 @@
     <div class="form-card" style="border-color:#38BDF8;">
       <h3 style="color:#7DD3FC;">3️⃣ Notifica MESSAGGI NORMALI (Altre Chat)</h3>
       <div class="field">
-        <label>Suoneria per Allerte PC, Eventi & Turni, Discussione o Manuali</label>
+        <label>Suoneria per Allerte PC, Eventi &amp; Turni, Discussione o Manuali</label>
         <select id="selChatTone" onchange="updateSoundSetting('chatTone', this.value)">
           <option value="chat_soft">Notifica Chat Soft</option>
           <option value="chime_operativo">Chime Operativo</option>
@@ -767,13 +870,44 @@
     <div id="pendingApprovalsList" style="display:flex; flex-direction:column; gap:10px;"></div>
   </div>
 
-  <!-- VISTA ADMIN: GESTIONE BACHECA -->
+  <!-- VISTA ADMIN: GESTIONE BACHECA (NUOVA CHAT FORUM O CARICAMENTO DATI + FILE) -->
   <div id="view-bacheca" class="view">
     <div class="subbar">
       <button class="back-btn" onclick="switchView('home')">← Indietro</button>
       <span class="subbar-title" style="color:#FDE047;">📋 GESTIONE BACHECA</span>
       <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
     </div>
+
+    <div class="form-card" style="border-color:#38BDF8;">
+      <h3 style="color:#7DD3FC;">➕ Crea Nuova Chat / Canale in Bacheca</h3>
+      <div class="field">
+        <label>Nome Nuova Chat / Canale *</label>
+        <input type="text" id="newBoardChannelName" placeholder="Es. LOGISTICA MEZZI o VERBALI INTERVENTI">
+      </div>
+      <div class="field">
+        <label>Sottotitolo / Etichetta</label>
+        <input type="text" id="newBoardChannelTag" placeholder="Es. COORDINAMENTO o DOCUMENTI & DATI">
+      </div>
+      <div class="field">
+        <label>Tipo di Chat da creare *</label>
+        <select id="newBoardChannelMode" onchange="toggleBoardChannelFileHint()">
+          <option value="forum">💬 Chat Forum (discussione e messaggi come le altre chat)</option>
+          <option value="upload">📂 Chat Caricamento Dati (caricamento file + descrizione + ricerca)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Allega file iniziale / documento (opzionale)</label>
+        <input type="file" id="newBoardChannelFile" accept=".pdf,.doc,.docx,.txt,.csv,.xls,.xlsx,image/*,application/pdf" onchange="handleBoardChannelFileSelect(event)">
+        <span id="newBoardChannelFileLabel" style="font-size:11px; color:#94A3B8;">Nessun file allegato</span>
+      </div>
+      <button type="button" class="approve-btn" style="width:100%; padding:9px;" onclick="createBoardChannel()">+ Crea Chat in Bacheca</button>
+    </div>
+
+    <div class="form-card">
+      <h3>Canali Attivi in Bacheca</h3>
+      <div id="boardChannelsManageList" style="display:flex; flex-direction:column; gap:8px;"></div>
+    </div>
+
     <div id="boardAdminList" style="display:flex; flex-direction:column; gap:10px;"></div>
   </div>
 
@@ -781,17 +915,17 @@
   <div id="view-utenti" class="view">
     <div class="subbar">
       <button class="back-btn" onclick="switchView('home')">← Indietro</button>
-      <span class="subbar-title" style="color:#FDE047;">👥 GESTIONE UTENTI & RUOLI</span>
+      <span class="subbar-title" style="color:#FDE047;">👥 GESTIONE UTENTI &amp; RUOLI</span>
       <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
     </div>
     <div id="usersAdminList" style="display:flex; flex-direction:column; gap:10px;"></div>
   </div>
 
-  <!-- VISTA 5 (ADMIN): SEGNALAZIONI & RICHIESTE ACCESSO + SYNC DISPOSITIVI -->
+  <!-- VISTA ADMIN: SEGNALAZIONI & RICHIESTE ACCESSO + SYNC DISPOSITIVI -->
   <div id="view-segnalazioni" class="view">
     <div class="subbar">
       <button class="back-btn" onclick="switchView('home')">← Indietro</button>
-      <span class="subbar-title" style="color:#FDE047;">🚩 SEGNALAZIONI & ACCESSI</span>
+      <span class="subbar-title" style="color:#FDE047;">🚩 SEGNALAZIONI &amp; ACCESSI</span>
       <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
     </div>
     <div class="drive-note">
@@ -876,6 +1010,13 @@ const DEFAULT_DATA = {
   currentTopic: "EMERGENZE",
   activeUserId: "u_michele",
   loggedIn: true,
+  permissionsPromptAnswered: false,
+  permissionsGranted: {
+    notifications: false,
+    audio: true,
+    vibration: true,
+    files: true
+  },
   deviceSyncUrl: "",
   corpiTrentino: [...DEFAULT_CORPI_TRENTINO],
   soundSettings: {
@@ -910,11 +1051,11 @@ const DEFAULT_DATA = {
   pendingRegistrations: [],
   reports: [],
   channels: [
-    { name: "EMERGENZE", tag: "ALLERTA IMMEDIATA", color: "#DC2626", time: "—", unread: 0 },
-    { name: "ALLERTE PC", tag: "PROTEZIONE CIVILE", color: "#EA580C", time: "—", unread: 0 },
-    { name: "EVENTI & TURNI", tag: "SERVIZIO & ADDESTRAMENTO", color: "#2563EB", time: "—", unread: 0 },
-    { name: "DISCUSSIONE OPERATIVA", tag: "COORDINAMENTO", color: "#16A34A", time: "—", unread: 0 },
-    { name: "MANUALI E PROCEDURE", tag: "DOCUMENTAZIONE PDF", color: "#0284C7", time: "—", unread: 0 }
+    { name: "EMERGENZE", tag: "ALLERTA IMMEDIATA", mode: "forum", color: "#DC2626", time: "—", unread: 0 },
+    { name: "ALLERTE PC", tag: "PROTEZIONE CIVILE", mode: "forum", color: "#EA580C", time: "—", unread: 0 },
+    { name: "EVENTI & TURNI", tag: "SERVIZIO & ADDESTRAMENTO", mode: "forum", color: "#2563EB", time: "—", unread: 0 },
+    { name: "DISCUSSIONE OPERATIVA", tag: "COORDINAMENTO", mode: "forum", color: "#16A34A", time: "—", unread: 0 },
+    { name: "MANUALI E PROCEDURE", tag: "CARICAMENTO FILE & DATI", mode: "upload", color: "#0284C7", time: "—", unread: 0 }
   ],
   topics: {
     "EMERGENZE": [],
@@ -929,6 +1070,12 @@ let state = loadState();
 let quickPhotoTempDataUrl = "";
 let quickPhotoTempName = "";
 let regBadgeTempDataUrl = "";
+let manualTempDataUrl = "";
+let manualTempFileName = "";
+let manualTempMime = "";
+let boardChannelFileDataUrl = "";
+let boardChannelFileName = "";
+let boardChannelFileMime = "";
 let openFlagBoxPostId = null;
 
 function loadState() {
@@ -937,9 +1084,17 @@ function loadState() {
     if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
     const parsed = JSON.parse(raw);
     const base = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const normalizedChannels = (Array.isArray(parsed.channels) && parsed.channels.length ? parsed.channels : base.channels).map(ch => ({
+      ...ch,
+      mode: ch.mode || (ch.name === "MANUALI E PROCEDURE" ? "upload" : "forum")
+    }));
     return {
       ...base,
       ...parsed,
+      permissionsGranted: {
+        ...base.permissionsGranted,
+        ...(parsed.permissionsGranted || {})
+      },
       corpiTrentino: Array.isArray(parsed.corpiTrentino) && parsed.corpiTrentino.length
         ? parsed.corpiTrentino
         : [...DEFAULT_CORPI_TRENTINO],
@@ -950,7 +1105,7 @@ function loadState() {
       users: Array.isArray(parsed.users) && parsed.users.length ? parsed.users : base.users,
       pendingRegistrations: Array.isArray(parsed.pendingRegistrations) ? parsed.pendingRegistrations : [],
       reports: Array.isArray(parsed.reports) ? parsed.reports : [],
-      channels: Array.isArray(parsed.channels) && parsed.channels.length ? parsed.channels : base.channels,
+      channels: normalizedChannels,
       topics: {
         ...base.topics,
         ...(parsed.topics || {})
@@ -996,7 +1151,7 @@ function persist() {
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
   } catch (err) {
-    showToast("Spazio locale pieno: riduci la dimensione del file audio o foto", true);
+    showToast("Spazio locale pieno: scegli un file più leggero", true);
   }
 }
 
@@ -1019,6 +1174,10 @@ function isModeratorForForum(forumName) {
   if (!u) return false;
   if (isAdmin()) return true;
   return Array.isArray(u.modForums) && u.modForums.includes(forumName);
+}
+
+function getChannelObj(name) {
+  return (state.channels || []).find(c => c.name === name) || { name, mode: "forum", tag: "", color: "#38BDF8" };
 }
 
 function showToast(msg, isError = false) {
@@ -1046,6 +1205,7 @@ document.addEventListener("click", (e) => {
       drawer.classList.remove("open");
     }
   }
+  getAudioContext();
 });
 
 function switchView(viewName) {
@@ -1075,6 +1235,18 @@ function openTopic(topicName) {
   switchView("topic");
 }
 
+function renderQuickCatChips() {
+  const wrap = document.getElementById("quickCatChips");
+  if (!wrap) return;
+  const currentCat = state.selectedCat || (state.channels[0] && state.channels[0].name) || "EMERGENZE";
+  state.selectedCat = currentCat;
+  wrap.innerHTML = state.channels.map(ch => {
+    const active = ch.name === state.selectedCat ? "active" : "";
+    const icon = ch.mode === "upload" ? "📂" : "💬";
+    return `<button type="button" class="cat-chip ${active}" data-cat="${escapeHtml(ch.name)}" onclick="selectQuickCat('${escapeJs(ch.name)}')">${icon} ${escapeHtml(ch.name)}</button>`;
+  }).join("");
+}
+
 function syncChrome() {
   enforceFounderIntegrity();
   const u = getCurrentUser();
@@ -1094,6 +1266,56 @@ function syncChrome() {
   });
 
   populateCorpiSelects();
+  renderQuickCatChips();
+  updatePwaInstallBar();
+}
+
+/* GESTIONE PERMESSI ALL'AVVIO (CONSENTI / NON CONSENTIRE) */
+function openPermissionsModal(force = false) {
+  if (!force && state.permissionsPromptAnswered) return;
+  const modal = document.getElementById("permModalBackdrop");
+  if (modal) modal.classList.add("open");
+}
+
+function closePermissionsModal() {
+  const modal = document.getElementById("permModalBackdrop");
+  if (modal) modal.classList.remove("open");
+}
+
+function allowPermissionsPrompt() {
+  state.permissionsPromptAnswered = true;
+  state.permissionsGranted = {
+    notifications: true,
+    audio: true,
+    vibration: true,
+    files: true
+  };
+  persist();
+  closePermissionsModal();
+  getAudioContext();
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().then(perm => {
+      state.permissionsGranted.notifications = perm === "granted";
+      persist();
+      renderSoundSettingsView();
+    }).catch(() => {});
+  }
+  renderSoundSettingsView();
+  showToast("Permessi consentiti e configurati");
+}
+
+function denyPermissionsPrompt() {
+  state.permissionsPromptAnswered = true;
+  state.permissionsGranted = {
+    notifications: false,
+    audio: false,
+    vibration: false,
+    files: true
+  };
+  persist();
+  closePermissionsModal();
+  renderSoundSettingsView();
+  showToast("Permessi non consentiti: puoi riattivarli in Suonerie & Permessi", true);
 }
 
 /* CORPI DEL TRENTINO */
@@ -1180,8 +1402,16 @@ function renderCorpiTrentinoView() {
   });
 }
 
-/* PWA: MANIFEST DINAMICO & SERVICE WORKER */
+/* PWA & RILEVAMENTO APP GIÀ INSTALLATA */
 let deferredPwaPrompt = null;
+
+function isAppAlreadyInstalled() {
+  const standaloneDisplay = window.matchMedia("(display-mode: standalone)").matches || window.matchMedia("(display-mode: fullscreen)").matches;
+  const iosStandalone = window.navigator.standalone === true;
+  const isCapacitorNative = !!(window.Capacitor && typeof window.Capacitor.isNativePlatform === "function" && window.Capacitor.isNativePlatform());
+  const hasCapacitorBridge = !!(window.Capacitor && window.Capacitor.platform && window.Capacitor.platform !== "web");
+  return standaloneDisplay || iosStandalone || isCapacitorNative || hasCapacitorBridge;
+}
 
 function setupPwaManifestAndServiceWorker() {
   try {
@@ -1240,11 +1470,15 @@ window.addEventListener("beforeinstallprompt", (e) => {
   updatePwaInstallBar();
 });
 
+window.addEventListener("appinstalled", () => {
+  deferredPwaPrompt = null;
+  updatePwaInstallBar();
+});
+
 function updatePwaInstallBar() {
   const bar = document.getElementById("pwaInstallBar");
   if (!bar) return;
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-  if (isStandalone) {
+  if (isAppAlreadyInstalled()) {
     bar.classList.remove("visible");
     return;
   }
@@ -1252,6 +1486,10 @@ function updatePwaInstallBar() {
 }
 
 function triggerPwaInstall() {
+  if (isAppAlreadyInstalled()) {
+    updatePwaInstallBar();
+    return showToast("L'applicazione risulta già installata su questo dispositivo");
+  }
   if (deferredPwaPrompt) {
     deferredPwaPrompt.prompt();
     deferredPwaPrompt.userChoice.then(() => {
@@ -1260,7 +1498,7 @@ function triggerPwaInstall() {
     });
     return;
   }
-  showToast("Su Android: apri il menu (⋮) in alto a destra e seleziona 'Installa app' o 'Aggiungi a schermata Home'");
+  showToast("Su Android: apri il menu (⋮) del browser e seleziona 'Installa app'");
 }
 
 /* AUDIO & SUONERIE DIFFERENZIATE (WEB AUDIO + FILE AUDIO UTENTE) */
@@ -1268,6 +1506,7 @@ let sharedAudioCtx = null;
 let customAudioPlayer = null;
 
 function getAudioContext() {
+  if (state.permissionsGranted && state.permissionsGranted.audio === false) return null;
   const AudioCtx = window.AudioContext || window.webkitAudioContext;
   if (!AudioCtx) return null;
   if (!sharedAudioCtx) {
@@ -1280,6 +1519,7 @@ function getAudioContext() {
 }
 
 function playToneNotes(notes, baseGain = 0.25) {
+  if (state.permissionsGranted && state.permissionsGranted.audio === false) return;
   try {
     const ctx = getAudioContext();
     if (!ctx) return;
@@ -1306,6 +1546,7 @@ function playToneNotes(notes, baseGain = 0.25) {
 }
 
 function playCustomAudioFile(dataUrl, volume = 0.85) {
+  if (state.permissionsGranted && state.permissionsGranted.audio === false) return false;
   try {
     if (!dataUrl) return false;
     if (customAudioPlayer) {
@@ -1450,13 +1691,13 @@ function triggerNotificationAlert({ categoryLabel, title, body, soundKind, banne
   }
 
   try {
-    if (navigator.vibrate) {
+    if (navigator.vibrate && (!state.permissionsGranted || state.permissionsGranted.vibration !== false)) {
       navigator.vibrate(soundKind === "emergency" ? [250, 120, 250, 120, 400] : [140]);
     }
   } catch (err) {}
 
   try {
-    if ("Notification" in window && Notification.permission === "granted") {
+    if ("Notification" in window && Notification.permission === "granted" && (!state.permissionsGranted || state.permissionsGranted.notifications !== false)) {
       new Notification(title || "Coordinamento Interforze", {
         body: body || "",
         silent: soundKind === "adminReport"
@@ -1470,11 +1711,15 @@ function requestDeviceNotificationPermission() {
     return showToast("Notifiche browser non supportate: attive notifiche in-app e suoni", true);
   }
   Notification.requestPermission().then(perm => {
+    state.permissionsPromptAnswered = true;
+    state.permissionsGranted = state.permissionsGranted || {};
+    state.permissionsGranted.notifications = perm === "granted";
+    persist();
     renderSoundSettingsView();
     if (perm === "granted") {
       showToast("Notifiche del dispositivo attivate!");
     } else {
-      showToast("Permesso non concesso: resteranno attive le notifiche interne con suoni", true);
+      showToast("Permesso non concesso: controlla Impostazioni Android > App", true);
     }
   });
 }
@@ -1577,6 +1822,17 @@ function renderSoundSettingsView() {
   const permTag = document.getElementById("notifPermStatus");
   if (permTag && "Notification" in window) {
     permTag.textContent = Notification.permission === "granted" ? "Attive ✓" : (Notification.permission === "denied" ? "Bloccate" : "Da attivare");
+  }
+
+  const sumBox = document.getElementById("permSummaryBox");
+  if (sumBox) {
+    const pg = state.permissionsGranted || {};
+    sumBox.innerHTML = `
+      <div>• Notifiche dispositivo: <strong>${("Notification" in window && Notification.permission === "granted") ? "Consentite ✓" : "Da attivare / Non consentite"}</strong></div>
+      <div>• Audio &amp; Suonerie: <strong>${pg.audio !== false ? "Consentito ✓" : "Disattivato"}</strong></div>
+      <div>• Vibrazione: <strong>${pg.vibration !== false ? "Consentita ✓" : "Disattivata"}</strong></div>
+      <div>• Caricamento File &amp; Foto: <strong>Consentito ✓</strong></div>
+    `;
   }
 }
 
@@ -1773,12 +2029,76 @@ function submitUserRegistration() {
   showToast("Richiesta inviata! Attendi l'approvazione di un amministratore");
 }
 
+/* CARICAMENTO FILE + DESCRIZIONE + RICERCA IN CHAT CARICAMENTO DATI */
+function handleManualFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  manualTempFileName = file.name;
+  manualTempMime = file.type || "application/octet-stream";
+  const lbl = document.getElementById("manualSelectedFileLabel");
+  if (lbl) lbl.textContent = `File pronto: ${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB)`;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    manualTempDataUrl = String(evt.target.result || "");
+  };
+  reader.readAsDataURL(file);
+}
+
+function uploadManualDocument() {
+  const topic = state.currentTopic || "MANUALI E PROCEDURE";
+  const descInp = document.getElementById("manualDescInput");
+  const desc = (descInp ? descInp.value : "").trim();
+  if (!manualTempFileName) {
+    return showToast("Seleziona un file da caricare", true);
+  }
+  if (!desc) {
+    return showToast("Inserisci una descrizione per questo file", true);
+  }
+
+  const u = getCurrentUser();
+  if (!state.topics[topic]) state.topics[topic] = [];
+  const docItem = {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    title: manualTempFileName,
+    body: desc,
+    author: `${u.nome} ${u.cognome || ""}`.trim(),
+    time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+    highlight: false,
+    photo: manualTempMime.startsWith("image/") ? manualTempDataUrl : "",
+    fileDataUrl: manualTempDataUrl,
+    fileName: manualTempFileName
+  };
+
+  state.topics[topic].unshift(docItem);
+  const ch = state.channels.find(c => c.name === topic);
+  if (ch) ch.time = "Adesso";
+
+  manualTempDataUrl = "";
+  manualTempFileName = "";
+  manualTempMime = "";
+  if (descInp) descInp.value = "";
+  const fileInp = document.getElementById("manualFileInput");
+  if (fileInp) fileInp.value = "";
+  const lbl = document.getElementById("manualSelectedFileLabel");
+  if (lbl) lbl.textContent = "Nessun file selezionato";
+
+  persist();
+  renderTopic();
+  renderHome();
+  triggerNotificationAlert({
+    categoryLabel: `📂 ${topic}`,
+    title: `Nuovo file caricato: ${docItem.title}`,
+    body: desc,
+    soundKind: "chat",
+    bannerStyle: ""
+  });
+  showToast("File e descrizione caricati");
+}
+
 /* HOME & POST */
 function selectQuickCat(cat) {
   state.selectedCat = cat;
-  document.querySelectorAll("#quickCatChips .cat-chip").forEach(btn => {
-    btn.classList.toggle("active", btn.dataset.cat === cat);
-  });
+  renderQuickCatChips();
 }
 
 function handleQuickPhoto(e) {
@@ -1803,16 +2123,18 @@ function clearQuickPhoto() {
   if (lbl) lbl.textContent = "";
 }
 
-function createPostObject(text, highlight = false, photo = "") {
+function createPostObject(text, highlight = false, photo = "", fileDataUrl = "", fileName = "") {
   const u = getCurrentUser();
   return {
     id: Date.now() + Math.floor(Math.random() * 1000),
-    title: text.slice(0, 65),
+    title: fileName || text.slice(0, 65),
     body: text,
     author: `${u.nome} ${u.cognome || ""}`.trim(),
     time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
     highlight: !!highlight,
-    photo: photo || ""
+    photo: photo || "",
+    fileDataUrl: fileDataUrl || "",
+    fileName: fileName || ""
   };
 }
 
@@ -1853,19 +2175,21 @@ function renderHome() {
   state.channels.forEach(ch => {
     const posts = state.topics[ch.name] || [];
     const last = posts[0];
+    const isUpload = ch.mode === "upload";
     const card = document.createElement("div");
     card.className = "channel-card";
     card.onclick = () => openTopic(ch.name);
     card.innerHTML = `
       <div class="channel-top">
-        <span class="channel-name" style="color:${ch.color};">${escapeHtml(ch.name)}</span>
+        <span class="channel-name" style="color:${escapeHtml(ch.color || "#38BDF8")};">${escapeHtml(ch.name)}</span>
         <div style="display:flex; gap:6px; align-items:center;">
+          <span class="mode-pill ${isUpload ? "upload" : ""}">${isUpload ? "CARICAMENTO DATI" : "CHAT FORUM"}</span>
           ${ch.unread > 0 ? `<span class="unread-pill">${ch.unread}</span>` : ""}
           <span class="channel-meta">${escapeHtml(ch.time || "—")}</span>
         </div>
       </div>
-      <div class="channel-meta">${escapeHtml(ch.tag)} • ${posts.length} post</div>
-      <div class="channel-preview">${last ? `<strong>${escapeHtml(last.author)}:</strong> ${escapeHtml(last.body)}` : `<span style="color:#64748B;">Nessun messaggio ancora in questo canale.</span>`}</div>
+      <div class="channel-meta">${escapeHtml(ch.tag || "")} • ${posts.length} ${isUpload ? "file/dati" : "post"}</div>
+      <div class="channel-preview">${last ? `<strong>${escapeHtml(last.title)}:</strong> ${escapeHtml(last.body)}` : `<span style="color:#64748B;">Nessun elemento ancora in questo canale.</span>`}</div>
     `;
     wrap.appendChild(card);
   });
@@ -1900,20 +2224,55 @@ function addTopicPost() {
 
 function renderTopic() {
   const topic = state.currentTopic;
+  const chObj = getChannelObj(topic);
+  const isUploadMode = chObj.mode === "upload";
+
   document.getElementById("topicTitle").textContent = topic;
-  const modTag = document.getElementById("topicModTag");
-  modTag.textContent = isModeratorForForum(topic) ? "Mod/Admin" : "";
+  const modeBadge = document.getElementById("topicModeBadge");
+  if (modeBadge) {
+    modeBadge.textContent = isUploadMode ? "CARICAMENTO DATI" : "CHAT FORUM";
+    modeBadge.className = "mode-pill" + (isUploadMode ? " upload" : "");
+  }
+
+  const manSection = document.getElementById("manualsSection");
+  const stdComposer = document.getElementById("standardTopicComposer");
+  if (manSection) manSection.style.display = isUploadMode ? "flex" : "none";
+  if (stdComposer) stdComposer.style.display = isUploadMode ? "none" : "flex";
+
+  const searchQuery = isUploadMode
+    ? ((document.getElementById("manualSearchInput")?.value || "").trim().toLowerCase())
+    : "";
+
   const wrap = document.getElementById("topicPostsContainer");
   wrap.innerHTML = "";
-  const posts = state.topics[topic] || [];
+  let posts = state.topics[topic] || [];
+
+  if (searchQuery) {
+    posts = posts.filter(p =>
+      String(p.title || "").toLowerCase().includes(searchQuery) ||
+      String(p.body || "").toLowerCase().includes(searchQuery) ||
+      String(p.fileName || "").toLowerCase().includes(searchQuery) ||
+      String(p.author || "").toLowerCase().includes(searchQuery)
+    );
+  }
+
   if (!posts.length) {
-    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessun messaggio in ${escapeHtml(topic)}.</div>`;
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">${searchQuery ? "Nessun risultato trovato per la ricerca." : `Nessun elemento in ${escapeHtml(topic)}.`}</div>`;
     return;
   }
+
   posts.forEach(ev => {
     const canDelete = isModeratorForForum(topic);
     const card = document.createElement("div");
     card.className = "post-card" + (ev.highlight ? " highlight" : "");
+
+    const fileBlock = ev.fileDataUrl
+      ? `<div class="file-chip">
+          <span>📎 <strong>${escapeHtml(ev.fileName || ev.title)}</strong></span>
+          <a class="photo-btn" href="${ev.fileDataUrl}" download="${escapeHtml(ev.fileName || "documento")}">Scarica / Apri</a>
+        </div>`
+      : "";
+
     card.innerHTML = `
       <div class="ev-top">
         <div>
@@ -1922,6 +2281,7 @@ function renderTopic() {
         </div>
       </div>
       <div class="ev-body">${escapeHtml(ev.body)}</div>
+      ${fileBlock}
       ${ev.photo ? `<img class="ev-img" src="${ev.photo}" alt="Allegato">` : ""}
       <div class="ev-actions">
         <button type="button" class="mini-btn" onclick="openReportBox(${ev.id})">🚩 Segnala</button>
@@ -1980,7 +2340,121 @@ function deleteTopicPost(topic, postId) {
   state.topics[topic] = (state.topics[topic] || []).filter(p => p.id !== postId);
   persist();
   renderTopic();
-  showToast("Post eliminato");
+  showToast("Elemento eliminato");
+}
+
+/* GESTIONE BACHECA: CREAZIONE NUOVA CHAT FORUM O CARICAMENTO DATI + FILE */
+function toggleBoardChannelFileHint() {
+  const mode = document.getElementById("newBoardChannelMode")?.value;
+  const lbl = document.getElementById("newBoardChannelFileLabel");
+  if (lbl && !boardChannelFileName) {
+    lbl.textContent = mode === "upload"
+      ? "Puoi anche allegare un file iniziale oltre a caricarne altri nella chat dati"
+      : "Puoi allegare un file iniziale alla chat forum (opzionale)";
+  }
+}
+
+function handleBoardChannelFileSelect(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  boardChannelFileName = file.name;
+  boardChannelFileMime = file.type || "application/octet-stream";
+  const lbl = document.getElementById("newBoardChannelFileLabel");
+  if (lbl) lbl.textContent = `File allegato: ${file.name} ✓`;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    boardChannelFileDataUrl = String(evt.target.result || "");
+  };
+  reader.readAsDataURL(file);
+}
+
+function createBoardChannel() {
+  if (!isAdmin()) return;
+  const nameInp = document.getElementById("newBoardChannelName");
+  const tagInp = document.getElementById("newBoardChannelTag");
+  const modeSel = document.getElementById("newBoardChannelMode");
+
+  const name = (nameInp ? nameInp.value : "").trim().toUpperCase();
+  const mode = modeSel ? modeSel.value : "forum";
+  const tag = (tagInp ? tagInp.value : "").trim().toUpperCase() || (mode === "upload" ? "CARICAMENTO FILE & DATI" : "CHAT FORUM");
+
+  if (!name) return showToast("Inserisci il nome della nuova chat", true);
+  if (state.channels.some(c => c.name.toUpperCase() === name)) {
+    return showToast("Esiste già una chat con questo nome", true);
+  }
+
+  const newCh = {
+    name,
+    tag,
+    mode,
+    color: mode === "upload" ? "#10B981" : "#38BDF8",
+    time: boardChannelFileName ? "Adesso" : "—",
+    unread: 0
+  };
+  state.channels.push(newCh);
+  state.topics[name] = [];
+
+  if (boardChannelFileDataUrl && boardChannelFileName) {
+    const u = getCurrentUser();
+    state.topics[name].unshift({
+      id: Date.now() + Math.floor(Math.random() * 1000),
+      title: boardChannelFileName,
+      body: `File allegato all'apertura della chat ${name}`,
+      author: `${u.nome} ${u.cognome || ""}`.trim(),
+      time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+      highlight: false,
+      photo: boardChannelFileMime.startsWith("image/") ? boardChannelFileDataUrl : "",
+      fileDataUrl: boardChannelFileDataUrl,
+      fileName: boardChannelFileName
+    });
+  }
+
+  nameInp.value = "";
+  tagInp.value = "";
+  boardChannelFileDataUrl = "";
+  boardChannelFileName = "";
+  boardChannelFileMime = "";
+  const fileInp = document.getElementById("newBoardChannelFile");
+  if (fileInp) fileInp.value = "";
+  const lbl = document.getElementById("newBoardChannelFileLabel");
+  if (lbl) lbl.textContent = "Nessun file allegato";
+
+  persist();
+  syncChrome();
+  renderBoardAdmin();
+  renderHome();
+  showToast(`Creata "${name}" (${mode === "upload" ? "Caricamento Dati" : "Chat Forum"})`);
+}
+
+function toggleChannelMode(channelName) {
+  if (!isAdmin()) return;
+  const ch = state.channels.find(c => c.name === channelName);
+  if (!ch) return;
+  ch.mode = ch.mode === "upload" ? "forum" : "upload";
+  ch.tag = ch.mode === "upload" ? "CARICAMENTO FILE & DATI" : "CHAT FORUM";
+  persist();
+  syncChrome();
+  renderBoardAdmin();
+  renderHome();
+  showToast(`Modalità aggiornata per ${channelName}`);
+}
+
+function deleteBoardChannel(channelName) {
+  if (!isAdmin()) return;
+  if (state.channels.length <= 1) return showToast("Deve restare almeno una chat in bacheca", true);
+  state.channels = state.channels.filter(c => c.name !== channelName);
+  delete state.topics[channelName];
+  if (state.selectedCat === channelName) {
+    state.selectedCat = state.channels[0].name;
+  }
+  if (state.currentTopic === channelName) {
+    state.currentTopic = state.channels[0].name;
+  }
+  persist();
+  syncChrome();
+  renderBoardAdmin();
+  renderHome();
+  showToast(`Chat "${channelName}" eliminata`);
 }
 
 /* ADMIN VIEWS */
@@ -2051,6 +2525,25 @@ function rejectRegistration(regId) {
 }
 
 function renderBoardAdmin() {
+  const chListEl = document.getElementById("boardChannelsManageList");
+  if (chListEl) {
+    chListEl.innerHTML = (state.channels || []).map(ch => {
+      const isUpload = ch.mode === "upload";
+      return `
+        <div class="file-chip">
+          <div>
+            <strong>${escapeHtml(ch.name)}</strong>
+            <span class="mode-pill ${isUpload ? "upload" : ""}">${isUpload ? "CARICAMENTO DATI" : "CHAT FORUM"}</span>
+          </div>
+          <div class="ev-actions">
+            <button type="button" class="mini-btn" onclick="toggleChannelMode('${escapeJs(ch.name)}')">Cambia Tipo</button>
+            <button type="button" class="del-btn" onclick="deleteBoardChannel('${escapeJs(ch.name)}')">Elimina</button>
+          </div>
+        </div>
+      `;
+    }).join("");
+  }
+
   const wrap = document.getElementById("boardAdminList");
   if (!wrap) return;
   wrap.innerHTML = "";
@@ -2177,6 +2670,7 @@ function exportAppStateJson() {
     pendingRegistrations: state.pendingRegistrations || [],
     reports: state.reports || [],
     corpiTrentino: state.corpiTrentino || DEFAULT_CORPI_TRENTINO,
+    channels: state.channels || [],
     topics: state.topics || {}
   };
   const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
@@ -2314,13 +2808,13 @@ function escapeJs(str) {
 setupPwaManifestAndServiceWorker();
 enforceFounderIntegrity();
 syncChrome();
-updatePwaInstallBar();
 renderSoundSettingsView();
 if (state.loggedIn) {
   renderHome();
 } else {
   switchView("login");
 }
+openPermissionsModal(false);
 </script>
 </body>
 </html>
