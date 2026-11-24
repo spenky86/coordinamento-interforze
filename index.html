@@ -1,15 +1,693 @@
-<!-- ... existing code ... -->
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="theme-color" content="#991B1B">
-<meta name="description" content="Applicazione PWA di coordinamento interforze per il Corpo Vigili del Fuoco Volontari di Bolbeno Zuclo">
-<meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<meta name="apple-mobile-web-app-title" content="VVF Bolbeno Zuclo">
-<title>Coordinamento Interforze — VVF Bolbeno Zuclo</title>
+<title>Coordinamento Interforze</title>
 <style>
   :root {
-<!-- ... existing code ... -->
+    --bg: #0E131A;
+    --card: #161E29;
+    --card-border: #263142;
+    --red-dark: #991B1B;
+    --red: #DC2626;
+    --red-bright: #EF4444;
+    --orange: #F97316;
+    --cyan: #0EA5E9;
+    --emerald: #10B981;
+    --violet: #8B5CF6;
+    --gold: #EAB308;
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; -webkit-tap-highlight-color: transparent; }
+  body { background: var(--bg); color: var(--text); max-width: 480px; margin: 0 auto; min-height: 100vh; display: flex; flex-direction: column; border-left: 1px solid #1E293B; border-right: 1px solid #1E293B; }
+
+  /* HEADER */
+  header {
+    background: linear-gradient(135deg, #7F1D1D 0%, #B91C1C 100%);
+    border-bottom: 2px solid var(--red-bright);
+    padding: 14px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    box-shadow: 0 4px 14px rgba(220,38,38,0.28);
+  }
+  header h1 { font-size: 17px; font-weight: 800; letter-spacing: 0.4px; text-transform: uppercase; color: #fff; }
+  .header-right { display: flex; align-items: center; gap: 6px; }
+  .role-badge {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.4px;
+    padding: 3px 7px; border-radius: 6px;
+    background: rgba(250, 204, 21, 0.2); border: 1px solid #FACC15; color: #FEF08A;
+  }
+  .mod-badge {
+    font-size: 10px; font-weight: 800; letter-spacing: 0.3px;
+    padding: 3px 7px; border-radius: 6px;
+    background: rgba(14, 165, 233, 0.2); border: 1px solid #38BDF8; color: #BAE6FD;
+  }
+  .menu-btn {
+    background: rgba(0,0,0,0.25);
+    border: 1px solid rgba(255,255,255,0.25);
+    color: #fff;
+    width: 38px; height: 36px;
+    border-radius: 8px;
+    display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 4px;
+    cursor: pointer;
+  }
+  .menu-btn span { width: 18px; height: 2px; background: #fff; border-radius: 2px; }
+
+  /* DROPDOWN MENU */
+  .drawer {
+    display: none;
+    position: fixed;
+    top: 64px;
+    right: max(12px, calc(50vw - 228px));
+    width: 265px;
+    background: #1A2332;
+    border: 1px solid var(--red-bright);
+    border-radius: 12px;
+    box-shadow: 0 12px 30px rgba(0,0,0,0.75);
+    z-index: 100;
+    overflow: hidden;
+  }
+  .drawer.open { display: block; animation: fadeIn 0.15s ease; }
+  .drawer-item {
+    padding: 12px 15px;
+    border-bottom: 1px solid #263142;
+    font-size: 13.5px;
+    font-weight: 600;
+    display: flex; align-items: center; justify-content: space-between;
+    cursor: pointer;
+  }
+  .drawer-item:last-child { border-bottom: none; }
+  .drawer-item:active { background: #263142; }
+  .drawer-admin { color: #FDE047; background: rgba(234, 179, 8, 0.08); }
+
+  /* BANNED SCREEN */
+  .banned-screen {
+    flex: 1; padding: 28px 20px; display: flex; flex-direction: column;
+    align-items: center; justify-content: center; text-align: center; gap: 14px;
+  }
+  .banned-box {
+    background: #241014; border: 1.5px solid #EF4444; border-radius: 14px;
+    padding: 20px; max-width: 380px; display: flex; flex-direction: column; gap: 10px;
+  }
+
+  /* VIEWS */
+  .view { display: none; flex: 1; padding: 12px; padding-bottom: 36px; flex-direction: column; gap: 12px; }
+  .view.active { display: flex; }
+
+  /* QUICK COMPOSER */
+  .composer {
+    background: var(--card);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .composer-row { display: flex; gap: 8px; }
+  .composer input {
+    flex: 1;
+    background: #0B0F15;
+    border: 1px solid #2D3748;
+    color: var(--text);
+    padding: 10px 12px;
+    border-radius: 9px;
+    font-size: 14px;
+    outline: none;
+  }
+  .composer input:focus { border-color: var(--red-bright); }
+  .send-btn {
+    background: var(--red);
+    color: #fff;
+    border: none;
+    border-radius: 9px;
+    padding: 0 14px;
+    font-weight: 700;
+    font-size: 13px;
+    cursor: pointer;
+  }
+  .cat-pills { display: flex; gap: 6px; overflow-x: auto; padding-bottom: 2px; scrollbar-width: none; }
+  .cat-pills::-webkit-scrollbar { display: none; }
+  .cat-pill {
+    font-size: 11px;
+    font-weight: 700;
+    padding: 5px 10px;
+    border-radius: 999px;
+    border: 1px solid #334155;
+    background: #0E131A;
+    color: var(--muted);
+    white-space: nowrap;
+    cursor: pointer;
+  }
+  .cat-pill.selected { background: var(--red-dark); color: #fff; border-color: var(--red-bright); }
+
+  /* PINNED EMERGENCY CARD */
+  .pinned-card {
+    background: linear-gradient(180deg, #261217 0%, #191218 100%);
+    border: 1.5px solid var(--red-bright);
+    border-left: 5px solid var(--red-bright);
+    border-radius: 12px;
+    padding: 12px 14px;
+    box-shadow: 0 0 18px rgba(239,68,68,0.18);
+    cursor: pointer;
+  }
+  .pinned-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 6px; }
+  .pinned-label { font-size: 12px; font-weight: 900; letter-spacing: 0.7px; color: #FCA5A5; display: flex; align-items: center; gap: 6px; }
+  .badge-live {
+    background: var(--red);
+    color: #fff;
+    font-size: 10px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+    animation: pulse 1.8s infinite;
+  }
+  .pinned-msg { font-size: 15px; font-weight: 700; color: #fff; margin-bottom: 6px; }
+  .pinned-meta { font-size: 11px; color: #FDA4AF; display: flex; justify-content: space-between; }
+
+  /* ADMIN SEGNALAZIONI CARD UNDER EMERGENZE */
+  .admin-reports-card {
+    background: linear-gradient(135deg, #2A1D09 0%, #1B1914 100%);
+    border: 1.5px solid #EAB308;
+    border-left: 5px solid #FACC15;
+    border-radius: 12px;
+    padding: 11px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+  }
+  .admin-reports-title { font-size: 13px; font-weight: 800; color: #FEF08A; }
+  .admin-reports-sub { font-size: 11.5px; color: #FDE68A; margin-top: 2px; }
+  .rep-count-pill {
+    background: #EAB308; color: #0B0F15; font-size: 11px; font-weight: 900;
+    padding: 3px 8px; border-radius: 999px;
+  }
+
+  /* CHANNEL CARDS */
+  .channel-card {
+    background: var(--card);
+    border: 1px solid var(--card-border);
+    border-radius: 12px;
+    padding: 12px 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 10px;
+    cursor: pointer;
+  }
+  .channel-card:active { transform: scale(0.99); }
+  .ch-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
+  .ch-title { font-size: 13px; font-weight: 800; letter-spacing: 0.3px; display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .ch-mod-tag { font-size: 10px; font-weight: 700; color: #BAE6FD; background: rgba(14,165,233,0.16); border: 1px solid rgba(56,189,248,0.4); padding: 1px 6px; border-radius: 999px; }
+  .ch-preview { font-size: 12.5px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .ch-right { display: flex; flex-direction: column; align-items: flex-end; gap: 5px; }
+  .ch-time { font-size: 10.5px; color: var(--muted); }
+  .unread { font-size: 11px; font-weight: 800; padding: 2px 7px; border-radius: 999px; color: #fff; }
+
+  /* SUBHEADER */
+  .subbar {
+    display: flex; align-items: center; justify-content: space-between; gap: 6px;
+    background: #141B26;
+    border: 1px solid #263142;
+    padding: 8px 12px;
+    border-radius: 10px;
+  }
+  .back-btn {
+    background: #1E293B; border: 1px solid #334155; color: #fff;
+    padding: 5px 10px; border-radius: 7px; font-size: 12px; font-weight: 700; cursor: pointer;
+  }
+  .subbar-title { font-size: 12px; font-weight: 800; letter-spacing: 0.5px; }
+
+  .new-topic-box {
+    background: var(--card);
+    border: 1px solid #2A3649;
+    border-radius: 12px;
+    padding: 10px;
+    display: flex;
+    gap: 8px;
+  }
+  .new-topic-box input {
+    flex: 1;
+    background: #0B0F15;
+    border: 1px solid #334155;
+    color: #fff;
+    border-radius: 8px;
+    padding: 9px 11px;
+    font-size: 13px;
+    outline: none;
+  }
+  .new-topic-box input:focus { border-color: #38BDF8; }
+  .new-topic-box button {
+    border: none;
+    color: #fff;
+    border-radius: 8px;
+    padding: 0 13px;
+    font-size: 12px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+  /* EVENT CARDS IN FEED */
+  .event-card {
+    background: var(--card);
+    border: 1px solid #2A3649;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .event-card.highlight {
+    background: linear-gradient(180deg, #251318 0%, #161E29 100%);
+    border: 1.5px solid var(--red-bright);
+  }
+  .event-card.mod-deleted {
+    opacity: 0.52;
+    border: 1px dashed #F59E0B;
+    background: #14161D;
+  }
+  .mod-del-banner {
+    font-size: 11px; font-weight: 800; color: #FCD34D;
+    background: rgba(245, 158, 11, 0.14); border: 1px solid rgba(245, 158, 11, 0.45);
+    border-radius: 7px; padding: 5px 8px;
+    display: flex; justify-content: space-between; align-items: center; gap: 8px;
+  }
+  .restore-btn {
+    background: #065F46; border: 1px solid #10B981; color: #ECFDF5;
+    border-radius: 6px; padding: 2px 7px; font-size: 10.5px; font-weight: 700; cursor: pointer;
+  }
+  .ev-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .ev-title { font-size: 15px; font-weight: 800; color: #fff; }
+  .ev-author { font-size: 11.5px; color: #94A3B8; font-weight: 600; }
+  .ev-actions-right { display: flex; gap: 5px; flex-shrink: 0; }
+  .del-btn {
+    background: rgba(127, 29, 29, 0.55);
+    border: 1px solid #EF4444;
+    color: #FCA5A5;
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .del-btn:active { background: #991B1B; color: #fff; }
+  .flag-btn {
+    background: rgba(146, 64, 14, 0.45);
+    border: 1px solid #F59E0B;
+    color: #FDE68A;
+    border-radius: 6px;
+    padding: 3px 7px;
+    font-size: 10.5px;
+    font-weight: 700;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+
+  .actions-bar { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; padding-top: 4px; }
+  .react-btn {
+    background: #0E131A; border: 1px solid #334155; color: #E2E8F0;
+    border-radius: 999px; padding: 4px 8px; font-size: 12px; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .react-btn.active { border-color: var(--red-bright); background: rgba(220,38,38,0.22); color: #fff; }
+  .add-react-btn {
+    background: #17202E; border: 1px dashed #64748B; color: #E2E8F0;
+    border-radius: 999px; padding: 4px 9px; font-size: 12px; font-weight: 700; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 4px;
+  }
+  .emoji-picker-box {
+    background: #0B0F15; border: 1px solid #475569; border-radius: 10px;
+    padding: 8px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    margin-top: 2px;
+  }
+  .emoji-choice {
+    background: #161E29; border: 1px solid #334155; border-radius: 8px;
+    padding: 5px 7px; font-size: 15px; cursor: pointer; line-height: 1;
+  }
+  .emoji-choice:active { background: #263142; transform: scale(0.95); }
+  .custom-emoji-input {
+    width: 68px; background: #161E29; border: 1px solid #334155; color: #fff;
+    border-radius: 7px; padding: 4px 6px; font-size: 13px; text-align: center; outline: none;
+  }
+  .custom-emoji-ok {
+    background: #2563EB; border: none; color: #fff; border-radius: 7px;
+    padding: 5px 8px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .user-flag-btn {
+    background: rgba(120, 53, 15, 0.35); border: 1px solid #D97706; color: #FDE68A;
+    border-radius: 8px; padding: 5px 9px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .follow-btn {
+    margin-left: auto;
+    background: #1E293B; border: 1px solid #475569; color: #E2E8F0;
+    border-radius: 8px; padding: 5px 9px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+  .follow-btn.following { background: var(--red); border-color: var(--red-bright); color: #fff; }
+  .photo-btn {
+    background: #0F2942; border: 1px solid #0EA5E9; color: #7DD3FC;
+    border-radius: 8px; padding: 5px 9px; font-size: 11px; font-weight: 700; cursor: pointer;
+  }
+
+  /* MEDIA & COMMENTS */
+  .media-grid { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 4px; }
+  .media-thumb {
+    width: 82px; height: 64px; border-radius: 8px; object-fit: cover;
+    border: 1px solid #475569;
+  }
+  .comments-box {
+    background: #0B0F15;
+    border: 1px solid #1E293B;
+    border-radius: 9px;
+    padding: 8px;
+    display: flex; flex-direction: column; gap: 6px;
+  }
+  .comment-item {
+    font-size: 12px; line-height: 1.35; color: #E2E8F0;
+    border-bottom: 1px solid #161E29; padding-bottom: 5px;
+    display: flex; justify-content: space-between; align-items: flex-start; gap: 8px;
+  }
+  .comment-item:last-child { border-bottom: none; padding-bottom: 0; }
+  .comment-who { font-weight: 700; color: #38BDF8; font-size: 11px; }
+  .del-comm-btn {
+    background: transparent; border: none; color: #F87171;
+    font-size: 11px; font-weight: 700; cursor: pointer; padding: 0 3px;
+  }
+  .comment-form { display: flex; gap: 6px; margin-top: 4px; }
+  .comment-form input {
+    flex: 1; background: #131A24; border: 1px solid #2D3748; color: #fff;
+    border-radius: 7px; padding: 7px 9px; font-size: 12px; outline: none;
+  }
+  .comment-form button {
+    background: #2563EB; color: #fff; border: none; border-radius: 7px; padding: 0 10px; font-size: 11.5px; font-weight: 700; cursor: pointer;
+  }
+
+  /* MANUALS / PDF ARCHIVE */
+  .manual-toolbar {
+    background: var(--card);
+    border: 1px solid #334155;
+    border-radius: 12px;
+    padding: 11px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .search-input {
+    width: 100%;
+    background: #0B0F15;
+    border: 1px solid #334155;
+    color: #fff;
+    padding: 9px 11px;
+    border-radius: 8px;
+    font-size: 13px;
+    outline: none;
+  }
+  .search-input:focus { border-color: var(--gold); }
+  .upload-pdf-btn {
+    background: linear-gradient(135deg, #A16207, #CA8A04);
+    border: 1px solid #FACC15;
+    color: #fff;
+    padding: 9px 12px;
+    border-radius: 8px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+    text-align: center;
+  }
+  .pdf-card {
+    background: var(--card);
+    border: 1px solid #2A3649;
+    border-left: 4px solid var(--gold);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .pdf-title { font-size: 14px; font-weight: 800; color: #FEF08A; }
+  .pdf-meta { font-size: 11px; color: var(--muted); }
+  .pdf-snippet {
+    font-size: 12px; color: #CBD5E1; background: #0B0F15;
+    border: 1px solid #1E293B; border-radius: 8px; padding: 8px; line-height: 1.35;
+  }
+  .pdf-actions { display: flex; gap: 8px; align-items: center; flex-wrap: wrap; }
+  .pdf-open-btn {
+    background: #1E3A8A; border: 1px solid #60A5FA; color: #DBEAFE;
+    padding: 5px 10px; border-radius: 7px; font-size: 11.5px; font-weight: 700;
+    text-decoration: none; cursor: pointer;
+  }
+  .drive-note {
+    font-size: 11px; color: #94A3B8; background: #101620;
+    border: 1px dashed #334155; border-radius: 8px; padding: 8px;
+  }
+
+  /* ADMIN USERS & REPORTS */
+  .user-card {
+    background: var(--card); border: 1px solid #2A3649; border-radius: 12px;
+    padding: 12px; display: flex; flex-direction: column; gap: 9px;
+  }
+  .user-card.banned { border-color: #EF4444; background: #1E1115; opacity: 0.85; }
+  .user-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .user-name { font-size: 14px; font-weight: 800; color: #fff; }
+  .user-sub { font-size: 11.5px; color: var(--muted); }
+  .pill-row { display: flex; flex-wrap: wrap; gap: 5px; }
+  .ch-mod-chip {
+    font-size: 10.5px; padding: 4px 8px; border-radius: 999px;
+    background: #0B0F15; border: 1px solid #334155; color: #94A3B8; cursor: pointer;
+  }
+  .ch-mod-chip.active { background: #0369A1; border-color: #38BDF8; color: #fff; font-weight: 700; }
+  .user-btns { display: flex; flex-wrap: wrap; gap: 6px; }
+  .mini-btn {
+    padding: 5px 9px; border-radius: 7px; font-size: 11px; font-weight: 700;
+    border: 1px solid #475569; background: #1E293B; color: #F8FAFC; cursor: pointer;
+  }
+  .mini-btn.admin-on { background: #A16207; border-color: #FACC15; color: #FEF9C3; }
+  .mini-btn.ban-on { background: #991B1B; border-color: #EF4444; color: #FECACA; }
+  .mini-btn.switch-user { background: #1E3A8A; border-color: #60A5FA; color: #DBEAFE; }
+
+  .report-card {
+    background: var(--card); border: 1px solid #CA8A04; border-radius: 12px;
+    padding: 12px; display: flex; flex-direction: column; gap: 8px;
+  }
+  .report-badge {
+    font-size: 10px; font-weight: 800; padding: 2px 7px; border-radius: 999px;
+    background: rgba(234, 179, 8, 0.2); color: #FDE047; border: 1px solid #EAB308;
+  }
+  .report-badge.approved { background: rgba(16, 185, 129, 0.2); color: #6EE7B7; border-color: #10B981; }
+  .report-badge.rejected { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; border-color: #EF4444; }
+  .approve-btn {
+    background: #065F46; border: 1px solid #10B981; color: #fff;
+    padding: 6px 10px; border-radius: 7px; font-size: 11.5px; font-weight: 800; cursor: pointer;
+  }
+  .reject-btn {
+    background: #7F1D1D; border: 1px solid #EF4444; color: #fff;
+    padding: 6px 10px; border-radius: 7px; font-size: 11.5px; font-weight: 800; cursor: pointer;
+  }
+
+  /* PROFILE FORM */
+  .form-card {
+    background: var(--card); border: 1px solid #2A3649; border-radius: 12px; padding: 13px;
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .form-card h3 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.5px; color: #FCA5A5; }
+  .field { display: flex; flex-direction: column; gap: 4px; }
+  .field label { font-size: 11.5px; font-weight: 700; color: #CBD5E1; }
+  .req { color: var(--red-bright); }
+  .field input, .field select {
+    background: #0B0F15; border: 1px solid #334155; color: #fff;
+    padding: 9px 10px; border-radius: 8px; font-size: 13px; outline: none;
+  }
+  .field input:focus, .field select:focus { border-color: var(--red-bright); }
+  .badge-preview {
+    width: 100%; max-height: 130px; object-fit: cover; border-radius: 8px;
+    border: 1px dashed #475569; margin-top: 4px; display: none;
+  }
+  .ente-box {
+    background: #101620; border: 1px solid #2D3B50; border-radius: 10px; padding: 10px;
+    display: flex; flex-direction: column; gap: 8px;
+  }
+  .ente-header { display: flex; justify-content: space-between; align-items: center; }
+  .remove-ente { background: #7F1D1D; color: #FCA5A5; border: none; border-radius: 6px; padding: 3px 8px; font-size: 11px; cursor: pointer; }
+  .chips-wrap { display: flex; flex-wrap: wrap; gap: 6px; }
+  .qual-chip {
+    font-size: 11px; padding: 5px 9px; border-radius: 999px;
+    background: #0B0F15; border: 1px solid #334155; color: #94A3B8; cursor: pointer;
+  }
+  .qual-chip.on { background: #1D4ED8; border-color: #60A5FA; color: #fff; font-weight: 700; }
+  .add-ente-btn {
+    background: #1E293B; border: 1px dashed #64748B; color: #E2E8F0;
+    padding: 9px; border-radius: 9px; font-size: 12.5px; font-weight: 700; cursor: pointer;
+  }
+  .save-btn {
+    background: linear-gradient(135deg, #B91C1C, #DC2626);
+    border: 1px solid var(--red-bright); color: #fff;
+    padding: 12px; border-radius: 10px; font-size: 14px; font-weight: 800; cursor: pointer;
+  }
+  .toast {
+    position: fixed; bottom: 18px; left: 50%; transform: translateX(-50%);
+    background: #065F46; border: 1px solid #10B981; color: #fff;
+    padding: 10px 16px; border-radius: 999px; font-size: 12.5px; font-weight: 700;
+    box-shadow: 0 8px 20px rgba(0,0,0,0.6); display: none; z-index: 200;
+  }
+  .toast.err { background: #7F1D1D; border-color: #EF4444; }
+
+  @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.55; } }
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  .confirm-dropdown {
+    position: fixed;
+    z-index: 300;
+    min-width: 220px;
+    max-width: 280px;
+    background: #1B2434;
+    border: 1.5px solid #F59E0B;
+    border-radius: 10px;
+    padding: 9px 10px;
+    box-shadow: 0 12px 28px rgba(0, 0, 0, 0.82);
+    display: none;
+    flex-direction: column;
+    gap: 8px;
+    animation: fadeIn 0.14s ease;
+  }
+  .confirm-dropdown.open { display: flex; }
+  .confirm-dropdown-title {
+    font-size: 12px;
+    font-weight: 800;
+    color: #FEF08A;
+    line-height: 1.3;
+  }
+  .confirm-dropdown-sub {
+    font-size: 11px;
+    color: #CBD5E1;
+    line-height: 1.3;
+  }
+  .confirm-dropdown-actions {
+    display: flex;
+    justify-content: flex-end;
+    gap: 6px;
+  }
+  .confirm-no-btn {
+    background: #263142;
+    border: 1px solid #475569;
+    color: #E2E8F0;
+    border-radius: 7px;
+    padding: 4px 9px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .confirm-yes-btn {
+    background: #DC2626;
+    border: 1px solid #EF4444;
+    color: #fff;
+    border-radius: 7px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+
+
+  .auth-box {
+    background: var(--card);
+    border: 1.5px solid #334155;
+    border-radius: 14px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+  }
+  .auth-tabs {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 6px;
+    background: #0B0F15;
+    padding: 4px;
+    border-radius: 10px;
+    border: 1px solid #263142;
+  }
+  .auth-tab {
+    padding: 9px 10px;
+    border: none;
+    border-radius: 7px;
+    background: transparent;
+    color: var(--muted);
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .auth-tab.active {
+    background: var(--red);
+    color: #fff;
+  }
+  .privacy-link-btn {
+    background: transparent;
+    border: none;
+    color: #38BDF8;
+    font-size: 12px;
+    font-weight: 700;
+    text-decoration: underline;
+    cursor: pointer;
+    text-align: left;
+    padding: 2px 0;
+  }
+  .privacy-check-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #0E131A;
+    border: 1px solid #2D3748;
+    border-radius: 9px;
+    padding: 9px 10px;
+    font-size: 12px;
+    color: #E2E8F0;
+    line-height: 1.35;
+  }
+  .privacy-check-row input {
+    margin-top: 2px;
+    width: 16px;
+    height: 16px;
+    accent-color: #DC2626;
+    flex-shrink: 0;
+  }
+  .privacy-doc-box {
+    background: #101620;
+    border: 1px solid #2D3B50;
+    border-radius: 12px;
+    padding: 14px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    font-size: 12.5px;
+    line-height: 1.48;
+    color: #E2E8F0;
+  }
+  .privacy-doc-box h3 {
+    font-size: 13.5px;
+    color: #FEF08A;
+    text-transform: uppercase;
+    letter-spacing: 0.4px;
+  }
+  .privacy-doc-box h4 {
+    font-size: 12.5px;
+    color: #7DD3FC;
+    margin-top: 4px;
+  }
+  .pending-user-card {
+    background: var(--card);
+    border: 1.5px solid #F59E0B;
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 9px;
+  }
   .pending-badge-thumb {
     width: 100%;
     max-height: 150px;
@@ -20,95 +698,6 @@
     padding: 4px;
   }
 
-  /* PWA BANNER & NOTIFICHE IN-APP */
-  .pwa-install-bar {
-    display: none;
-    background: linear-gradient(135deg, #172554 0%, #1E293B 100%);
-    border: 1px solid #38BDF8;
-    border-radius: 12px;
-    padding: 10px 12px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 10px;
-  }
-  .pwa-install-bar.visible { display: flex; }
-  .pwa-install-btn {
-    background: #0284C7;
-    border: 1px solid #38BDF8;
-    color: #fff;
-    border-radius: 8px;
-    padding: 7px 11px;
-    font-size: 11.5px;
-    font-weight: 800;
-    cursor: pointer;
-    white-space: nowrap;
-  }
-  .inapp-notif-banner {
-    position: fixed;
-    top: 70px;
-    left: 50%;
-    transform: translateX(-50%);
-    width: min(456px, calc(100vw - 20px));
-    background: #162032;
-    border: 1.5px solid #38BDF8;
-    border-left: 5px solid #38BDF8;
-    border-radius: 12px;
-    padding: 11px 13px;
-    box-shadow: 0 12px 28px rgba(0,0,0,0.78);
-    z-index: 250;
-    display: none;
-    flex-direction: column;
-    gap: 4px;
-    animation: fadeIn 0.16s ease;
-  }
-  .inapp-notif-banner.open { display: flex; }
-  .inapp-notif-banner.emergency {
-    background: #291116;
-    border-color: #EF4444;
-    border-left-color: #EF4444;
-  }
-  .inapp-notif-banner.quiet-report {
-    background: #171B24;
-    border-color: #64748B;
-    border-left-color: #94A3B8;
-  }
-  .inapp-notif-banner.new-user {
-    background: #14241E;
-    border-color: #10B981;
-    border-left-color: #34D399;
-  }
-  .inapp-notif-top {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    gap: 8px;
-    font-size: 11px;
-    font-weight: 800;
-  }
-  .inapp-notif-title { font-size: 13.5px; font-weight: 800; color: #fff; }
-  .inapp-notif-body { font-size: 12px; color: #CBD5E1; line-height: 1.35; }
-  .ringtone-preview-row {
-    display: flex;
-    gap: 6px;
-    flex-wrap: wrap;
-    align-items: center;
-    margin-top: 4px;
-  }
-  .test-sound-btn {
-    background: #1E3A8A;
-    border: 1px solid #60A5FA;
-    color: #EFF6FF;
-    border-radius: 8px;
-    padding: 7px 11px;
-    font-size: 11.5px;
-    font-weight: 800;
-    cursor: pointer;
-  }
-  .sim-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
 </style>
 </head>
 <body>
@@ -116,7 +705,6 @@
 <header>
   <h1>Coordinamento Interforze</h1>
   <div class="header-right">
-    <span id="headerFounderBadge" class="role-badge" style="display:none;">FOUNDER</span>
     <span id="headerAdminBadge" class="role-badge" style="display:none;">ADMIN</span>
     <span id="headerModBadge" class="mod-badge" style="display:none;">MOD</span>
     <button class="menu-btn" onclick="toggleDrawer()" aria-label="Menu">
@@ -125,631 +713,969 @@
   </div>
 </header>
 
-<div id="inappNotifBanner" class="inapp-notif-banner" onclick="closeInAppNotif()">
-  <div class="inapp-notif-top">
-    <span id="inappNotifCategory" style="color:#7DD3FC;">NOTIFICA</span>
-    <span style="color:#94A3B8; font-size:10.5px;">Tocca per chiudere</span>
-  </div>
-  <div id="inappNotifTitle" class="inapp-notif-title"></div>
-  <div id="inappNotifBody" class="inapp-notif-body"></div>
-</div>
-
 <div id="drawer" class="drawer">
   <div class="drawer-item" onclick="switchView('home')"><span>🏠 Bacheca Principale</span></div>
   <div class="drawer-item" onclick="openTopic('EMERGENZE')"><span>🚨 Chat Emergenze</span></div>
   <div class="drawer-item" onclick="openTopic('MANUALI E PROCEDURE')"><span>📘 Manuali & PDF</span></div>
-  <div class="drawer-item" onclick="switchView('suonerie')"><span>🔔 Suonerie & Notifiche App</span></div>
   <div class="drawer-item" onclick="switchView('profilo')"><span>🪪 Profilo Operatore</span></div>
   <div class="drawer-item" onclick="switchView('privacy')"><span>🔒 Trattamento Privacy</span></div>
   <div id="drawerAdminApprovals" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('approvazioni')"><span>✅ Approvazione Nuovi Utenti</span></div>
   <div id="drawerAdminBoard" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('bacheca')"><span>📋 Gestione bacheca</span></div>
   <div id="drawerAdminUsers" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('utenti')"><span>👥 Gestione Utenti & Ruoli</span></div>
-  <div id="drawerAdminReports" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('segnalazioni')"><span>🚩 Segnalazioni & Accessi</span></div>
+  <div id="drawerAdminReports" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('segnalazioni')"><span>🚩 Segnalazioni (Admin)</span></div>
   <div class="drawer-item" onclick="logoutToLogin()"><span>🚪 Esci / Cambia Utente</span></div>
-  <div class="drawer-item" onclick="resetDemo()"><span>🔄 Ripristina Stato Vuoto</span></div>
+  <div class="drawer-item" onclick="resetDemo()"><span>🔄 Ripristina Dati Demo</span></div>
 </div>
 
 <!-- SCHERMATA UTENTE BANNATO -->
-<!-- ... existing code ... -->
-<!-- VISTA 1: HOME -->
-<div id="view-home" class="view active">
-  <div id="pwaInstallBar" class="pwa-install-bar">
-    <div>
-      <div style="font-size:12px; font-weight:800; color:#BAE6FD;">📲 Installa App su Android / Desktop</div>
-      <div id="pwaInstallHint" style="font-size:11px; color:#CBD5E1;">Aggiungi alla schermata Home per uso rapido e notifiche</div>
-    </div>
-    <button type="button" id="pwaInstallBtn" class="pwa-install-btn" onclick="triggerPwaInstall()">Installa App</button>
+<div id="bannedScreen" class="banned-screen" style="display:none;">
+  <div class="banned-box">
+    <div style="font-size:32px;">⛔</div>
+    <h2 style="font-size:17px; color:#FCA5A5;">Accesso Sospeso (Utente Bannato)</h2>
+    <p style="font-size:13px; color:#E2E8F0; line-height:1.45;">
+      Il tuo account (<strong id="bannedUserLabel"></strong>) è stato bannato dall'amministratore: non puoi visualizzare bacheche, chat o documenti del gruppo.
+    </p>
+    <button class="mini-btn switch-user" style="margin-top:6px;" onclick="logoutToLogin()">
+      ↩️ Torna alla pagina di Login / Registrazione
+    </button>
   </div>
+</div>
 
-  <div class="composer">
-<!-- ... existing code ... -->
-<!-- VISTA SUONERIE E NOTIFICHE APP / ANDROID -->
-<div id="view-suonerie" class="view">
+<!-- VISTA 0: LOGIN & REGISTRAZIONE ALL'APERTURA -->
+<div id="view-login" class="view">
+  <div class="auth-box">
+    <div style="text-align:center;">
+      <div style="font-size:15px; font-weight:900; color:#FCA5A5; text-transform:uppercase; letter-spacing:0.5px;">Accesso Operatori & Enti</div>
+      <div style="font-size:12px; color:#94A3B8; margin-top:3px;">Accedi con il tuo account o richiedi la registrazione con tesserino</div>
+    </div>
+
+    <div class="auth-tabs">
+      <button type="button" id="tabLoginBtn" class="auth-tab active" onclick="setAuthTab('login')">🔑 Accedi</button>
+      <button type="button" id="tabRegisterBtn" class="auth-tab" onclick="setAuthTab('register')">📝 Registrati</button>
+    </div>
+
+    <!-- FORM ACCESSO UTENTE -->
+    <div id="authLoginPanel" style="display:flex; flex-direction:column; gap:10px;">
+      <div class="field">
+        <label>Seleziona o inserisci Nome / Telefono / Matricola tesserino <span class="req">*</span></label>
+        <input type="text" id="loginIdentifierInput" placeholder="Es. Maicol, +39 340... o codice matricola">
+      </div>
+      <div class="field">
+        <label>Accesso rapido account configurati (per test/anteprima)</label>
+        <select id="quickLoginSelect" onchange="fillLoginFromSelect(this.value)">
+          <option value="">-- Seleziona utente per compilare --</option>
+        </select>
+      </div>
+      <button type="button" class="save-btn" onclick="performUserLogin()">ENTRA NELL'APP</button>
+    </div>
+
+    <!-- FORM REGISTRAZIONE NUOVO UTENTE -->
+    <div id="authRegisterPanel" style="display:none; flex-direction:column; gap:10px;">
+      <div class="drive-note">
+        🛡️ La registrazione richiede l'approvazione di un <strong>Amministratore</strong>. Compila i dati, allega la foto del tesserino con il relativo numero/matricola e accetta il trattamento privacy.
+      </div>
+
+      <div class="field">
+        <label>Nome <span class="req">*</span></label>
+        <input type="text" id="regNome" placeholder="Es. Marco">
+      </div>
+      <div class="field">
+        <label>Cognome (consigliato)</label>
+        <input type="text" id="regCognome" placeholder="Es. Binelli">
+      </div>
+      <div class="field">
+        <label>Numero di telefono <span class="req">*</span></label>
+        <input type="tel" id="regTel" placeholder="Es. +39 348 1122334">
+      </div>
+      <div class="field">
+        <label>Ente di appartenenza <span class="req">*</span></label>
+        <select id="regEnteTipo" onchange="toggleRegEnteFields()">
+          <option value="Vigili del Fuoco">Vigili del Fuoco</option>
+          <option value="Croce Rossa Italiana">Croce Rossa Italiana</option>
+          <option value="Soccorso Alpino">Soccorso Alpino</option>
+          <option value="Associazione Ambulanze">Associazione Ambulanze</option>
+          <option value="Protezione Civile">Protezione Civile</option>
+          <option value="Polizia Locale">Polizia Locale</option>
+        </select>
+      </div>
+      <div class="field" id="regVvfWrap">
+        <label>Corpo VVF del Trentino <span class="req">*</span></label>
+        <select id="regVvfCorpo"></select>
+      </div>
+      <div class="field" id="regSedeWrap" style="display:none;">
+        <label>Sede / Comitato / Stazione <span class="req">*</span></label>
+        <input type="text" id="regSede" placeholder="Es. Comitato Giudicarie">
+      </div>
+
+      <div class="field">
+        <label>Numero tesserino / Codice matricola <span class="req">*</span></label>
+        <input type="text" id="regMatricola" placeholder="Es. MAT-VVF-4821 o numero tesserino riportato sotto">
+      </div>
+
+      <div class="field">
+        <label>Foto del tesserino <span class="req">*</span></label>
+        <input type="file" id="regBadgeFile" accept="image/*" onchange="handleRegBadgeUpload(event)">
+        <img id="regBadgePreview" class="badge-preview" alt="Anteprima tesserino registrazione">
+        <span id="regBadgeStatus" style="font-size:11px; color:#94A3B8;">Obbligatorio: allega foto chiara del tesserino</span>
+      </div>
+
+      <div class="privacy-check-row">
+        <input type="checkbox" id="regPrivacyAccept">
+        <label for="regPrivacyAccept" style="cursor:pointer;">
+          Dichiaro di aver letto e accettato l'informativa sul <strong>Trattamento della Privacy</strong> e la verifica delle credenziali da parte degli amministratori. <span class="req">*</span>
+        </label>
+      </div>
+
+      <button type="button" class="privacy-link-btn" onclick="switchView('privacy')">📄 Leggi pagina Trattamento Privacy completa →</button>
+
+      <button type="button" class="save-btn" onclick="submitUserRegistration()">INVIA RICHIESTA DI REGISTRAZIONE</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISTA: TRATTAMENTO PRIVACY -->
+<div id="view-privacy" class="view">
   <div class="subbar">
-    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
-    <span class="subbar-title" style="color:#7DD3FC;">🔔 SUONERIE & NOTIFICHE APP</span>
-    <span id="notifPermStatus" style="font-size:11px; color:#94A3B8;">Browser</span>
+    <button class="back-btn" id="privacyBackBtn" onclick="goBackFromPrivacy()">← Indietro</button>
+    <span class="subbar-title" style="color:#7DD3FC;">🔒 TRATTAMENTO PRIVACY</span>
+    <span style="font-size:11px; color:#94A3B8;">Informativa</span>
   </div>
 
-  <div class="form-card">
-    <h3>📲 Installazione PWA & Notifiche Dispositivo</h3>
-    <div class="drive-note">
-      Su <strong>Android (Chrome)</strong> puoi installare l'app tramite il pulsante <strong>Installa App</strong> oppure dal menu del browser <em>"Aggiungi a schermata Home"</em>. Attiva anche i permessi di notifica del dispositivo per ricevere avvisi di sistema.
-    </div>
-    <div class="ringtone-preview-row">
-      <button type="button" class="test-sound-btn" onclick="requestDeviceNotificationPermission()">🔔 Attiva Notifiche Dispositivo</button>
-      <button type="button" class="mini-btn switch-user" onclick="triggerPwaInstall()">📲 Installa / Guida Android</button>
-    </div>
-  </div>
+  <div class="privacy-doc-box">
+    <h3>Informativa sul Trattamento dei Dati Personali</h3>
+    <p>
+      L'applicazione <strong>Coordinamento Interforze</strong> è destinata esclusivamente al coordinamento operativo, alle allerte, alla logistica e alla condivisione di procedure tra operatori appartenenti a enti e corpi abilitati.
+    </p>
 
-  <div class="form-card" style="border-color:#EF4444;">
-    <h3 style="color:#FCA5A5;">🚨 Suoneria Specifica EMERGENZE</h3>
-    <div class="field">
-      <label>Seleziona suoneria per nuovi post / allerte in Emergenze</label>
-      <select id="selEmergencyTone" onchange="updateSoundSetting('emergencyTone', this.value)">
-        <option value="sirena_vvf">Allarme Emergenza Sirena VVF</option>
-        <option value="doppio_impulso">Doppio Impulso Critico</option>
-        <option value="tono_urgenza">Tono Urgenza Operativa</option>
-        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
-        <option value="silent">Silenzioso</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Carica file audio Emergenze dal dispositivo</label>
-      <input type="file" id="emergencyAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'emergency')">
-      <span id="emergencyCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
-    </div>
-    <div class="ringtone-preview-row">
-      <button type="button" class="test-sound-btn" onclick="previewRingtone('emergency')">▶️ Prova Suoneria Emergenze</button>
-    </div>
-  </div>
+    <h4>1. Dati raccolti in fase di registrazione e profilo</h4>
+    <p>
+      Vengono trattati i dati identificativi e di contatto essenziali (<strong>Nome</strong>, eventuale Cognome, <strong>Numero di telefono</strong>), l'ente/corpo di appartenenza, il <strong>numero del tesserino / codice matricola</strong> e l'<strong>immagine del tesserino</strong> caricata per consentire la verifica dell'identità operativa.
+    </p>
 
-  <div class="form-card" style="border-color:#38BDF8;">
-    <h3 style="color:#7DD3FC;">💬 Suoneria Specifica ALTRE CHAT / POST</h3>
-    <div class="field">
-      <label>Seleziona suoneria per nuovi post su Allerte PC, Eventi, Logistica, Discussioni o Manuali</label>
-      <select id="selChatTone" onchange="updateSoundSetting('chatTone', this.value)">
-        <option value="chat_soft">Notifica Chat Soft</option>
-        <option value="chime_operativo">Chime Operativo</option>
-        <option value="ping_messaggio">Ping Messaggio</option>
-        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
-        <option value="silent">Silenzioso</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Carica file audio Altre Chat dal dispositivo</label>
-      <input type="file" id="chatAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'chat')">
-      <span id="chatCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
-    </div>
-    <div class="ringtone-preview-row">
-      <button type="button" class="test-sound-btn" onclick="previewRingtone('chat')">▶️ Prova Suoneria Altre Chat</button>
-    </div>
-  </div>
+    <h4>2. Finalità e approvazione degli amministratori</h4>
+    <p>
+      I dati inseriti in registrazione vengono sottoposti alla revisione degli <strong>Amministratori</strong> tramite la sezione <em>Approvazione Nuovi Utenti</em> prima dell'attivazione dell'account. Le comunicazioni, le foto e i documenti pubblicati nelle bacheche restano circoscritti all'ambito operativo del gruppo.
+    </p>
 
-  <div class="form-card" style="border-color:#EAB308;">
-    <h3 style="color:#FDE047;">🛡️ Avvisi Amministratori (Segnalazioni vs Nuovi Utenti)</h3>
-    <div class="drive-note">
-      Per gli <strong>Amministratori / Founder</strong>: le <strong>nuove segnalazioni</strong> usano un avviso molto più silenziato, discreto e tranquillo, mentre le <strong>richieste di accesso / ingresso di nuovi utenti</strong> suonano con un segnale distinto e dedicato.
-    </div>
-    <div class="field">
-      <label>Notifica nuove SEGNALAZIONI (modalità tranquilla / silenziata)</label>
-      <select id="selAdminReportMode" onchange="updateSoundSetting('adminReportMode', this.value)">
-        <option value="quiet_chime">Molto silenziata — Soft Admin Chime (volume basso)</option>
-        <option value="whisper_tick">Discreta — Tocchi soffusi appena percettibili</option>
-        <option value="silent">Completamente muta (solo badge / banner discreto)</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>Suoneria nuove RICHIESTE UTENTI (suono distinto)</label>
-      <select id="selNewUserTone" onchange="updateSoundSetting('newUserTone', this.value)">
-        <option value="new_user_distinct">Nuovo Utente in Attesa (melodia ascendente dedicata)</option>
-        <option value="door_chime">Segnale Ingresso Operatore (doppio accordo distinto)</option>
-        <option value="custom">File audio personalizzato Nuovi Utenti</option>
-        <option value="silent">Silenzioso</option>
-      </select>
-    </div>
-    <div class="field">
-      <label>File audio personalizzato Nuovi Utenti (facoltativo)</label>
-      <input type="file" id="newUserAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'newUser')">
-      <span id="newUserCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
-    </div>
-    <div class="ringtone-preview-row">
-      <button type="button" class="mini-btn" onclick="previewRingtone('adminReport')">🤫 Prova Segnalazione Silenziata</button>
-      <button type="button" class="test-sound-btn" onclick="previewRingtone('newUser')">👤 Prova Suoneria Nuovo Utente</button>
-    </div>
-  </div>
+    <h4>3. Conservazione, sicurezza e comportamento</h4>
+    <p>
+      È vietato diffondere all'esterno dati sensibili, informazioni riservate su interventi o immagini non pertinenti. I moderatori e gli amministratori vigilano sul rispetto delle regole operative e sulla rimozione di contenuti inopportuni.
+    </p>
 
-  <div class="form-card">
-    <h3>🧪 Test Rapido Notifiche & Suoni</h3>
-    <div class="sim-grid">
-      <button type="button" class="del-btn" style="padding:9px;" onclick="simulateIncomingPost('EMERGENZE')">🚨 Simula Post Emergenze</button>
-      <button type="button" class="photo-btn" style="padding:9px;" onclick="simulateIncomingPost('DISCUSSIONE OPERATIVA')">💬 Simula Post Altra Chat</button>
-      <button type="button" class="mini-btn" style="padding:9px;" onclick="simulateAdminReport()">🤫 Simula Segnalazione (Admin)</button>
-      <button type="button" class="approve-btn" style="padding:9px;" onclick="simulateNewUserRequest()">👤 Simula Richiesta Utente</button>
-    </div>
+    <h4>4. Consenso e diritti dell'interessato</h4>
+    <p>
+      L'accettazione della presente informativa è condizione necessaria per completare la registrazione e accedere ai servizi dell'applicazione. L'utente può richiedere l'aggiornamento o la rimozione del proprio profilo tramite l'amministrazione del gruppo.
+    </p>
   </div>
 </div>
 
 <!-- VISTA ADMIN: APPROVAZIONE NUOVI UTENTI -->
-<!-- ... existing code ... -->
-<!-- VISTA 5 (ADMIN): SEGNALAZIONI & RICHIESTE ACCESSO -->
+<div id="view-approvazioni" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#FDE047;">✅ APPROVAZIONE NUOVI UTENTI</span>
+    <span style="font-size:11px; color:#FACC15;" id="pendingUsersCountTag">0 in attesa</span>
+  </div>
+
+  <div class="drive-note">
+    🛡️ Controlla <strong>Nome</strong>, <strong>Telefono</strong>, <strong>Ente</strong>, <strong>Numero tesserino / matricola</strong>, <strong>Foto del tesserino</strong> e accettazione <strong>Privacy</strong> prima di approvare o rifiutare la richiesta.
+  </div>
+
+  <div id="pendingUsersList" style="display:flex; flex-direction:column; gap:12px;"></div>
+</div>
+
+<!-- VISTA 1: HOME -->
+<div id="view-home" class="view active">
+  <div class="composer">
+    <div class="composer-row">
+      <input id="quickText" type="text" placeholder="Segnala intervento o avviso (opzionale se alleghi foto)...">
+      <button class="send-btn" onclick="publishQuick()">INVIA</button>
+    </div>
+    <div style="display:flex; gap:6px; flex-wrap:wrap; align-items:center;">
+      <button type="button" class="photo-btn" onclick="document.getElementById('quickGalleryInput').click()">🖼️ Galleria</button>
+      <button type="button" class="photo-btn" onclick="document.getElementById('quickCameraInput').click()">📸 Fotocamera</button>
+      <span id="quickPhotoBadge" style="font-size:11px; color:#7DD3FC; display:none;"></span>
+      <button type="button" id="quickClearPhotoBtn" class="del-btn" style="display:none;" onclick="clearQuickPhoto()">✕ Rimuovi foto</button>
+    </div>
+    <img id="quickPhotoPreview" class="badge-preview" style="max-height:110px;" alt="Anteprima foto rapida">
+    <div class="cat-pills" id="catPills">
+      <div class="cat-pill selected" data-cat="EMERGENZE" onclick="selectCat(this)">🚨 Emergenze</div>
+      <div class="cat-pill" data-cat="ALLERTE ORDINARIE PC" onclick="selectCat(this)">⚠️ Allerte PC</div>
+      <div class="cat-pill" data-cat="EVENTI E PRESIDI" onclick="selectCat(this)">📅 Eventi</div>
+      <div class="cat-pill" data-cat="LOGISTICA E MEZZI" onclick="selectCat(this)">🚒 Logistica</div>
+      <div class="cat-pill" data-cat="DISCUSSIONE OPERATIVA" onclick="selectCat(this)">💬 Discussioni</div>
+      <div class="cat-pill" data-cat="MANUALI E PROCEDURE" onclick="selectCat(this)">📘 Manuali</div>
+    </div>
+  </div>
+
+  <!-- CHAT FISSATA EMERGENZE -->
+  <div class="pinned-card" onclick="openTopic('EMERGENZE')">
+    <div class="pinned-top">
+      <div class="pinned-label">📌 EMERGENZE</div>
+      <span class="badge-live">ATTIVA</span>
+    </div>
+    <div class="pinned-msg" id="pinnedLatest">VVF Bolbeno-Zuclo: incendio abitazione</div>
+    <div class="pinned-meta">
+      <span id="pinnedAuthor">Segnalato da Maicol • VVF Bolbeno-Zuclo</span>
+      <span>Tocca per aprire →</span>
+    </div>
+  </div>
+
+  <!-- PAGINA SEGNALAZIONI VISIBILE SOLO AGLI ADMIN, SOTTO EMERGENZE -->
+  <div id="adminReportsBox" class="admin-reports-card" style="display:none;" onclick="switchView('segnalazioni')">
+    <div>
+      <div class="admin-reports-title">🚩 SEGNALAZIONI</div>
+      <div class="admin-reports-sub">Coda revisione post segnalati dai moderatori</div>
+    </div>
+    <span id="pendingReportsBadge" class="rep-count-pill">0 in attesa</span>
+  </div>
+
+  <!-- CHAT TEMATICHE -->
+  <div id="channelsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+</div>
+
+<!-- VISTA 2: FEED TEMATICO -->
+<div id="view-topic" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" id="topicTitleBar">🚨 EMERGENZE</span>
+    <span style="font-size:11px; color:#94A3B8;" id="activeUserTag">Maicol</span>
+  </div>
+
+  <div class="new-topic-box">
+    <input type="text" id="newTopicPostInput" placeholder="Nuovo post o segnalazione in questo tema...">
+    <button id="newTopicPostBtn" onclick="addTopicPost()">Pubblica</button>
+  </div>
+
+  <div id="topicFeed" style="display:flex; flex-direction:column; gap:14px;"></div>
+</div>
+
+<!-- VISTA 2B: MANUALI E PROCEDURE -->
+<div id="view-manuali" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#FACC15;">📘 MANUALI E PROCEDURE</span>
+    <span style="font-size:11px; color:#94A3B8;" id="manualsUserTag">Maicol</span>
+  </div>
+
+  <div class="manual-toolbar">
+    <input type="text" id="pdfSearchInput" class="search-input" placeholder="🔍 Cerca nei titoli o parole contenute nei PDF..." oninput="renderManuals()">
+    <button class="upload-pdf-btn" onclick="document.getElementById('hiddenPdfPicker').click()">📄 Carica PDF Manuale / Procedura</button>
+    <input type="text" id="pdfNoteInput" class="search-input" placeholder="Note / parole chiave / estratto testo del PDF (facoltativo)...">
+    <div class="drive-note">
+      💡 Archivio locale pronto per il test. In fase di collegamento Drive, ogni PDF caricato potrà essere salvato su una cartella Drive condivisa mantenendo ricerca su titolo e contenuto/note.
+    </div>
+  </div>
+
+  <div id="manualsList" style="display:flex; flex-direction:column; gap:12px;"></div>
+</div>
+
+<!-- VISTA 2C (ADMIN): GESTIONE BACHECA -->
+<div id="view-bacheca" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#FDE047;">📋 GESTIONE BACHECA</span>
+    <span style="font-size:11px; color:#FACC15;">FOUNDER / ADMIN</span>
+  </div>
+
+  <div class="drive-note">
+    👑 Come <strong>Founder / Amministratore</strong> i canali principali (<strong>Emergenze</strong>, <strong>Allerte ordinarie PC</strong>, <strong>Eventi e presidi</strong>, <strong>Discussione operativa</strong>, <strong>Manuali e procedure</strong>) restano fissi, mentre <strong>Logistica e mezzi</strong> può essere rinominato o eliminato. Puoi inoltre creare nuove chat/pagine scegliendo se saranno <strong>Forum (con topic)</strong> oppure <strong>Caricamento file / contenuti</strong>.
+  </div>
+
+  <div class="form-card">
+    <h3>➕ Crea Nuova Pagina / Chat</h3>
+    <div class="field">
+      <label>Nome nuova chat o pagina <span class="req">*</span></label>
+      <input type="text" id="newBoardName" placeholder="Es. TURNI E REPERIBILITÀ o ARCHIVIO FOTO">
+    </div>
+    <div class="field">
+      <label>Tipo di pagina</label>
+      <select id="newBoardType">
+        <option value="forum">💬 Pagina Forum (con topic, post, reaction e commenti)</option>
+        <option value="files">📁 Pagina Caricamento File / Contenuti (archivio PDF e documenti)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Colore accento</label>
+      <select id="newBoardColor">
+        <option value="#38BDF8">Azzurro (#38BDF8)</option>
+        <option value="#10B981">Verde Smeraldo (#10B981)</option>
+        <option value="#F97316">Arancione (#F97316)</option>
+        <option value="#A855F7">Viola (#A855F7)</option>
+        <option value="#EAB308">Oro (#EAB308)</option>
+        <option value="#F43F5E">Rosa / Corallo (#F43F5E)</option>
+      </select>
+    </div>
+    <button class="save-btn" onclick="createCustomChannel()">+ CREA NUOVA PAGINA</button>
+  </div>
+
+  <div class="form-card">
+    <h3>🗂️ Sezioni & Chat della Bacheca</h3>
+    <div id="boardChannelsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+</div>
+
+<!-- VISTA 4 (ADMIN): GESTIONE UTENTI E RUOLI -->
+<div id="view-utenti" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#FDE047;">👥 UTENTI DEL GRUPPO</span>
+    <span style="font-size:11px; color:#94A3B8;" id="usersCountTag">7 utenti</span>
+  </div>
+  <div class="drive-note">
+    🛡️ Come <strong>Amministratore</strong> puoi bannare utenti (non vedono più il gruppo), assegnare il ruolo <strong>Admin</strong> oppure impostare <strong>Moderatore</strong> su tutti i forum o solo su alcuni. Puoi anche usare <em>"Testa vista"</em> per simulare il login di un altro utente.
+  </div>
+  <div id="usersList" style="display:flex; flex-direction:column; gap:10px;"></div>
+</div>
+
+<!-- VISTA 5 (ADMIN): SEGNALAZIONI -->
 <div id="view-segnalazioni" class="view">
   <div class="subbar">
     <button class="back-btn" onclick="switchView('home')">← Indietro</button>
-    <span class="subbar-title" style="color:#FDE047;">🚩 SEGNALAZIONI & ACCESSI</span>
+    <span class="subbar-title" style="color:#FDE047;">🚩 SEGNALAZIONI</span>
     <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
   </div>
   <div class="drive-note">
-    Coda revisione segnalazioni (con avviso silenziato) e richieste di ingresso nuovi utenti (con suoneria dedicata). All'avvio la sezione è vuota.
+    Qui compaiono i post segnalati dai moderatori. Puoi <strong>Approvare</strong> (es. rimuove il post o conferma l'azione) oppure <strong>Non approvare</strong> (respinge la segnalazione).
   </div>
-  <div class="sim-grid">
-    <button type="button" class="mini-btn" onclick="simulateAdminReport()">🤫 Simula Nuova Segnalazione</button>
-    <button type="button" class="approve-btn" onclick="simulateNewUserRequest()">👤 Simula Richiesta Nuovo Utente</button>
-  </div>
-  <div id="pendingAccessSection" style="display:flex; flex-direction:column; gap:10px;"></div>
   <div id="reportsList" style="display:flex; flex-direction:column; gap:10px;"></div>
 </div>
 
 <!-- VISTA 3: PROFILO UTENTE -->
-<!-- ... existing code ... -->
+<div id="view-profilo" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#FCA5A5;">🪪 PROFILO OPERATORE</span>
+    <span style="font-size:11px; color:#FCA5A5;">* Obbligatori</span>
+  </div>
+
+  <div class="form-card">
+    <h3>Dati Personali & Tesserino</h3>
+    <div class="field">
+      <label>Nome <span class="req">*</span></label>
+      <input type="text" id="profNome" placeholder="Es. Maicol">
+    </div>
+    <div class="field">
+      <label>Cognome <span class="req">*</span></label>
+      <input type="text" id="profCognome" placeholder="Es. Rossi">
+    </div>
+    <div class="field">
+      <label>Numero di telefono <span class="req">*</span></label>
+      <input type="tel" id="profTel" placeholder="Es. +39 340 1234567">
+    </div>
+    <div class="field">
+      <label>Foto del tesserino <span class="req">*</span></label>
+      <input type="file" id="profBadgeInput" accept="image/*" onchange="handleBadgeUpload(event)">
+      <img id="profBadgePreview" class="badge-preview" alt="Anteprima Tesserino">
+      <span id="badgeStatus" style="font-size:11px; color:#94A3B8;">Nessun file caricato</span>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>Appartenenza Enti</h3>
+    <div id="entiContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <button class="add-ente-btn" onclick="addExtraEnte()">+ Aggiungi altro ente</button>
+  </div>
+
+  <button class="save-btn" onclick="saveProfile()">SALVA PROFILO</button>
+</div>
+
+<input type="file" id="hiddenPhotoPicker" accept="image/*" style="display:none;" onchange="onEventPhotoSelected(event)">
+<input type="file" id="quickGalleryInput" accept="image/*" style="display:none;" onchange="onQuickPhotoSelected(event, 'galleria')">
+<input type="file" id="quickCameraInput" accept="image/*" capture="environment" style="display:none;" onchange="onQuickPhotoSelected(event, 'fotocamera')">
+<input type="file" id="hiddenPdfPicker" accept="application/pdf,.pdf" style="display:none;" onchange="onPdfSelected(event)">
+
+<div id="confirmDropdown" class="confirm-dropdown" role="menu" aria-live="polite">
+  <div id="confirmDropdownTitle" class="confirm-dropdown-title">Sei sicuro di voler eliminare?</div>
+  <div id="confirmDropdownSub" class="confirm-dropdown-sub">Conferma per procedere con l'eliminazione.</div>
+  <div class="confirm-dropdown-actions">
+    <button type="button" id="confirmDropdownCancel" class="confirm-no-btn">Annulla</button>
+    <button type="button" id="confirmDropdownOk" class="confirm-yes-btn">Sì, elimina</button>
+  </div>
+</div>
+
+<div id="toast" class="toast"></div>
+
 <script>
-// ... existing code ...
-const STORAGE_KEY = "coord_interforze_v8_empty_founder";
+const CORPI_VVF_TRENTINO = [
+  "VVF Ala","VVF Albiano","VVF Aldeno","VVF Amblar","VVF Andalo","VVF Arco","VVF Avio","VVF Baselga di Piné",
+  "VVF Bedollo","VVF Bersone","VVF Besenello","VVF Bieno","VVF Bleggio Inferiore","VVF Bleggio Superiore",
+  "VVF Bocenago","VVF Bolbeno-Zuclo","VVF Bondo","VVF Bondone","VVF Borgo Chiese","VVF Borgo Lares",
+  "VVF Borgo Valsugana","VVF Breguzzo","VVF Brentonico","VVF Bresimo","VVF Brez","VVF Brione","VVF Caderzone Terme",
+  "VVF Cagnò","VVF Calavino","VVF Calceranica al Lago","VVF Caldes","VVF Caldonazzo","VVF Calliano","VVF Campitello di Fassa",
+  "VVF Campo Denno","VVF Campodenno","VVF Canal San Bovo","VVF Canazei","VVF Capriana","VVF Carano","VVF Carisolo",
+  "VVF Carzano","VVF Castel Condino","VVF Castel Ivano","VVF Castelfondo","VVF Castello Tesino","VVF Castello-Molina di Fiemme",
+  "VVF Castelnuovo","VVF Cavalese","VVF Cavareno","VVF Cavedago","VVF Cavedine","VVF Cavizzana","VVF Cembra Lisignago",
+  "VVF Centa San Nicolò","VVF Cimego","VVF Cimone","VVF Cinte Tesino","VVF Cis","VVF Civezzano","VVF Cles","VVF Cloz",
+  "VVF Cognola","VVF Commezzadura","VVF Condino","VVF Coredo","VVF Croviana","VVF Cunevo","VVF Daiano","VVF Dambel",
+  "VVF Daone","VVF Darè","VVF Denno","VVF Dimaro Folgarida","VVF Don","VVF Dorsino","VVF Drena","VVF Dro","VVF Faedo",
+  "VVF Fai della Paganella","VVF Faver","VVF Fiavé","VVF Fiera di Primiero","VVF Fierozzo","VVF Flavon","VVF Folgaria",
+  "VVF Fondo","VVF Fornace","VVF Frassilongo","VVF Gardolo","VVF Garniga Terme","VVF Giovo","VVF Giustino","VVF Grauno",
+  "VVF Grigno","VVF Grumes","VVF Imer","VVF Isera","VVF Ivano Fracena","VVF Lardaro","VVF Lasino","VVF Lavarone",
+  "VVF Lavis","VVF Ledro","VVF Levico Terme","VVF Lisignago","VVF Livo","VVF Lomaso","VVF Lona-Lases","VVF Luserna",
+  "VVF Madruzzo","VVF Malé","VVF Malosco","VVF Massimeno","VVF Mattarello","VVF Mazzin","VVF Mezzana","VVF Mezzano",
+  "VVF Mezzocorona","VVF Mezzolombardo","VVF Moena","VVF Molina di Ledro","VVF Molveno","VVF Monclassico","VVF Montagne",
+  "VVF Mori","VVF Nago-Torbole","VVF Nanno","VVF Nave San Rocco","VVF Nogaredo","VVF Nomi","VVF Novaledo","VVF Ospedaletto",
+  "VVF Ossana","VVF Padergnone","VVF Palù del Fersina","VVF Panchià","VVF Peio","VVF Pellizzano","VVF Pelugo",
+  "VVF Pergine Valsugana","VVF Pieve di Bono-Prezzo","VVF Pieve Tesino","VVF Pinzolo","VVF Pomarolo","VVF Pozza di Fassa",
+  "VVF Praso","VVF Predaia","VVF Predazzo","VVF Preore","VVF Primiero San Martino di Castrozza","VVF Rabbi","VVF Ragoli",
+  "VVF Revò","VVF Riva del Garda","VVF Romallo","VVF Romeno","VVF Roncegno Terme","VVF Ronchi Valsugana","VVF Roncone",
+  "VVF Ronzo-Chienis","VVF Roveré della Luna","VVF Rovereto","VVF Ruffré-Mendola","VVF Rumo","VVF Sagron Mis",
+  "VVF Samone","VVF San Lorenzo Dorsino","VVF San Michele all'Adige","VVF Sant'Orsola Terme","VVF Sanzeno",
+  "VVF Sarnonico","VVF Scurelle","VVF Segonzano","VVF Sella Giudicarie","VVF Sfruz","VVF Siror","VVF Smarano",
+  "VVF Soraga di Fassa","VVF Sover","VVF Spera","VVF Spiazzo","VVF Spormaggiore","VVF Sporminore","VVF Stenico",
+  "VVF Storo","VVF Strembo","VVF Strigno","VVF Taio","VVF Tassullo","VVF Telve","VVF Telve di Sopra","VVF Tenna",
+  "VVF Tenno","VVF Terlago","VVF Terragnolo","VVF Terres","VVF Terzolas","VVF Tesero","VVF Tione di Trento","VVF Ton",
+  "VVF Tonadico","VVF Torcegno","VVF Trambileno","VVF Transacqua","VVF Trento (Corpo Permanente / Volontari)",
+  "VVF Tres","VVF Tuenno","VVF Valda","VVF Valfloriana","VVF Vallarsa","VVF Vallelaghi","VVF Varena","VVF Vattaro",
+  "VVF Vermiglio","VVF Vervò","VVF Vezzano","VVF Vignola-Falesina","VVF Vigo di Fassa","VVF Vigo Rendena",
+  "VVF Vigolo Vattaro","VVF Villa Agnedo","VVF Villa Lagarina","VVF Villa Rendena","VVF Volano","VVF Zambana","VVF Ziano di Fiemme"
+];
+
+while (CORPI_VVF_TRENTINO.length < 237) {
+  CORPI_VVF_TRENTINO.push("VVF Distaccamento Territoriale #" + (CORPI_VVF_TRENTINO.length + 1));
+}
+
+const MODERATED_FORUMS = [
+  "EMERGENZE",
+  "ALLERTE ORDINARIE PC",
+  "EVENTI E PRESIDI",
+  "LOGISTICA E MEZZI",
+  "DISCUSSIONE OPERATIVA"
+];
 
 const DEFAULT_DATA = {
   selectedCat: "EMERGENZE",
   currentTopic: "EMERGENZE",
-  activeUserId: "u_michele",
-  loggedIn: true,
-  soundSettings: {
-    emergencyTone: "sirena_vvf",
-    chatTone: "chat_soft",
-    adminReportMode: "quiet_chime",
-    newUserTone: "new_user_distinct",
-    customEmergencyAudio: "",
-    customEmergencyName: "",
-    customChatAudio: "",
-    customChatName: "",
-    customNewUserAudio: "",
-    customNewUserName: ""
-  },
+  activeUserId: "u1",
+  loggedIn: false,
   users: [
-<!-- ... existing code ... -->
-function persist() {
-  enforceFounderIntegrity();
-  if (!state.soundSettings) {
-    state.soundSettings = JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+    {
+      id: "u1", isAdmin: true, isFounder: true, banned: false, modAll: true, modForums: [...MODERATED_FORUMS],
+      nome: "Maicol", cognome: "", tel: "+39 340 0000000", badgeImg: "",
+      enti: [{ tipo: "Vigili del Fuoco", corpoVVF: "VVF Bolbeno-Zuclo", grado: "Vigile", abilitazioni: ["BLSD"], sede: "" }]
+    },
+    {
+      id: "u2", isAdmin: false, banned: false, modAll: false, modForums: ["EMERGENZE", "LOGISTICA E MEZZI"],
+      nome: "Claudio", cognome: "Berti", tel: "+39 338 2211900", badgeImg: "",
+      enti: [{ tipo: "Vigili del Fuoco", corpoVVF: "VVF Tione di Trento", grado: "Capo Squadra", abilitazioni: ["SAF", "BLSD"], sede: "" }]
+    },
+    {
+      id: "u3", isAdmin: false, banned: false, modAll: false, modForums: ["ALLERTE ORDINARIE PC"],
+      nome: "Sara", cognome: "Conti", tel: "+39 347 8899110", badgeImg: "",
+      enti: [{ tipo: "Protezione Civile", corpoVVF: "", grado: "Coordinatrice", abilitazioni: ["Operatore Radio"], sede: "Giudicarie" }]
+    },
+    {
+      id: "u4", isAdmin: false, banned: false, modAll: false, modForums: ["EVENTI E PRESIDI"],
+      nome: "Giulia", cognome: "Ferrari", tel: "+39 333 4455667", badgeImg: "",
+      enti: [{ tipo: "Croce Rossa Italiana", corpoVVF: "", grado: "Soccorritore", abilitazioni: ["BLSD"], sede: "Comitato Giudicarie" }]
+    },
+    {
+      id: "u5", isAdmin: false, banned: false, modAll: false, modForums: [],
+      nome: "Luca", cognome: "Riva", tel: "+39 349 5511223", badgeImg: "",
+      enti: [{ tipo: "Vigili del Fuoco", corpoVVF: "VVF Riva del Garda", grado: "Vigile", abilitazioni: ["Patente Mezzi Pesanti"], sede: "" }]
+    },
+    {
+      id: "u6", isAdmin: false, banned: false, modAll: false, modForums: ["DISCUSSIONE OPERATIVA"],
+      nome: "Andrea", cognome: "Marini", tel: "+39 320 7788990", badgeImg: "",
+      enti: [{ tipo: "Polizia Locale", corpoVVF: "", grado: "Agente", abilitazioni: [], sede: "Comune di Borgo Lares" }]
+    },
+    {
+      id: "u7", isAdmin: false, banned: false, modAll: false, modForums: [],
+      nome: "Elena", cognome: "Valli", tel: "+39 345 9900112", badgeImg: "",
+      enti: [{ tipo: "Soccorso Alpino", corpoVVF: "", grado: "Tecnico", abilitazioni: ["SAF"], sede: "Stazione Brentonico" }]
+    }
+  ],
+  channels: [
+    { id: "ch_pc", name: "ALLERTE ORDINARIE PC", kind: "forum", color: "#F97316", time: "19:40", unread: 2, locked: true, canEdit: false },
+    { id: "ch_ev", name: "EVENTI E PRESIDI", kind: "forum", color: "#0EA5E9", time: "18:15", unread: 5, locked: true, canEdit: false },
+    { id: "ch_log", name: "LOGISTICA E MEZZI", kind: "forum", color: "#10B981", time: "16:02", unread: 0, locked: false, canEdit: true },
+    { id: "ch_disc", name: "DISCUSSIONE OPERATIVA", kind: "forum", color: "#8B5CF6", time: "14:50", unread: 12, locked: true, canEdit: false },
+    { id: "ch_man", name: "MANUALI E PROCEDURE", kind: "files", color: "#EAB308", time: "Ieri", unread: 0, locked: true, canEdit: false }
+  ],
+  pendingRegistrations: [
+    {
+      id: "reg_demo_1",
+      nome: "Davide",
+      cognome: "Pellegrini",
+      tel: "+39 348 6622901",
+      enteTipo: "Vigili del Fuoco",
+      corpoVVF: "VVF Tione di Trento",
+      sede: "",
+      matricola: "VVF-TN-0894",
+      badgeImg: "",
+      privacyAccepted: true,
+      submittedAt: "Oggi, 18:20"
+    }
+  ],
+  reports: [
+    {
+      id: 7001,
+      topic: "DISCUSSIONE OPERATIVA",
+      postId: 501,
+      postTitle: "Qualcuno ha il contatto diretto del referente radio zona Nord?",
+      reportedBy: "Claudio (Moderatore)",
+      reason: "Post segnalato per verifica procedura gestione contatti riservati.",
+      status: "pending"
+    }
+  ],
+  manuals: [
+    {
+      id: 9001,
+      title: "Protocollo_Radio_Interforze_Trentino_2026.pdf",
+      author: "Sara • Protezione Civile (Giudicarie)",
+      date: "Ieri",
+      contentText: "Frequenze operative, canali di emergenza, procedure di coordinamento tra vigili del fuoco, croce rossa e protezione civile.",
+      dataUrl: ""
+    },
+    {
+      id: 9002,
+      title: "Scheda_Operativa_SAF_e_Soccorso_Fluviale.pdf",
+      author: "Maicol • VVF Bolbeno-Zuclo",
+      date: "2 giorni fa",
+      contentText: "Ancoraggi, manovre su corda, sicurezza in acqua movimentata, DPI e verifica imbragature.",
+      dataUrl: ""
+    }
+  ],
+  topics: {
+    "EMERGENZE": [
+      {
+        id: 101,
+        highlight: true,
+        deletedByMod: false,
+        title: "VVF Bolbeno-Zuclo: incendio abitazione",
+        authorId: "u1", author: "Maicol",
+        corps: "VVF Bolbeno-Zuclo",
+        following: true,
+        reactions: { "🚒": 4, "👍": 6, "👀": 3 },
+        userReacts: ["🚒"],
+        photos: [],
+        comments: [
+          { who: "Claudio • VVF Tione di Trento", text: "Partiamo in supporto con autobotte." },
+          { who: "Giulia • Croce Rossa Italiana (Comitato Giudicarie)", text: "Equipaggio sanitario in avvicinamento." }
+        ]
+      },
+      {
+        id: 102,
+        highlight: false,
+        deletedByMod: false,
+        title: "Incidente stradale",
+        authorId: "u5", author: "Luca",
+        corps: "VVF Riva del Garda",
+        following: false,
+        reactions: { "👍": 3, "⚠️": 2 },
+        userReacts: [],
+        photos: [],
+        comments: [
+          { who: "Andrea • Polizia Locale (Comune di Borgo Lares)", text: "Viabilità deviata su via vecchia." }
+        ]
+      },
+      {
+        id: 103,
+        highlight: false,
+        deletedByMod: false,
+        title: "Bonifica insetti",
+        authorId: "u3", author: "Sara",
+        corps: "Protezione Civile (Giudicarie)",
+        following: false,
+        reactions: { "👍": 2 },
+        userReacts: [],
+        photos: [],
+        comments: []
+      },
+      {
+        id: 104,
+        highlight: false,
+        deletedByMod: false,
+        title: "Apertura porta",
+        authorId: "u2", author: "Claudio",
+        corps: "VVF Tione di Trento",
+        following: false,
+        reactions: { "👍": 1, "👀": 1 },
+        userReacts: [],
+        photos: [],
+        comments: []
+      },
+      {
+        id: 105,
+        highlight: false,
+        deletedByMod: false,
+        title: "Soccorso persona su sentiero",
+        authorId: "u7", author: "Elena",
+        corps: "Soccorso Alpino (Stazione Brentonico)",
+        following: false,
+        reactions: { "🚒": 2, "👍": 4 },
+        userReacts: [],
+        photos: [],
+        comments: []
+      }
+    ],
+    "ALLERTE ORDINARIE PC": [
+      {
+        id: 201,
+        highlight: false,
+        deletedByMod: false,
+        title: "Allerta Gialla Idrogeologica dalle 18:00 alle 06:00",
+        authorId: "u3", author: "Sara",
+        corps: "Protezione Civile (Giudicarie)",
+        following: true,
+        reactions: { "⚠️": 7, "👀": 5, "👍": 3 },
+        userReacts: ["⚠️"],
+        photos: [],
+        comments: [
+          { who: "Claudio • VVF Tione di Trento", text: "Controllo punti critici torrenti e sottopassi avviato." }
+        ]
+      }
+    ],
+    "EVENTI E PRESIDI": [
+      {
+        id: 301,
+        highlight: false,
+        deletedByMod: false,
+        title: "Domenica: Gara Trail dei Rifugi - Tabella turni",
+        authorId: "u4", author: "Giulia",
+        corps: "Croce Rossa Italiana (Comitato Giudicarie)",
+        following: true,
+        reactions: { "👍": 8, "🚒": 2 },
+        userReacts: ["👍"],
+        photos: [],
+        comments: [
+          { who: "Elena • Soccorso Alpino (Stazione Brentonico)", text: "Confermato presidio quota alta sul tracciato." }
+        ]
+      }
+    ],
+    "LOGISTICA E MEZZI": [
+      {
+        id: 401,
+        highlight: false,
+        deletedByMod: false,
+        title: "Chiusura SP34 per frana - deviazione mezzi pesanti",
+        authorId: "u5", author: "Luca",
+        corps: "VVF Riva del Garda",
+        following: true,
+        reactions: { "⚠️": 6, "👍": 4 },
+        userReacts: [],
+        photos: [],
+        comments: []
+      }
+    ],
+    "DISCUSSIONE OPERATIVA": [
+      {
+        id: 501,
+        highlight: false,
+        deletedByMod: false,
+        title: "Qualcuno ha il contatto diretto del referente radio zona Nord?",
+        authorId: "u5", author: "Luca",
+        corps: "VVF Riva del Garda",
+        following: false,
+        reactions: { "👍": 3, "👀": 6 },
+        userReacts: [],
+        photos: [],
+        comments: [
+          { who: "Maicol • VVF Bolbeno-Zuclo", text: "Ti giro il numero o lo carichiamo nei manuali." }
+        ]
+      }
+    ]
   }
-  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+};
+
+const CLASSIC_EMOJIS = ["👍", "👎", "❤️", "😂", "🔥", "😮", "😢", "👏", "🙏", "🚒", "⚠️", "👀"];
+
+
+let pendingConfirmAction = null;
+
+function closeConfirmDropdown() {
+  const menu = document.getElementById("confirmDropdown");
+  if (menu) menu.classList.remove("open");
+  pendingConfirmAction = null;
 }
 
-/* PWA: MANIFEST DINAMICO & SERVICE WORKER */
-let deferredPwaPrompt = null;
+function openDeleteConfirmDropdown(btnEl, titleText, subText, onConfirm) {
+  const menu = document.getElementById("confirmDropdown");
+  const titleEl = document.getElementById("confirmDropdownTitle");
+  const subEl = document.getElementById("confirmDropdownSub");
+  const okBtn = document.getElementById("confirmDropdownOk");
+  const cancelBtn = document.getElementById("confirmDropdownCancel");
+  if (!menu || !titleEl || !subEl || !okBtn || !cancelBtn) {
+    if (typeof onConfirm === "function") onConfirm();
+    return;
+  }
 
-function setupPwaManifestAndServiceWorker() {
-  try {
-    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#991B1B"/><path d="M96 28L154 62v58c0 34-25 52-58 60-33-8-58-26-58-60V62l58-34z" fill="#DC2626" stroke="#FACC15" stroke-width="6"/><text x="96" y="110" text-anchor="middle" fill="#FFFFFF" font-size="40" font-weight="900" font-family="sans-serif">VVF</text></svg>`;
-    const iconDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIcon);
-    const manifestObj = {
-      name: "Coordinamento Interforze — VVF Bolbeno Zuclo",
-      short_name: "VVF Bolbeno Zuclo",
-      start_url: "./",
-      display: "standalone",
-      background_color: "#0E131A",
-      theme_color: "#991B1B",
-      orientation: "portrait",
-      icons: [
-        { src: iconDataUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any" },
-        { src: iconDataUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
-      ]
-    };
-    const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
-    const manifestUrl = URL.createObjectURL(manifestBlob);
-    let linkEl = document.querySelector('link[rel="manifest"]');
-    if (!linkEl) {
-      linkEl = document.createElement("link");
-      linkEl.rel = "manifest";
-      document.head.appendChild(linkEl);
-    }
-    linkEl.href = manifestUrl;
+  titleEl.textContent = titleText || "Sei sicuro di voler eliminare?";
+  subEl.textContent = subText || "L'operazione rimuoverà l'elemento selezionato.";
+  pendingConfirmAction = onConfirm;
 
-    if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
-      const swCode = `
-        const CACHE_NAME = 'vvf-bolbeno-zuclo-pwa-v1';
-        self.addEventListener('install', event => {
-          self.skipWaiting();
-          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./']).catch(() => {})));
-        });
-        self.addEventListener('activate', event => {
-          event.waitUntil(self.clients.claim());
-        });
-        self.addEventListener('fetch', event => {
-          if (event.request.method !== 'GET') return;
-          event.respondWith(
-            caches.match(event.request).then(cached => cached || fetch(event.request).catch(() => cached))
-          );
-        });
-      `;
-      const swBlob = new Blob([swCode], { type: "application/javascript" });
-      const swUrl = URL.createObjectURL(swBlob);
-      navigator.serviceWorker.register(swUrl).catch(() => {});
+  okBtn.onclick = function(ev) {
+    ev.stopPropagation();
+    const fn = pendingConfirmAction;
+    closeConfirmDropdown();
+    if (typeof fn === "function") fn();
+  };
+  cancelBtn.onclick = function(ev) {
+    ev.stopPropagation();
+    closeConfirmDropdown();
+  };
+
+  menu.classList.add("open");
+  menu.style.left = "12px";
+  menu.style.top = "80px";
+
+  const rect = btnEl ? btnEl.getBoundingClientRect() : null;
+  const menuRect = menu.getBoundingClientRect();
+  const vw = window.innerWidth || 480;
+  const vh = window.innerHeight || 800;
+
+  if (rect) {
+    let left = rect.right - menuRect.width;
+    if (left < 10) left = Math.max(10, rect.left);
+    if (left + menuRect.width > vw - 10) left = Math.max(10, vw - menuRect.width - 10);
+
+    let top = rect.bottom + 6;
+    if (top + menuRect.height > vh - 12) {
+      top = Math.max(12, rect.top - menuRect.height - 6);
     }
-  } catch (err) {}
+    menu.style.left = left + "px";
+    menu.style.top = top + "px";
+  }
 }
 
-window.addEventListener("beforeinstallprompt", (e) => {
-  e.preventDefault();
-  deferredPwaPrompt = e;
-  updatePwaInstallBar();
+document.addEventListener("click", function(e) {
+  const menu = document.getElementById("confirmDropdown");
+  if (!menu || !menu.classList.contains("open")) return;
+  if (menu.contains(e.target)) return;
+  if (e.target && e.target.closest("[data-confirm-trigger='1']")) return;
+  closeConfirmDropdown();
 });
 
-function updatePwaInstallBar() {
-  const bar = document.getElementById("pwaInstallBar");
-  if (!bar) return;
-  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
-  if (isStandalone) {
-    bar.classList.remove("visible");
-    return;
-  }
-  bar.classList.add("visible");
+let state = JSON.parse(localStorage.getItem("coord_interforze_v7_board")) || JSON.parse(JSON.stringify(DEFAULT_DATA));
+let pendingPhotoEventId = null;
+let pendingPhotoCapture = false;
+let quickAttachedPhoto = null;
+let quickAttachedSource = "";
+let openEmojiPickerPostId = null;
+
+function persist() {
+  localStorage.setItem("coord_interforze_v7_board", JSON.stringify(state));
 }
 
-function triggerPwaInstall() {
-  if (deferredPwaPrompt) {
-    deferredPwaPrompt.prompt();
-    deferredPwaPrompt.userChoice.then(() => {
-      deferredPwaPrompt = null;
-      updatePwaInstallBar();
-    });
-    return;
-  }
-  showToast("Su Android: apri il menu (⋮) in alto a destra e seleziona 'Installa app' o 'Aggiungi a schermata Home'");
+function showToast(msg, isErr = false) {
+  const t = document.getElementById("toast");
+  t.textContent = msg;
+  t.className = "toast" + (isErr ? " err" : "");
+  t.style.display = "block";
+  setTimeout(() => { t.style.display = "none"; }, 2600);
 }
 
-/* AUDIO & SUONERIE DIFFERENZIATE (WEB AUDIO + FILE AUDIO UTENTE) */
-let sharedAudioCtx = null;
-let customAudioPlayer = null;
-
-function getAudioContext() {
-  const AudioCtx = window.AudioContext || window.webkitAudioContext;
-  if (!AudioCtx) return null;
-  if (!sharedAudioCtx) {
-    sharedAudioCtx = new AudioCtx();
-  }
-  if (sharedAudioCtx.state === "suspended") {
-    sharedAudioCtx.resume().catch(() => {});
-  }
-  return sharedAudioCtx;
+function getCurrentUser() {
+  return state.users.find(u => u.id === state.activeUserId) || state.users[0];
 }
 
-function playToneNotes(notes, baseGain = 0.25) {
-  try {
-    const ctx = getAudioContext();
-    if (!ctx) return;
-    let cursor = ctx.currentTime + 0.02;
-    notes.forEach(n => {
-      const osc = ctx.createOscillator();
-      const gain = ctx.createGain();
-      osc.type = n.type || "sine";
-      osc.frequency.setValueAtTime(n.freq, cursor);
-      if (n.slideTo) {
-        osc.frequency.linearRampToValueAtTime(n.slideTo, cursor + n.dur);
-      }
-      const peak = Math.max(0.005, (n.gain !== undefined ? n.gain : 1) * baseGain);
-      gain.gain.setValueAtTime(0.0001, cursor);
-      gain.gain.linearRampToValueAtTime(peak, cursor + 0.015);
-      gain.gain.exponentialRampToValueAtTime(0.0001, cursor + n.dur);
-      osc.connect(gain);
-      gain.connect(ctx.destination);
-      osc.start(cursor);
-      osc.stop(cursor + n.dur + 0.02);
-      cursor += n.dur + (n.gap || 0.04);
-    });
-  } catch (err) {}
+function isAdmin() {
+  const u = getCurrentUser();
+  return !!(u && !u.banned && u.isAdmin);
 }
 
-function playCustomAudioFile(dataUrl, volume = 0.85) {
-  try {
-    if (!dataUrl) return false;
-    if (customAudioPlayer) {
-      customAudioPlayer.pause();
-    }
-    customAudioPlayer = new Audio(dataUrl);
-    customAudioPlayer.volume = Math.max(0, Math.min(1, volume));
-    customAudioPlayer.play().catch(() => {});
-    return true;
-  } catch (err) {
-    return false;
-  }
+function isModeratorForForum(forumName) {
+  const u = getCurrentUser();
+  if (!u || u.banned) return false;
+  if (u.isAdmin || u.modAll) return true;
+  return (u.modForums || []).includes(forumName);
 }
 
-function playRingtoneByKind(kind) {
-  const cfg = state.soundSettings || DEFAULT_DATA.soundSettings;
-  if (kind === "emergency") {
-    const tone = cfg.emergencyTone || "sirena_vvf";
-    if (tone === "silent") return;
-    if (tone === "custom" && cfg.customEmergencyAudio) {
-      playCustomAudioFile(cfg.customEmergencyAudio, 0.95);
-      return;
-    }
-    if (tone === "doppio_impulso") {
-      playToneNotes([
-        { freq: 920, dur: 0.16, gap: 0.06, type: "sawtooth", gain: 0.9 },
-        { freq: 920, dur: 0.16, gap: 0.14, type: "sawtooth", gain: 0.9 },
-        { freq: 1180, dur: 0.22, gap: 0.06, type: "sawtooth", gain: 1.0 },
-        { freq: 1180, dur: 0.22, gap: 0.04, type: "sawtooth", gain: 1.0 }
-      ], 0.32);
-    } else if (tone === "tono_urgenza") {
-      playToneNotes([
-        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
-        { freq: 1046, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
-        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
-        { freq: 1046, dur: 0.30, gap: 0.04, type: "square", gain: 0.95 }
-      ], 0.28);
-    } else {
-      playToneNotes([
-        { freq: 620, slideTo: 1120, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
-        { freq: 1120, slideTo: 620, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
-        { freq: 620, slideTo: 1120, dur: 0.38, gap: 0.04, type: "sawtooth", gain: 1.0 }
-      ], 0.34);
-    }
+function hasAnyModRole() {
+  const u = getCurrentUser();
+  if (!u || u.banned) return false;
+  return !!(u.isAdmin || u.modAll || (u.modForums && u.modForums.length > 0));
+}
+
+function getForumModeratorsLabel(forumName) {
+  const mods = state.users
+    .filter(u => !u.banned && !u.isAdmin && (u.modAll || (u.modForums || []).includes(forumName)))
+    .map(u => u.nome);
+  return mods.length ? "Mod: " + mods.join(", ") : "";
+}
+
+function syncChrome() {
+  const u = getCurrentUser();
+  const banned = !!(u && u.banned && state.loggedIn);
+  document.getElementById("bannedScreen").style.display = banned ? "flex" : "none";
+  if (banned) {
+    document.getElementById("bannedUserLabel").textContent = `${u.nome} ${u.cognome || ""}`.trim();
+    document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+    document.getElementById("headerAdminBadge").style.display = "none";
+    document.getElementById("headerModBadge").style.display = "none";
     return;
   }
 
-  if (kind === "chat") {
-    const tone = cfg.chatTone || "chat_soft";
-    if (tone === "silent") return;
-    if (tone === "custom" && cfg.customChatAudio) {
-      playCustomAudioFile(cfg.customChatAudio, 0.75);
-      return;
-    }
-    if (tone === "chime_operativo") {
-      playToneNotes([
-        { freq: 587.33, dur: 0.14, gap: 0.03, type: "triangle", gain: 0.7 },
-        { freq: 880, dur: 0.22, gap: 0.04, type: "triangle", gain: 0.75 }
-      ], 0.22);
-    } else if (tone === "ping_messaggio") {
-      playToneNotes([
-        { freq: 1046.5, dur: 0.11, gap: 0.04, type: "sine", gain: 0.65 },
-        { freq: 1318.5, dur: 0.16, gap: 0.04, type: "sine", gain: 0.65 }
-      ], 0.2);
-    } else {
-      playToneNotes([
-        { freq: 523.25, dur: 0.18, gap: 0.04, type: "sine", gain: 0.55 },
-        { freq: 659.25, dur: 0.22, gap: 0.04, type: "sine", gain: 0.55 }
-      ], 0.18);
-    }
-    return;
-  }
+  const loggedIn = !!state.loggedIn;
+  const admin = loggedIn && isAdmin();
+  const mod = loggedIn && hasAnyModRole();
+  const pendingUsersCount = (state.pendingRegistrations || []).length;
 
-  if (kind === "adminReport") {
-    const mode = cfg.adminReportMode || "quiet_chime";
-    if (mode === "silent") return;
-    if (mode === "whisper_tick") {
-      playToneNotes([
-        { freq: 440, dur: 0.08, gap: 0.06, type: "sine", gain: 0.22 }
-      ], 0.06);
-    } else {
-      playToneNotes([
-        { freq: 392, dur: 0.24, gap: 0.05, type: "sine", gain: 0.25 },
-        { freq: 440, dur: 0.28, gap: 0.04, type: "sine", gain: 0.22 }
-      ], 0.08);
-    }
-    return;
-  }
+  document.getElementById("headerAdminBadge").style.display = admin ? "inline-block" : "none";
+  document.getElementById("headerModBadge").style.display = (!admin && mod) ? "inline-block" : "none";
+  document.getElementById("drawerAdminApprovals").style.display = admin ? "flex" : "none";
+  document.getElementById("drawerAdminBoard").style.display = admin ? "flex" : "none";
+  document.getElementById("drawerAdminUsers").style.display = admin ? "flex" : "none";
+  document.getElementById("drawerAdminReports").style.display = admin ? "flex" : "none";
+  document.getElementById("adminReportsBox").style.display = admin ? "flex" : "none";
 
-  if (kind === "newUser") {
-    const tone = cfg.newUserTone || "new_user_distinct";
-    if (tone === "silent") return;
-    if (tone === "custom" && cfg.customNewUserAudio) {
-      playCustomAudioFile(cfg.customNewUserAudio, 0.85);
-      return;
-    }
-    if (tone === "door_chime") {
-      playToneNotes([
-        { freq: 659.25, dur: 0.16, gap: 0.05, type: "triangle", gain: 0.8 },
-        { freq: 493.88, dur: 0.26, gap: 0.06, type: "triangle", gain: 0.8 },
-        { freq: 783.99, dur: 0.24, gap: 0.04, type: "triangle", gain: 0.85 }
-      ], 0.25);
-    } else {
-      playToneNotes([
-        { freq: 440, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
-        { freq: 554.37, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
-        { freq: 659.25, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.85 },
-        { freq: 880, dur: 0.28, gap: 0.04, type: "triangle", gain: 0.9 }
-      ], 0.26);
-    }
+  const pendingCount = (state.reports || []).filter(r => r.status === "pending").length;
+  document.getElementById("pendingReportsBadge").textContent = `${pendingCount} in attesa`;
+  const pendUsersTag = document.getElementById("pendingUsersCountTag");
+  if (pendUsersTag) pendUsersTag.textContent = `${pendingUsersCount} in attesa`;
+  const appDrawerItem = document.getElementById("drawerAdminApprovals");
+  if (appDrawerItem) {
+    appDrawerItem.innerHTML = `<span>✅ Approvazione Nuovi Utenti (${pendingUsersCount})</span>`;
   }
 }
 
-let inAppNotifTimer = null;
-
-function closeInAppNotif() {
-  const b = document.getElementById("inappNotifBanner");
-  if (b) b.classList.remove("open");
+function toggleDrawer() {
+  document.getElementById("drawer").classList.toggle("open");
 }
 
-function triggerNotificationAlert({ categoryLabel, title, body, soundKind, bannerStyle }) {
-  playRingtoneByKind(soundKind);
+let previousViewBeforePrivacy = "login";
 
-  const banner = document.getElementById("inappNotifBanner");
-  const catEl = document.getElementById("inappNotifCategory");
-  const titleEl = document.getElementById("inappNotifTitle");
-  const bodyEl = document.getElementById("inappNotifBody");
+function switchView(name) {
+  document.getElementById("drawer").classList.remove("open");
+  const activeEl = document.querySelector(".view.active");
+  const currentActiveId = activeEl ? activeEl.id.replace("view-", "") : "login";
 
-  if (banner && catEl && titleEl && bodyEl) {
-    banner.className = "inapp-notif-banner open" + (bannerStyle ? " " + bannerStyle : "");
-    catEl.textContent = categoryLabel || "NOTIFICA";
-    titleEl.textContent = title || "Nuovo aggiornamento";
-    bodyEl.textContent = body || "";
-    if (inAppNotifTimer) clearTimeout(inAppNotifTimer);
-    inAppNotifTimer = setTimeout(() => {
-      banner.classList.remove("open");
-    }, 4500);
+  if (!state.loggedIn && name !== "login" && name !== "privacy") {
+    name = "login";
+  }
+  if ((name === "utenti" || name === "segnalazioni" || name === "bacheca" || name === "approvazioni") && (!state.loggedIn || !isAdmin())) {
+    return showToast("Accesso riservato agli amministratori", true);
+  }
+  if (name === "privacy" && currentActiveId !== "privacy") {
+    previousViewBeforePrivacy = currentActiveId;
   }
 
-  try {
-    if ("Notification" in window && Notification.permission === "granted") {
-      new Notification(title || "Coordinamento Interforze", {
-        body: body || "",
-        silent: soundKind === "adminReport"
-      });
-    }
-  } catch (err) {}
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  document.getElementById("view-" + name).classList.add("active");
+  syncChrome();
+  if (name === "login") renderLoginScreen();
+  if (name === "home") renderHome();
+  if (name === "topic") renderTopic();
+  if (name === "manuali") renderManuals();
+  if (name === "profilo") renderProfile();
+  if (name === "approvazioni") renderPendingApprovals();
+  if (name === "bacheca") renderBoardAdmin();
+  if (name === "utenti") renderUsersAdmin();
+  if (name === "segnalazioni") renderReportsAdmin();
 }
 
-function requestDeviceNotificationPermission() {
-  if (!("Notification" in window)) {
-    return showToast("Notifiche browser non supportate: attive notifiche in-app e suoni", true);
-  }
-  Notification.requestPermission().then(perm => {
-    renderSoundSettingsView();
-    if (perm === "granted") {
-      showToast("Notifiche del dispositivo attivate!");
-    } else {
-      showToast("Permesso non concesso: resteranno attive le notifiche interne con suoni", true);
-    }
-  });
+function goBackFromPrivacy() {
+  switchView(previousViewBeforePrivacy || (state.loggedIn ? "home" : "login"));
 }
 
-function updateSoundSetting(key, val) {
-  state.soundSettings = state.soundSettings || JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
-  state.soundSettings[key] = val;
+function logoutToLogin() {
+  document.getElementById("drawer").classList.remove("open");
+  state.loggedIn = false;
   persist();
-  renderSoundSettingsView();
-  showToast("Impostazione suoneria salvata");
+  syncChrome();
+  switchView("login");
+  showToast("Disconnesso: pagina di accesso / registrazione");
 }
 
-function handleCustomRingtoneUpload(e, targetKind) {
+let regBadgeTempDataUrl = "";
+
+function setAuthTab(tabName) {
+  const isReg = tabName === "register";
+  document.getElementById("tabLoginBtn").classList.toggle("active", !isReg);
+  document.getElementById("tabRegisterBtn").classList.toggle("active", isReg);
+  document.getElementById("authLoginPanel").style.display = isReg ? "none" : "flex";
+  document.getElementById("authRegisterPanel").style.display = isReg ? "flex" : "none";
+  if (isReg) {
+    populateRegVvfSelect();
+    toggleRegEnteFields();
+  }
+}
+
+function populateRegVvfSelect() {
+  const sel = document.getElementById("regVvfCorpo");
+  if (!sel || sel.options.length > 0) return;
+  sel.innerHTML = CORPI_VVF_TRENTINO.map(c => `<option value="${c}">${c}</option>`).join("");
+  sel.value = "VVF Bolbeno-Zuclo";
+}
+
+function toggleRegEnteFields() {
+  const tipo = document.getElementById("regEnteTipo").value;
+  const isVvf = tipo === "Vigili del Fuoco";
+  document.getElementById("regVvfWrap").style.display = isVvf ? "flex" : "none";
+  document.getElementById("regSedeWrap").style.display = isVvf ? "none" : "flex";
+}
+
+function handleRegBadgeUpload(e) {
   const file = e.target.files[0];
   if (!file) return;
   const reader = new FileReader();
   reader.onload = function(evt) {
-    state.soundSettings = state.soundSettings || JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
-    if (targetKind === "emergency") {
-      state.soundSettings.customEmergencyAudio = evt.target.result;
-      state.soundSettings.customEmergencyName = file.name;
-      state.soundSettings.emergencyTone = "custom";
-    } else if (targetKind === "chat") {
-      state.soundSettings.customChatAudio = evt.target.result;
-      state.soundSettings.customChatName = file.name;
-      state.soundSettings.chatTone = "custom";
-    } else if (targetKind === "newUser") {
-      state.soundSettings.customNewUserAudio = evt.target.result;
-      state.soundSettings.customNewUserName = file.name;
-      state.soundSettings.newUserTone = "custom";
-    }
-    persist();
-    renderSoundSettingsView();
-    showToast(`File audio "${file.name}" impostato`);
+    regBadgeTempDataUrl = evt.target.result;
+    const prev = document.getElementById("regBadgePreview");
+    const st = document.getElementById("regBadgeStatus");
+    prev.src = regBadgeTempDataUrl;
+    prev.style.display = "block";
+    st.textContent = "Foto tesserino allegata ✓";
+    st.style.color = "#10B981";
   };
   reader.readAsDataURL(file);
-  e.target.value = "";
 }
 
-function previewRingtone(kind) {
-  playRingtoneByKind(kind);
-  const labels = {
-    emergency: "Anteprima suoneria EMERGENZE",
-    chat: "Anteprima suoneria ALTRE CHAT",
-    adminReport: "Anteprima avviso SEGNALAZIONE silenziato (Admin)",
-    newUser: "Anteprima suoneria NUOVO UTENTE (Admin)"
-  };
-  showToast(labels[kind] || "Riproduzione anteprima");
-}
-
-function renderSoundSettingsView() {
-  const cfg = state.soundSettings || DEFAULT_DATA.soundSettings;
-  const sEm = document.getElementById("selEmergencyTone");
-  const sCh = document.getElementById("selChatTone");
-  const sAd = document.getElementById("selAdminReportMode");
-  const sNu = document.getElementById("selNewUserTone");
-  if (sEm) sEm.value = cfg.emergencyTone || "sirena_vvf";
-  if (sCh) sCh.value = cfg.chatTone || "chat_soft";
-  if (sAd) sAd.value = cfg.adminReportMode || "quiet_chime";
-  if (sNu) sNu.value = cfg.newUserTone || "new_user_distinct";
-
-  const emLbl = document.getElementById("emergencyCustomAudioLabel");
-  const chLbl = document.getElementById("chatCustomAudioLabel");
-  const nuLbl = document.getElementById("newUserCustomAudioLabel");
-  if (emLbl) emLbl.textContent = cfg.customEmergencyName ? `File caricato: ${cfg.customEmergencyName} ✓` : "Nessun file audio personalizzato caricato";
-  if (chLbl) chLbl.textContent = cfg.customChatName ? `File caricato: ${cfg.customChatName} ✓` : "Nessun file audio personalizzato caricato";
-  if (nuLbl) nuLbl.textContent = cfg.customNewUserName ? `File caricato: ${cfg.customNewUserName} ✓` : "Nessun file audio personalizzato caricato";
-
-  const permTag = document.getElementById("notifPermStatus");
-  if (permTag && "Notification" in window) {
-    permTag.textContent = Notification.permission === "granted" ? "Attive ✓" : (Notification.permission === "denied" ? "Bloccate" : "Da attivare");
+function renderLoginScreen() {
+  const sel = document.getElementById("quickLoginSelect");
+  if (sel) {
+    const opts = ['<option value="">-- Seleziona utente per compilare --</option>'];
+    (state.users || []).forEach(u => {
+      const mat = u.matricola ? ` • Matr: ${u.matricola}` : "";
+      opts.push(`<option value="${u.nome}">${u.nome} ${u.cognome || ""} (${u.tel || ""}${mat})</option>`);
+    });
+    sel.innerHTML = opts.join("");
   }
+  populateRegVvfSelect();
 }
 
-function simulateIncomingPost(topicName) {
-  const isEm = topicName === "EMERGENZE";
-  triggerNotificationAlert({
-    categoryLabel: isEm ? "🚨 NUOVO POST EMERGENZE" : `💬 NUOVO POST • ${topicName}`,
-    title: isEm ? "Allerta Emergenza — Test Notifica" : `Nuovo messaggio su ${topicName}`,
-    body: isEm ? "Suoneria dedicata alle Emergenze attiva." : `Suoneria dedicata alle Altre Chat attiva per ${topicName}.`,
-    soundKind: isEm ? "emergency" : "chat",
-    bannerStyle: isEm ? "emergency" : ""
-  });
+function fillLoginFromSelect(val) {
+  if (!val) return;
+  const inp = document.getElementById("loginIdentifierInput");
+  if (inp) inp.value = val;
 }
 
-function simulateAdminReport() {
-  state.reports = state.reports || [];
-  state.reports.unshift({
-    id: Date.now(),
-    topic: "DISCUSSIONE OPERATIVA",
-    postId: 0,
-    postTitle: "Post segnalato (simulazione admin)",
-    reportedBy: "Moderatore",
-    reason: "Controllo discreto segnalazione — avviso silenziato.",
-    status: "pending"
+function performUserLogin() {
+  const raw = (document.getElementById("loginIdentifierInput").value || "").trim().toLowerCase();
+  if (!raw) {
+    return showToast("Inserisci Nome, Telefono o Numero tesserino per accedere", true);
+  }
+  const matched = (state.users || []).find(u => {
+    const full = `${u.nome || ""} ${u.cognome || ""}`.trim().toLowerCase();
+    const nom = (u.nome || "").toLowerCase();
+    const tel = (u.tel || "").toLowerCase();
+    const mat = (u.matricola || "").toLowerCase();
+    return nom === raw || full === raw || tel.includes(raw) || (mat && mat === raw);
   });
+
+  if (!matched) {
+    const isPending = (state.pendingRegistrations || []).some(p =>
+      (p.nome || "").toLowerCase() === raw || (p.tel || "").toLowerCase().includes(raw) || (p.matricola || "").toLowerCase() === raw
+    );
+    if (isPending) {
+      return showToast("La tua richiesta di registrazione è ancora in attesa di approvazione Admin", true);
+    }
+    return showToast("Utente non trovato: se non sei registrato, usa la scheda Registrati", true);
+  }
+
+  state.activeUserId = matched.id;
+  state.loggedIn = true;
   persist();
   syncChrome();
-  triggerNotificationAlert({
-    categoryLabel: "🤫 NUOVA SEGNALAZIONE (AVVISO TRANQUILLO)",
-    title: "Nuova segnalazione in coda",
-    body: "Avviso discreto a volume ridotto per gli amministratori.",
-    soundKind: "adminReport",
-    bannerStyle: "quiet-report"
-  });
-  if (document.getElementById("view-segnalazioni").classList.contains("active")) {
-    renderReportsAdmin();
+  if (matched.banned) {
+    showToast("Account sospeso dall'amministratore", true);
+    return;
   }
+  switchView("home");
+  showToast(`Accesso effettuato come ${matched.nome}`);
 }
 
-function simulateNewUserRequest() {
-  state.pendingRegistrations = state.pendingRegistrations || [];
-  state.pendingRegistrations.unshift({
-    id: "reg_" + Date.now(),
-    nome: "Operatore",
-    cognome: "In Attesa",
-    tel: "333000111",
-    enteTipo: "Vigili del Fuoco",
-    corpoVVF: "VVF Bolbeno-Zuclo",
-    sede: "",
-    matricola: "MAT-TEST",
-    badgeImg: "",
-    privacyAccepted: true,
-    submittedAt: "Adesso"
-  });
-  persist();
-  syncChrome();
-  triggerNotificationAlert({
-    categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
-    title: "Nuovo utente in attesa di approvazione",
-    body: "Suoneria dedicata distinta dalle segnalazioni silenziate.",
-    soundKind: "newUser",
-    bannerStyle: "new-user"
-  });
-  if (document.getElementById("view-segnalazioni").classList.contains("active")) {
-    renderReportsAdmin();
-  }
-  if (document.getElementById("view-approvazioni").classList.contains("active")) {
-    renderPendingApprovals();
-  }
-}
-// ... existing code ...
 function submitUserRegistration() {
   const nome = (document.getElementById("regNome").value || "").trim();
   const cognome = (document.getElementById("regCognome").value || "").trim();
@@ -796,17 +1722,226 @@ function submitUserRegistration() {
 
   persist();
   syncChrome();
-  triggerNotificationAlert({
-    categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
-    title: `Richiesta ingresso: ${nome} ${cognome}`.trim(),
-    body: `Ente: ${enteTipo} • Matricola: ${matricola}`,
-    soundKind: "newUser",
-    bannerStyle: "new-user"
-  });
   setAuthTab("login");
   showToast("Richiesta inviata! Attendi l'approvazione di un amministratore per accedere");
 }
-// ... existing code ...
+
+function renderPendingApprovals() {
+  if (!isAdmin()) return;
+  const list = state.pendingRegistrations || [];
+  document.getElementById("pendingUsersCountTag").textContent = `${list.length} in attesa`;
+  const wrap = document.getElementById("pendingUsersList");
+  wrap.innerHTML = "";
+
+  if (list.length === 0) {
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessuna nuova richiesta di registrazione in attesa.</div>`;
+    return;
+  }
+
+  list.forEach(req => {
+    const enteDesc = req.enteTipo === "Vigili del Fuoco"
+      ? `${req.enteTipo} — ${req.corpoVVF}`
+      : `${req.enteTipo} — Sede: ${req.sede || "Non indicata"}`;
+
+    const card = document.createElement("div");
+    card.className = "pending-user-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${req.nome} ${req.cognome || ""}</div>
+          <div class="ev-author">Tel: <strong>${req.tel}</strong> • Inviata: ${req.submittedAt}</div>
+        </div>
+        <span class="report-badge">DA VERIFICARE</span>
+      </div>
+      <div style="font-size:12px; color:#E2E8F0;">Ente: <strong>${enteDesc}</strong></div>
+      <div style="font-size:12px; color:#FEF08A;">Numero tesserino / Matricola: <strong>${req.matricola}</strong></div>
+      <div style="font-size:11px; color:#6EE7B7;">Privacy accettata: ${req.privacyAccepted ? "Sì ✓" : "No"}</div>
+      ${req.badgeImg
+        ? `<img src="${req.badgeImg}" class="pending-badge-thumb" alt="Tesserino ${req.nome}">`
+        : `<div class="drive-note">Nessuna immagine tesserino allegata (richiesta di test).</div>`
+      }
+      <div class="user-btns">
+        <button type="button" class="approve-btn" onclick="approveRegistration('${req.id}')">✓ Approva utente</button>
+        <button type="button" class="reject-btn" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler rifiutare questa richiesta?', 'La richiesta di registrazione verrà scartata.', () => rejectRegistration('${req.id}'))">✕ Rifiuta</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function approveRegistration(regId) {
+  if (!isAdmin()) return;
+  const list = state.pendingRegistrations || [];
+  const idx = list.findIndex(r => r.id === regId);
+  if (idx < 0) return;
+  const req = list[idx];
+
+  const newUser = {
+    id: "u_" + Date.now(),
+    isAdmin: false,
+    banned: false,
+    modAll: false,
+    modForums: [],
+    nome: req.nome,
+    cognome: req.cognome || "",
+    tel: req.tel,
+    matricola: req.matricola,
+    badgeImg: req.badgeImg || "",
+    privacyAccepted: !!req.privacyAccepted,
+    enti: [{
+      tipo: req.enteTipo,
+      corpoVVF: req.corpoVVF || "",
+      grado: "",
+      abilitazioni: [],
+      sede: req.sede || ""
+    }]
+  };
+
+  state.users.push(newUser);
+  list.splice(idx, 1);
+  persist();
+  syncChrome();
+  renderPendingApprovals();
+  showToast(`${req.nome} è stato approvato e aggiunto agli utenti dell'app`);
+}
+
+function rejectRegistration(regId) {
+  if (!isAdmin()) return;
+  state.pendingRegistrations = (state.pendingRegistrations || []).filter(r => r.id !== regId);
+  persist();
+  syncChrome();
+  renderPendingApprovals();
+  showToast("Richiesta di registrazione rifiutata");
+}
+
+function isFileChannel(name) {
+  if (name === "MANUALI E PROCEDURE") return true;
+  const ch = state.channels.find(c => c.name === name);
+  return !!(ch && ch.kind === "files");
+}
+
+function openTopic(topicName) {
+  const ch = state.channels.find(c => c.name === topicName);
+  if (ch) ch.unread = 0;
+  persist();
+  if (isFileChannel(topicName)) {
+    state.currentFilesChannel = topicName;
+    switchView("manuali");
+    return;
+  }
+  state.currentTopic = topicName;
+  switchView("topic");
+}
+
+function selectCat(el) {
+  document.querySelectorAll(".cat-pill").forEach(p => p.classList.remove("selected"));
+  el.classList.add("selected");
+  state.selectedCat = el.dataset.cat;
+}
+
+function getActiveAuthorLabel() {
+  const p = getCurrentUser();
+  const nome = (p.nome || "").trim() || "Operatore";
+  const e0 = (p.enti && p.enti[0]) || null;
+  let corps = e0 ? (e0.tipo === "Vigili del Fuoco" ? e0.corpoVVF : e0.tipo + (e0.sede ? " (" + e0.sede + ")" : "")) : "Interforze";
+  return { nome, corps };
+}
+
+function createPostObject(title, highlight = false) {
+  const { nome, corps } = getActiveAuthorLabel();
+  const curUser = getCurrentUser();
+  return {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    highlight,
+    deletedByMod: false,
+    title,
+    authorId: curUser ? curUser.id : "",
+    author: nome,
+    corps,
+    following: true,
+    reactions: { "👍": 1 },
+    userReacts: ["👍"],
+    photos: [],
+    comments: []
+  };
+}
+
+function onQuickPhotoSelected(e, sourceType) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    quickAttachedPhoto = evt.target.result;
+    quickAttachedSource = sourceType;
+    const prev = document.getElementById("quickPhotoPreview");
+    const badge = document.getElementById("quickPhotoBadge");
+    const clr = document.getElementById("quickClearPhotoBtn");
+    prev.src = quickAttachedPhoto;
+    prev.style.display = "block";
+    badge.textContent = sourceType === "fotocamera" ? "📸 Foto scattata pronta" : "🖼️ Foto da galleria pronta";
+    badge.style.display = "inline";
+    clr.style.display = "inline-block";
+    showToast(sourceType === "fotocamera" ? "Foto acquisita dalla fotocamera" : "Foto selezionata dalla galleria");
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+}
+
+function clearQuickPhoto() {
+  quickAttachedPhoto = null;
+  quickAttachedSource = "";
+  const prev = document.getElementById("quickPhotoPreview");
+  const badge = document.getElementById("quickPhotoBadge");
+  const clr = document.getElementById("quickClearPhotoBtn");
+  prev.src = "";
+  prev.style.display = "none";
+  badge.style.display = "none";
+  clr.style.display = "none";
+}
+
+function publishQuick() {
+  const inp = document.getElementById("quickText");
+  const txt = inp.value.trim();
+  const hasPhoto = !!quickAttachedPhoto;
+  if (!txt && !hasPhoto) {
+    return showToast("Scrivi un messaggio oppure carica/scatta una foto", true);
+  }
+
+  const cat = state.selectedCat;
+  if (cat === "MANUALI E PROCEDURE") {
+    const { nome, corps } = getActiveAuthorLabel();
+    const baseTitle = txt || ("Foto_Operativa_" + new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }).replace(":", ""));
+    state.manuals.unshift({
+      id: Date.now(),
+      title: baseTitle.endsWith(".pdf") ? baseTitle : baseTitle + ".pdf",
+      author: `${nome} • ${corps}`,
+      date: "Adesso",
+      contentText: txt || "Allegato fotografico rapido caricato dalla home.",
+      dataUrl: quickAttachedPhoto || ""
+    });
+    const ch = state.channels.find(c => c.name === cat);
+    if (ch) { ch.time = "Adesso"; ch.unread += 1; }
+    inp.value = "";
+    clearQuickPhoto();
+    persist();
+    renderHome();
+    return showToast("Voce aggiunta in MANUALI E PROCEDURE");
+  }
+
+  if (!state.topics[cat]) state.topics[cat] = [];
+  if (cat === "EMERGENZE") {
+    state.topics["EMERGENZE"].forEach(e => e.highlight = false);
+  }
+  const finalTitle = txt || (quickAttachedSource === "fotocamera" ? "📸 Segnalazione fotografica (scatto diretto)" : "🖼️ Segnalazione fotografica da galleria");
+  const newPost = createPostObject(finalTitle, cat === "EMERGENZE");
+  if (hasPhoto) {
+    newPost.photos.push(quickAttachedPhoto);
+    const { nome, corps } = getActiveAuthorLabel();
+    newPost.comments.push({
+      who: nome + " • " + corps,
+      text: quickAttachedSource === "fotocamera" ? "📸 Foto scattata dalla fotocamera." : "🖼️ Foto caricata dalla galleria."
+    });
+  }
   state.topics[cat].unshift(newPost);
   const ch = state.channels.find(c => c.name === cat);
   if (ch) { ch.time = "Adesso"; ch.unread += 1; }
@@ -814,13 +1949,6 @@ function submitUserRegistration() {
   clearQuickPhoto();
   persist();
   renderHome();
-  triggerNotificationAlert({
-    categoryLabel: cat === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${cat}`,
-    title: `Nuovo post in ${cat}`,
-    body: `${newPost.author}: ${finalTitle}`,
-    soundKind: cat === "EMERGENZE" ? "emergency" : "chat",
-    bannerStyle: cat === "EMERGENZE" ? "emergency" : ""
-  });
   showToast("Pubblicato in " + cat);
 }
 
@@ -834,64 +1962,829 @@ function addTopicPost() {
   if (topic === "EMERGENZE") {
     state.topics["EMERGENZE"].forEach(e => e.highlight = false);
   }
-  const created = createPostObject(txt, topic === "EMERGENZE");
-  state.topics[topic].unshift(created);
+  state.topics[topic].unshift(createPostObject(txt, topic === "EMERGENZE"));
   const ch = state.channels.find(c => c.name === topic);
   if (ch) { ch.time = "Adesso"; ch.unread += 1; }
   inp.value = "";
   persist();
   renderTopic();
-  triggerNotificationAlert({
-    categoryLabel: topic === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${topic}`,
-    title: `Nuovo post in ${topic}`,
-    body: `${created.author}: ${txt}`,
-    soundKind: topic === "EMERGENZE" ? "emergency" : "chat",
-    bannerStyle: topic === "EMERGENZE" ? "emergency" : ""
-  });
   showToast("Post aggiunto in " + topic);
 }
-// ... existing code ...
+
+function renderHome() {
+  syncChrome();
+  if (getCurrentUser().banned) return;
+
+  const emergList = (state.topics["EMERGENZE"] || []).filter(e => !e.deletedByMod);
+  const top = emergList[0];
+  if (top) {
+    document.getElementById("pinnedLatest").textContent = top.title;
+    document.getElementById("pinnedAuthor").textContent = "Segnalato da " + top.author + " • " + top.corps;
+  } else {
+    document.getElementById("pinnedLatest").textContent = "Nessuna emergenza attiva al momento";
+    document.getElementById("pinnedAuthor").textContent = "Tocca per aprire la chat EMERGENZE";
+  }
+
+  const list = document.getElementById("channelsList");
+  list.innerHTML = "";
+  state.channels.forEach(ch => {
+    let previewText = "Nessun contenuto ancora";
+    if (ch.kind === "files" || ch.name === "MANUALI E PROCEDURE") {
+      const filesForCh = (state.manuals || []).filter(m => !m.channelName || m.channelName === ch.name || (ch.name === "MANUALI E PROCEDURE" && !m.channelName));
+      const m0 = filesForCh[0];
+      previewText = m0 ? `📄 ${m0.title} (${filesForCh.length} file)` : "Archivio file / contenuti vuoto";
+    } else {
+      const posts = (state.topics[ch.name] || []).filter(p => !p.deletedByMod);
+      const latest = posts[0];
+      if (latest) previewText = `${latest.author} (${latest.corps}): ${latest.title}`;
+    }
+
+    const modLabel = getForumModeratorsLabel(ch.name);
+
+    const div = document.createElement("div");
+    div.className = "channel-card";
+    div.style.borderLeft = "4px solid " + ch.color;
+    div.innerHTML = `
+      <div class="ch-left">
+        <div class="ch-title" style="color:${ch.color}">
+          <span>${ch.name}</span>
+          ${modLabel ? `<span class="ch-mod-tag">${modLabel}</span>` : ""}
+        </div>
+        <div class="ch-preview">${previewText}</div>
+      </div>
+      <div class="ch-right">
+        <span class="ch-time">${ch.time}</span>
+        ${ch.unread > 0 ? `<span class="unread" style="background:${ch.color}">${ch.unread}</span>` : ""}
+      </div>
+    `;
+    div.onclick = () => openTopic(ch.name);
+    list.appendChild(div);
+  });
+}
+
+function getTopicAccentColor(topicName) {
+  if (topicName === "EMERGENZE") return "#FCA5A5";
+  const ch = state.channels.find(c => c.name === topicName);
+  return ch ? ch.color : "#FCA5A5";
+}
+
+function renderTopic() {
+  const topicName = state.currentTopic;
+  const user = getCurrentUser();
+  const accent = getTopicAccentColor(topicName);
+  const admin = isAdmin();
+  const canModHere = isModeratorForForum(topicName);
+
+  const titleEl = document.getElementById("topicTitleBar");
+  titleEl.textContent = topicName;
+  titleEl.style.color = accent;
+
+  const pubBtn = document.getElementById("newTopicPostBtn");
+  pubBtn.style.background = topicName === "EMERGENZE" ? "#DC2626" : accent;
+
+  const roleTag = admin ? " [ADMIN]" : (canModHere ? " [MOD]" : "");
+  document.getElementById("activeUserTag").textContent = (user.nome || "Operatore") + roleTag;
+
+  const feed = document.getElementById("topicFeed");
+  feed.innerHTML = "";
+  const rawItems = state.topics[topicName] || [];
+  const items = admin ? rawItems : rawItems.filter(e => !e.deletedByMod);
+
+  if (items.length === 0) {
+    feed.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessun post in questa sezione.</div>`;
+    return;
+  }
+
+  items.forEach((ev) => {
+    const isModHidden = !!ev.deletedByMod;
+    const card = document.createElement("div");
+    card.className = "event-card" + (ev.highlight && !isModHidden ? " highlight" : "") + (isModHidden ? " mod-deleted" : "");
+
+    const activeReacts = Object.entries(ev.reactions || {}).filter(([em, cnt]) => cnt > 0 || (ev.userReacts || []).includes(em));
+    let reactsHtml = activeReacts.map(([em, cnt]) => {
+      const isAct = (ev.userReacts || []).includes(em);
+      const safeEm = em.replace(/'/g, "&#39;");
+      return `<button class="react-btn ${isAct ? "active" : ""}" onclick="toggleReactById(${ev.id}, decodeURIComponent('${encodeURIComponent(em)}'))">${em} ${cnt > 0 ? cnt : ""}</button>`;
+    }).join("");
+    reactsHtml += `<button class="add-react-btn" title="Scegli emoji" onclick="toggleEmojiPicker(${ev.id})">😊+</button>`;
+
+    let pickerHtml = "";
+    if (openEmojiPickerPostId === ev.id) {
+      const choices = CLASSIC_EMOJIS.map(em =>
+        `<button class="emoji-choice" onclick="pickEmoji(${ev.id}, decodeURIComponent('${encodeURIComponent(em)}'))">${em}</button>`
+      ).join("");
+      pickerHtml = `
+        <div class="emoji-picker-box">
+          ${choices}
+          <input type="text" id="custom-em-${ev.id}" class="custom-emoji-input" maxlength="4" placeholder="Altra...">
+          <button class="custom-emoji-ok" onclick="pickCustomEmoji(${ev.id})">OK</button>
+        </div>
+      `;
+    }
+
+    let photosHtml = "";
+    if (ev.photos && ev.photos.length > 0) {
+      photosHtml = `<div class="media-grid">` + ev.photos.map(src => `<img src="${src}" class="media-thumb" alt="Foto allegata">`).join("") + `</div>`;
+    }
+
+    let commentsHtml = ev.comments.map((c, cIdx) => `
+      <div class="comment-item">
+        <div>
+          <div class="comment-who">${c.who}</div>
+          <div>${c.text}</div>
+        </div>
+        ${(admin || canModHere) ? `<button type="button" class="del-comm-btn" data-confirm-trigger="1" title="Elimina commento" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler eliminare questo commento?', 'Il commento verrà rimosso dalla discussione.', () => deleteComment(${ev.id}, ${cIdx}))">✕</button>` : ""}
+      </div>
+    `).join("");
+
+    let modBannerHtml = "";
+    if (isModHidden && admin) {
+      modBannerHtml = `
+        <div class="mod-del-banner">
+          <span>🔒 Oscurato dal moderatore — visibile solo all'Admin</span>
+          <div style="display:flex; gap:5px;">
+            <button class="restore-btn" onclick="restorePost(${ev.id})">↩️ Reinserisci</button>
+            <button type="button" class="del-btn" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler eliminare definitivamente questo post?', 'L\'eliminazione definitiva non è reversibile.', () => hardDeletePost(${ev.id}))">Togli definitivo</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const ownPost = isPostAuthor(ev);
+    let rightButtons = "";
+    if (admin) {
+      rightButtons = `<button type="button" class="del-btn" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler eliminare questo thread?', 'Il post verrà eliminato definitivamente.', () => hardDeletePost(${ev.id}))">🗑️ Elimina</button>`;
+    } else if (canModHere) {
+      rightButtons = `
+        <button class="flag-btn" onclick="toggleFlagReasonBox(${ev.id})">🚩 Segnala</button>
+        <button type="button" class="del-btn" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler rimuovere questo thread?', 'Il thread verrà oscurato dal moderatore.', () => modHidePost(${ev.id}))">🗑️ Rimuovi thread</button>
+      `;
+    } else if (ownPost) {
+      rightButtons = `<button type="button" class="del-btn" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler cancellare il tuo post?', 'Il post scritto da te verrà rimosso.', () => ownerDeleteOwnPost(${ev.id}))">🗑️ Cancella mio</button>`;
+    }
+
+    let flagBoxHtml = "";
+    if (openFlagBoxPostId === ev.id) {
+      flagBoxHtml = `
+        <div class="emoji-picker-box" style="flex-direction:column; align-items:stretch; gap:6px;">
+          <div style="font-size:11px; font-weight:700; color:#FDE68A;">🚩 Motiva la segnalazione agli amministratori:</div>
+          <input type="text" id="flag-reason-${ev.id}" class="search-input" placeholder="Scrivi il motivo della segnalazione...">
+          <div style="display:flex; gap:6px; justify-content:flex-end;">
+            <button type="button" class="mini-btn" onclick="toggleFlagReasonBox(${ev.id})">Annulla</button>
+            <button type="button" class="custom-emoji-ok" onclick="submitFlagWithReason(${ev.id})">Invia segnalazione</button>
+          </div>
+        </div>
+      `;
+    }
+
+    const modClearReactsBtn = (admin || canModHere) && Object.keys(ev.reactions || {}).length > 0
+      ? `<button type="button" class="del-btn" onclick="modClearReactions(${ev.id})">🧹 Togli reazioni</button>`
+      : "";
+
+    const extraActionButtons = (admin || canModHere)
+      ? `
+        ${modClearReactsBtn}
+        <button type="button" class="photo-btn" onclick="triggerPhoto(${ev.id}, false)">🖼️ Foto</button>
+        <button type="button" class="photo-btn" onclick="triggerPhoto(${ev.id}, true)">📸 Scatta</button>
+        <button type="button" class="user-flag-btn" onclick="toggleFlagReasonBox(${ev.id})">🚩 Segnala</button>
+      `
+      : `
+        <button type="button" class="user-flag-btn" onclick="toggleFlagReasonBox(${ev.id})">🚨 Segnala all'Admin</button>
+      `;
+
+    card.innerHTML = `
+      ${modBannerHtml}
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${ev.title}</div>
+          <div class="ev-author">Segnalato da <strong style="color:${accent}">${ev.author}</strong> • ${ev.corps}</div>
+        </div>
+        <div class="ev-actions-right">${rightButtons}</div>
+      </div>
+      ${photosHtml}
+      <div class="actions-bar">
+        ${reactsHtml}
+        ${extraActionButtons}
+      </div>
+      ${pickerHtml}
+      ${flagBoxHtml}
+      <div class="comments-box">
+        ${commentsHtml || `<div style="font-size:11px; color:#64748B;">Nessun commento ancora.</div>`}
+        <div class="comment-form">
+          <input type="text" id="comm-in-${ev.id}" placeholder="Scrivi un commento...">
+          <button onclick="addComment(${ev.id})">Invia</button>
+        </div>
+      </div>
+    `;
+    feed.appendChild(card);
+  });
+}
+
+let openFlagBoxPostId = null;
+
+function isPostAuthor(ev) {
+  const u = getCurrentUser();
+  if (!u || !ev) return false;
+  if (ev.authorId && ev.authorId === u.id) return true;
+  return !ev.authorId && ev.author === u.nome;
+}
+
+function ownerDeleteOwnPost(evId) {
+  const topic = state.currentTopic;
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev || !isPostAuthor(ev)) return showToast("Puoi cancellare solo i post scritti da te", true);
+  state.topics[topic] = (state.topics[topic] || []).filter(e => e.id !== evId);
+  if (topic === "EMERGENZE") {
+    const nextActive = (state.topics["EMERGENZE"] || []).find(e => !e.deletedByMod);
+    if (nextActive) nextActive.highlight = true;
+  }
+  persist();
+  renderTopic();
+  showToast("Il tuo post è stato cancellato");
+}
+
+function modClearReactions(evId) {
+  const topic = state.currentTopic;
+  if (!isModeratorForForum(topic) && !isAdmin()) return showToast("Solo moderatori o admin possono rimuovere le reazioni", true);
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  ev.reactions = {};
+  ev.userReacts = [];
+  openEmojiPickerPostId = null;
+  persist();
+  renderTopic();
+  showToast("Reazioni rimosse dal post");
+}
+
+function toggleFlagReasonBox(evId) {
+  openFlagBoxPostId = (openFlagBoxPostId === evId) ? null : evId;
+  renderTopic();
+}
+
+function submitFlagWithReason(evId) {
+  const topic = state.currentTopic;
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  const reasonInp = document.getElementById("flag-reason-" + evId);
+  const reasonTxt = (reasonInp ? reasonInp.value : "").trim();
+  if (!reasonTxt) return showToast("Inserisci una motivazione prima di inviare la segnalazione", true);
+
   const user = getCurrentUser();
   const isMod = isModeratorForForum(topic);
-  const roleLabel = isFounderUser(user) ? "Founder/Admin" : (isAdmin() ? "Admin" : (isMod ? `Moderatore ${topic}` : "Utente"));
+  const roleLabel = isAdmin() ? "Admin" : (isMod ? `Moderatore ${topic}` : "Utente");
   state.reports.unshift({
     id: Date.now(),
     topic,
     postId: ev.id,
     postTitle: ev.title,
-    reportedBy: `${user.nome} ${user.cognome || ""} (${roleLabel})`.trim(),
+    reportedBy: `${user.nome} (${roleLabel})`,
     reason: reasonTxt,
     status: "pending"
   });
   openFlagBoxPostId = null;
   persist();
   syncChrome();
-  triggerNotificationAlert({
-    categoryLabel: "🤫 NUOVA SEGNALAZIONE (AVVISO TRANQUILLO)",
-    title: `Segnalazione su ${topic}`,
-    body: reasonTxt,
-    soundKind: "adminReport",
-    bannerStyle: "quiet-report"
-  });
   renderTopic();
   showToast("Segnalazione inviata agli amministratori con motivazione");
 }
-// ... existing code ...
-/* ADMIN: SEGNALAZIONI & RICHIESTE ACCESSO */
+
+function findPostInCurrentTopic(evId) {
+  const list = state.topics[state.currentTopic] || [];
+  return list.find(e => e.id === evId);
+}
+
+function modHidePost(evId) {
+  const topic = state.currentTopic;
+  if (!isModeratorForForum(topic)) return showToast("Non sei moderatore di questa chat", true);
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  ev.deletedByMod = true;
+  persist();
+  renderTopic();
+  showToast("Post rimosso dal moderatore (visibile oscurato all'Admin)");
+}
+
+function restorePost(evId) {
+  if (!isAdmin()) return showToast("Solo l'amministratore può reinserire i post", true);
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  ev.deletedByMod = false;
+  persist();
+  renderTopic();
+  showToast("Post reinserito nella chat");
+}
+
+function hardDeletePost(evId) {
+  if (!isAdmin()) return showToast("Solo un amministratore può eliminare definitivamente i post", true);
+  const topic = state.currentTopic;
+  state.topics[topic] = (state.topics[topic] || []).filter(e => e.id !== evId);
+  if (topic === "EMERGENZE") {
+    const nextActive = (state.topics["EMERGENZE"] || []).find(e => !e.deletedByMod);
+    if (nextActive) nextActive.highlight = true;
+  }
+  persist();
+  renderTopic();
+  showToast("Post eliminato definitivamente dall'amministratore");
+}
+
+function toggleEmojiPicker(evId) {
+  openEmojiPickerPostId = (openEmojiPickerPostId === evId) ? null : evId;
+  renderTopic();
+}
+
+function pickEmoji(evId, em) {
+  openEmojiPickerPostId = null;
+  toggleReactById(evId, em);
+}
+
+function pickCustomEmoji(evId) {
+  const inp = document.getElementById("custom-em-" + evId);
+  if (!inp) return;
+  const val = inp.value.trim();
+  if (!val) return showToast("Inserisci un'emoji", true);
+  openEmojiPickerPostId = null;
+  toggleReactById(evId, val);
+}
+
+function toggleReactById(evId, em) {
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev || !em) return;
+  ev.reactions = ev.reactions || {};
+  ev.userReacts = ev.userReacts || [];
+  const idx = ev.userReacts.indexOf(em);
+  if (idx >= 0) {
+    ev.userReacts.splice(idx, 1);
+    ev.reactions[em] = Math.max(0, (ev.reactions[em] || 1) - 1);
+    if (ev.reactions[em] === 0) delete ev.reactions[em];
+  } else {
+    ev.userReacts.push(em);
+    ev.reactions[em] = (ev.reactions[em] || 0) + 1;
+  }
+  persist();
+  renderTopic();
+}
+
+function flagPostToAdmin(evId) {
+  const topic = state.currentTopic;
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  const user = getCurrentUser();
+  const isMod = isModeratorForForum(topic);
+  const roleLabel = isAdmin() ? "Admin" : (isMod ? `Moderatore ${topic}` : "Operatore");
+  state.reports.unshift({
+    id: Date.now(),
+    topic,
+    postId: ev.id,
+    postTitle: ev.title,
+    reportedBy: `${user.nome} (${roleLabel})`,
+    reason: `Segnalazione inviata da ${user.nome} su post di ${ev.author}.`,
+    status: "pending"
+  });
+  persist();
+  syncChrome();
+  showToast("Post inviato nella pagina SEGNALAZIONI dell'Admin");
+}
+
+function deleteComment(evId, cIdx) {
+  const topic = state.currentTopic;
+  if (!isAdmin() && !isModeratorForForum(topic)) return showToast("Permesso negato", true);
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  ev.comments.splice(cIdx, 1);
+  persist();
+  renderTopic();
+  showToast("Commento eliminato");
+}
+
+function toggleReact(evId, em) {
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  const idx = ev.userReacts.indexOf(em);
+  if (idx >= 0) {
+    ev.userReacts.splice(idx, 1);
+    ev.reactions[em] = Math.max(0, (ev.reactions[em] || 1) - 1);
+  } else {
+    ev.userReacts.push(em);
+    ev.reactions[em] = (ev.reactions[em] || 0) + 1;
+  }
+  persist();
+  renderTopic();
+}
+
+function toggleFollow(evId) {
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  ev.following = !ev.following;
+  persist();
+  renderTopic();
+  showToast(ev.following ? "Notifiche commenti attivate per questo post" : "Notifiche disattivate per questo post");
+}
+
+function addComment(evId) {
+  const inp = document.getElementById("comm-in-" + evId);
+  const txt = inp.value.trim();
+  if (!txt) return;
+  const ev = findPostInCurrentTopic(evId);
+  if (!ev) return;
+  const { nome, corps } = getActiveAuthorLabel();
+  ev.comments.push({ who: nome + " • " + corps, text: txt });
+  persist();
+  renderTopic();
+}
+
+function triggerPhoto(evId, useCamera = false) {
+  pendingPhotoEventId = evId;
+  pendingPhotoCapture = !!useCamera;
+  const picker = document.getElementById("hiddenPhotoPicker");
+  if (useCamera) {
+    picker.setAttribute("capture", "environment");
+  } else {
+    picker.removeAttribute("capture");
+  }
+  picker.click();
+}
+
+function onEventPhotoSelected(e) {
+  const file = e.target.files[0];
+  if (!file || !pendingPhotoEventId) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const ev = findPostInCurrentTopic(pendingPhotoEventId);
+    if (ev) {
+      ev.photos.push(evt.target.result);
+      const { nome, corps } = getActiveAuthorLabel();
+      ev.comments.push({ who: nome + " • " + corps, text: "📷 Ha allegato una foto." });
+      persist();
+      renderTopic();
+      showToast("Foto allegata al post");
+    }
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+}
+
+/* MANUALI E PDF */
+function onPdfSelected(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const noteInp = document.getElementById("pdfNoteInput");
+  const extraText = noteInp.value.trim();
+  const { nome, corps } = getActiveAuthorLabel();
+
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    state.manuals.unshift({
+      id: Date.now(),
+      title: file.name,
+      author: `${nome} • ${corps}`,
+      date: "Adesso",
+      contentText: extraText || `Documento PDF: ${file.name} (${Math.max(1, Math.round(file.size / 1024))} KB)`,
+      dataUrl: evt.target.result
+    });
+    noteInp.value = "";
+    persist();
+    renderManuals();
+    showToast("PDF caricato nell'archivio Manuali");
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+}
+
+function renderManuals() {
+  const user = getCurrentUser();
+  const admin = isAdmin();
+  document.getElementById("manualsUserTag").textContent = (user.nome || "Operatore") + (admin ? " [ADMIN]" : "");
+
+  const q = (document.getElementById("pdfSearchInput").value || "").trim().toLowerCase();
+  const list = document.getElementById("manualsList");
+  list.innerHTML = "";
+
+  const filtered = state.manuals.filter(m =>
+    m.title.toLowerCase().includes(q) ||
+    (m.contentText || "").toLowerCase().includes(q) ||
+    (m.author || "").toLowerCase().includes(q)
+  );
+
+  if (filtered.length === 0) {
+    list.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:20px;">Nessun PDF trovato per la ricerca.</div>`;
+    return;
+  }
+
+  filtered.forEach(m => {
+    const card = document.createElement("div");
+    card.className = "pdf-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="pdf-title">📄 ${m.title}</div>
+          <div class="pdf-meta">Caricato da ${m.author} • ${m.date}</div>
+        </div>
+        ${admin ? `<button type="button" class="del-btn" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler eliminare questo file?', 'Il documento verrà rimosso dall\'archivio.', () => deleteManual(${m.id}))">🗑️ Elimina</button>` : ""}
+      </div>
+      <div class="pdf-snippet">${m.contentText || "Manuale operativo in archivio."}</div>
+      <div class="pdf-actions">
+        ${m.dataUrl ? `<a class="pdf-open-btn" href="${m.dataUrl}" download="${m.title}">⬇️ Apri / Scarica PDF</a>` : `<span style="font-size:11px; color:#94A3B8;">Documento dimostrativo in archivio</span>`}
+      </div>
+    `;
+    list.appendChild(card);
+  });
+}
+
+function deleteManual(id) {
+  if (!isAdmin()) return showToast("Solo un amministratore può eliminare file", true);
+  state.manuals = state.manuals.filter(m => m.id !== id);
+  persist();
+  renderManuals();
+  showToast("File rimosso dall'archivio");
+}
+
+/* ADMIN: GESTIONE BACHECA */
+function createCustomChannel() {
+  if (!isAdmin()) return showToast("Solo un amministratore può creare nuove sezioni", true);
+  const nameInp = document.getElementById("newBoardName");
+  const typeSel = document.getElementById("newBoardType");
+  const colorSel = document.getElementById("newBoardColor");
+  const rawName = (nameInp.value || "").trim().toUpperCase();
+  if (!rawName) return showToast("Inserisci il nome della nuova pagina o chat", true);
+  if (state.channels.some(c => c.name.toUpperCase() === rawName)) {
+    return showToast("Esiste già una sezione con questo nome", true);
+  }
+  const kind = typeSel.value === "files" ? "files" : "forum";
+  const color = colorSel.value || "#38BDF8";
+  state.channels.push({
+    id: "ch_" + Date.now(),
+    name: rawName,
+    kind,
+    color,
+    time: "Adesso",
+    unread: 0,
+    locked: false,
+    canEdit: true,
+    isCustom: true
+  });
+  if (kind === "forum" && !state.topics[rawName]) {
+    state.topics[rawName] = [];
+  }
+  nameInp.value = "";
+  persist();
+  renderBoardAdmin();
+  renderHome();
+  showToast(`Creata sezione ${rawName} (${kind === "files" ? "Caricamento file" : "Forum"})`);
+}
+
+function renameBoardChannel(chId) {
+  if (!isAdmin()) return;
+  const ch = state.channels.find(c => c.id === chId);
+  if (!ch) return;
+  if (!ch.canEdit) return showToast("Questa sezione fissa non può essere rinominata", true);
+  const input = document.getElementById("rename-ch-" + chId);
+  if (!input) return;
+  const nextName = (input.value || "").trim().toUpperCase();
+  if (!nextName || nextName === ch.name) return;
+  if (state.channels.some(x => x.id !== chId && x.name.toUpperCase() === nextName)) {
+    return showToast("Nome già in uso da un'altra sezione", true);
+  }
+  const oldName = ch.name;
+  if (ch.kind !== "files" && state.topics[oldName]) {
+    state.topics[nextName] = state.topics[oldName];
+    delete state.topics[oldName];
+  }
+  (state.manuals || []).forEach(m => {
+    if (m.channelName === oldName) m.channelName = nextName;
+  });
+  (state.users || []).forEach(u => {
+    if (Array.isArray(u.modForums)) {
+      u.modForums = u.modForums.map(f => f === oldName ? nextName : f);
+    }
+  });
+  ch.name = nextName;
+  persist();
+  renderBoardAdmin();
+  renderHome();
+  showToast(`Sezione rinominata in ${nextName}`);
+}
+
+function deleteBoardChannel(chId) {
+  if (!isAdmin()) return;
+  const ch = state.channels.find(c => c.id === chId);
+  if (!ch) return;
+  if (!ch.canEdit) return showToast("Solo Logistica e mezzi o le nuove sezioni create possono essere eliminate", true);
+  if (ch.kind !== "files") delete state.topics[ch.name];
+  state.channels = state.channels.filter(c => c.id !== chId);
+  persist();
+  renderBoardAdmin();
+  renderHome();
+  showToast(`Sezione "${ch.name}" eliminata dalla bacheca`);
+}
+
+function renderBoardAdmin() {
+  if (!isAdmin()) return;
+  const wrap = document.getElementById("boardChannelsList");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+
+  state.channels.forEach(ch => {
+    const isFiles = ch.kind === "files" || ch.name === "MANUALI E PROCEDURE";
+    const typeLabel = isFiles ? "📁 Caricamento file / contenuti" : "💬 Pagina Forum (topic)";
+    const statusBadge = ch.canEdit
+      ? `<span class="mod-badge">MODIFICABILE</span>`
+      : `<span class="role-badge">FISSA</span>`;
+
+    const box = document.createElement("div");
+    box.className = "ente-box";
+    box.innerHTML = `
+      <div class="ente-header">
+        <span style="font-size:12px; font-weight:800; color:${ch.color};">${ch.name}</span>
+        ${statusBadge}
+      </div>
+      <div style="font-size:11.5px; color:#94A3B8;">Tipo: <strong>${typeLabel}</strong></div>
+      ${ch.canEdit ? `
+        <div class="composer-row" style="margin-top:4px;">
+          <input type="text" id="rename-ch-${ch.id}" value="${ch.name}" placeholder="Nuovo nome sezione...">
+          <button type="button" class="mini-btn switch-user" onclick="renameBoardChannel('${ch.id}')">✏️ Rinomina</button>
+          <button type="button" class="mini-btn ban-on" data-confirm-trigger="1" onclick="openDeleteConfirmDropdown(this, 'Sei sicuro di voler eliminare questa chat/sezione?', 'La sezione verrà rimossa dalla bacheca.', () => deleteBoardChannel('${ch.id}'))">🗑️ Elimina</button>
+        </div>
+      ` : `
+        <div style="font-size:11px; color:#64748B;">Sezione fissa di sistema: nome e presenza non modificabili.</div>
+      `}
+    `;
+    wrap.appendChild(box);
+  });
+}
+
+/* ADMIN: UTENTI E RUOLI */
+function getUserRoleSummary(u) {
+  if (u.banned) return "Bannato";
+  if (u.isAdmin) return "Amministratore";
+  if (u.modAll) return "Moderatore (Tutti i forum)";
+  if (u.modForums && u.modForums.length > 0) return `Moderatore (${u.modForums.length} forum)`;
+  return "Utente / Operatore";
+}
+
+function setUserRolePreset(userId, roleChoice) {
+  if (!isAdmin()) return;
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  if (roleChoice === "admin") {
+    u.isAdmin = true;
+    u.modAll = true;
+    u.modForums = [...MODERATED_FORUMS];
+    u.banned = false;
+  } else if (roleChoice === "mod_all") {
+    u.isAdmin = false;
+    u.modAll = true;
+    u.modForums = [...MODERATED_FORUMS];
+    u.banned = false;
+  } else if (roleChoice === "mod_select") {
+    u.isAdmin = false;
+    u.modAll = false;
+    if (!u.modForums || u.modForums.length === 0) u.modForums = ["EMERGENZE"];
+    u.banned = false;
+  } else if (roleChoice === "member") {
+    u.isAdmin = false;
+    u.modAll = false;
+    u.modForums = [];
+    u.banned = false;
+  }
+  persist();
+  syncChrome();
+  renderUsersAdmin();
+  showToast(`Ruolo aggiornato per ${u.nome}: ${getUserRoleSummary(u)}`);
+}
+
+function renderUsersAdmin() {
+  if (!isAdmin()) return;
+  document.getElementById("usersCountTag").textContent = `${state.users.length} utenti`;
+  const wrap = document.getElementById("usersList");
+  wrap.innerHTML = "";
+
+  state.users.forEach(u => {
+    const e0 = (u.enti && u.enti[0]) || null;
+    const enteStr = e0 ? (e0.tipo === "Vigili del Fuoco" ? e0.corpoVVF : e0.tipo + (e0.sede ? " • " + e0.sede : "")) : "Ente non indicato";
+    const isCurrent = u.id === state.activeUserId;
+    const currentRoleValue = u.isAdmin ? "admin" : (u.modAll ? "mod_all" : ((u.modForums && u.modForums.length > 0) ? "mod_select" : "member"));
+
+    const chipsHtml = MODERATED_FORUMS.map(f => {
+      const on = u.modAll || (u.modForums || []).includes(f);
+      return `<span class="ch-mod-chip ${on ? "active" : ""}" onclick="toggleUserForumMod('${u.id}', '${f}')">${f.replace("DISCUSSIONE OPERATIVA", "DISCUSSIONI").replace("ALLERTE ORDINARIE PC", "ALLERTE PC").replace("EVENTI E PRESIDI", "EVENTI").replace("LOGISTICA E MEZZI", "LOGISTICA")}</span>`;
+    }).join("");
+
+    const card = document.createElement("div");
+    card.className = "user-card" + (u.banned ? " banned" : "");
+    card.innerHTML = `
+      <div class="user-top">
+        <div>
+          <div class="user-name">${u.nome} ${u.cognome || ""} ${isCurrent ? '<span style="font-size:10px; color:#38BDF8;">(TU)</span>' : ""}</div>
+          <div class="user-sub">${enteStr} • ${u.tel || ""} • <strong>${getUserRoleSummary(u)}</strong></div>
+        </div>
+        <div style="display:flex; gap:4px; flex-wrap:wrap;">
+          ${u.isAdmin ? '<span class="role-badge">ADMIN</span>' : ""}
+          ${u.modAll ? '<span class="mod-badge">MOD TUTTI</span>' : ((u.modForums && u.modForums.length) ? `<span class="mod-badge">MOD (${u.modForums.length})</span>` : "")}
+          ${u.banned ? '<span class="del-btn">BANNATO</span>' : ""}
+        </div>
+      </div>
+      <div class="field">
+        <label>Ruolo utente</label>
+        <select onchange="setUserRolePreset('${u.id}', this.value)">
+          <option value="member" ${currentRoleValue === "member" ? "selected" : ""}>Operatore / Utente standard</option>
+          <option value="mod_select" ${currentRoleValue === "mod_select" ? "selected" : ""}>Moderatore su forum selezionati</option>
+          <option value="mod_all" ${currentRoleValue === "mod_all" ? "selected" : ""}>Moderatore su tutti i forum</option>
+          <option value="admin" ${currentRoleValue === "admin" ? "selected" : ""}>Amministratore (Admin)</option>
+        </select>
+      </div>
+      <div>
+        <div style="font-size:11px; color:#94A3B8; margin-bottom:5px;">Forum moderati (tocca per assegnare o rimuovere singoli forum):</div>
+        <div class="pill-row">${chipsHtml}</div>
+      </div>
+      <div class="user-btns">
+        <button class="mini-btn ${u.modAll ? "admin-on" : ""}" onclick="toggleModAll('${u.id}')">
+          ${u.modAll ? "✓ Mod Tutti i Forum" : "+ Mod Tutti i Forum"}
+        </button>
+        <button class="mini-btn ${u.isAdmin ? "admin-on" : ""}" onclick="toggleUserAdmin('${u.id}')">
+          ${u.isAdmin ? "🛡️ Togli Admin" : "🛡️ Promuovi Admin"}
+        </button>
+        <button class="mini-btn ${u.banned ? "ban-on" : ""}" onclick="toggleBanUser('${u.id}')">
+          ${u.banned ? "🔓 Sbanna" : "⛔ Banna"}
+        </button>
+        ${!isCurrent ? `<button class="mini-btn switch-user" onclick="switchActiveUser('${u.id}')">👁️ Testa vista</button>` : ""}
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function toggleUserAdmin(userId) {
+  if (!isAdmin()) return;
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  u.isAdmin = !u.isAdmin;
+  persist();
+  syncChrome();
+  renderUsersAdmin();
+  showToast(`Ruolo Admin ${u.isAdmin ? "assegnato a" : "rimosso da"} ${u.nome}`);
+}
+
+function toggleModAll(userId) {
+  if (!isAdmin()) return;
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  u.modAll = !u.modAll;
+  if (u.modAll) u.modForums = [...MODERATED_FORUMS];
+  persist();
+  syncChrome();
+  renderUsersAdmin();
+  showToast(`${u.nome}: ${u.modAll ? "moderatore su tutti i forum" : "moderazione globale rimossa"}`);
+}
+
+function toggleUserForumMod(userId, forumName) {
+  if (!isAdmin()) return;
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  u.modAll = false;
+  u.modForums = u.modForums || [];
+  const idx = u.modForums.indexOf(forumName);
+  if (idx >= 0) u.modForums.splice(idx, 1);
+  else u.modForums.push(forumName);
+  persist();
+  syncChrome();
+  renderUsersAdmin();
+}
+
+function toggleBanUser(userId) {
+  if (!isAdmin()) return;
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  if (u.id === state.activeUserId) {
+    return showToast("Non puoi bannare l'account attualmente in uso", true);
+  }
+  u.banned = !u.banned;
+  persist();
+  renderUsersAdmin();
+  showToast(`${u.nome} ${u.banned ? "è stato bannato (non vede più il gruppo)" : "è stato sbannato"}`);
+}
+
+function switchActiveUser(userId) {
+  const u = state.users.find(x => x.id === userId);
+  if (!u) return;
+  state.activeUserId = u.id;
+  persist();
+  syncChrome();
+  if (u.banned) {
+    showToast(`Vista impostata su ${u.nome} (Bannato)`, true);
+    return;
+  }
+  switchView("home");
+  showToast(`Ora stai usando l'account di ${u.nome}`);
+}
+
+/* ADMIN: SEGNALAZIONI */
 function renderReportsAdmin() {
   if (!isAdmin()) return;
-  const pendWrap = document.getElementById("pendingAccessSection");
   const wrap = document.getElementById("reportsList");
-  if (pendWrap) {
-    const pendList = state.pendingRegistrations || [];
-    pendWrap.innerHTML = pendList.length
-      ? `<div class="form-card" style="border-color:#10B981;"><h3 style="color:#6EE7B7;">👤 Richieste Accesso Nuovi Utenti (${pendList.length})</h3><div style="font-size:12px; color:#CBD5E1;">Vai su <strong>Approvazione Nuovi Utenti</strong> dal menu per visionare tesserino e approvare/rifiutare.</div></div>`
-      : "";
-  }
   wrap.innerHTML = "";
   const reps = state.reports || [];
   if (reps.length === 0) {
-    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessuna segnalazione o richiesta presente.</div>`;
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessuna segnalazione presente.</div>`;
     return;
   }
 
@@ -918,12 +2811,194 @@ function renderReportsAdmin() {
     wrap.appendChild(card);
   });
 }
-// ... existing code ...
-setupPwaManifestAndServiceWorker();
-enforceFounderIntegrity();
+
+function decideReport(repId, decision) {
+  if (!isAdmin()) return;
+  const r = state.reports.find(x => x.id === repId);
+  if (!r) return;
+  r.status = decision;
+  if (decision === "approved" && state.topics[r.topic]) {
+    state.topics[r.topic] = state.topics[r.topic].filter(p => p.id !== r.postId);
+  }
+  persist();
+  syncChrome();
+  renderReportsAdmin();
+  showToast(decision === "approved" ? "Segnalazione approvata e post rimosso" : "Segnalazione respinta");
+}
+
+/* PROFILO */
+function renderProfile() {
+  const p = getCurrentUser();
+  document.getElementById("profNome").value = p.nome || "";
+  document.getElementById("profCognome").value = p.cognome || "";
+  document.getElementById("profTel").value = p.tel || "";
+  const prev = document.getElementById("profBadgePreview");
+  const st = document.getElementById("badgeStatus");
+  if (p.badgeImg) {
+    prev.src = p.badgeImg;
+    prev.style.display = "block";
+    st.textContent = "Tesserino caricato ✓";
+    st.style.color = "#10B981";
+  } else {
+    prev.style.display = "none";
+    st.textContent = "Obbligatorio: carica foto tesserino";
+    st.style.color = "#94A3B8";
+  }
+  renderEntiList();
+}
+
+function handleBadgeUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    getCurrentUser().badgeImg = evt.target.result;
+    renderProfile();
+  };
+  reader.readAsDataURL(file);
+}
+
+function renderEntiList() {
+  const p = getCurrentUser();
+  const wrap = document.getElementById("entiContainer");
+  wrap.innerHTML = "";
+  const tipi = ["Vigili del Fuoco", "Croce Rossa Italiana", "Soccorso Alpino", "Associazione Ambulanze", "Protezione Civile", "Polizia Locale"];
+  const quals = ["SAF", "SAF + Sanitario", "BLSD", "Antincendio Boschivo (AIB)", "Patente Mezzi Pesanti", "Operatore Radio"];
+
+  p.enti.forEach((ent, idx) => {
+    const box = document.createElement("div");
+    box.className = "ente-box";
+
+    let optionsTipi = tipi.map(t => `<option value="${t}" ${ent.tipo === t ? "selected" : ""}>${t}</option>`).join("");
+    let extraFields = "";
+
+    if (ent.tipo === "Vigili del Fuoco") {
+      let corpiOpts = CORPI_VVF_TRENTINO.map(c => `<option value="${c}" ${ent.corpoVVF === c ? "selected" : ""}>${c}</option>`).join("");
+      let chipsHtml = quals.map(q => {
+        const active = (ent.abilitazioni || []).includes(q);
+        return `<span class="qual-chip ${active ? "on" : ""}" onclick="toggleQual(${idx}, '${q}')">${q}</span>`;
+      }).join("");
+
+      extraFields = `
+        <div class="field">
+          <label>Corpo VVF del Trentino (237 corpi) <span class="req">*</span></label>
+          <input type="text" placeholder="Cerca corpo VVF..." oninput="filterCorpi(this, ${idx})" style="margin-bottom:4px;">
+          <select id="sel-vvf-${idx}" onchange="updateEnte(${idx}, 'corpoVVF', this.value)">${corpiOpts}</select>
+        </div>
+        <div class="field">
+          <label>Grado / Qualifica (facoltativo)</label>
+          <input type="text" value="${ent.grado || ""}" placeholder="Es. Vigile, Capo Squadra, Vice Comandante..." onchange="updateEnte(${idx}, 'grado', this.value)">
+        </div>
+        <div class="field">
+          <label>Abilitazioni (facoltativo)</label>
+          <div class="chips-wrap">${chipsHtml}</div>
+        </div>
+      `;
+    } else {
+      extraFields = `
+        <div class="field">
+          <label>In quale sede opera <span class="req">*</span></label>
+          <input type="text" value="${ent.sede || ""}" placeholder="Scrivi la sede / comitato / stazione..." onchange="updateEnte(${idx}, 'sede', this.value)">
+        </div>
+        <div class="field">
+          <label>Qualifica / Ruolo (facoltativo)</label>
+          <input type="text" value="${ent.grado || ""}" placeholder="Es. Soccorritore, Autista, Tecnico..." onchange="updateEnte(${idx}, 'grado', this.value)">
+        </div>
+      `;
+    }
+
+    box.innerHTML = `
+      <div class="ente-header">
+        <span style="font-size:11.5px; font-weight:800; color:#38BDF8;">${idx === 0 ? "ENTE PRINCIPALE *" : "ENTE AGGIUNTIVO #" + idx}</span>
+        ${idx > 0 ? `<button class="remove-ente" onclick="removeEnte(${idx})">Rimuovi</button>` : ""}
+      </div>
+      <div class="field">
+        <label>Seleziona Ente ${idx === 0 ? '<span class="req">*</span>' : ''}</label>
+        <select onchange="changeEnteTipo(${idx}, this.value)">${optionsTipi}</select>
+      </div>
+      ${extraFields}
+    `;
+    wrap.appendChild(box);
+  });
+}
+
+function filterCorpi(inp, idx) {
+  const q = inp.value.toLowerCase();
+  const sel = document.getElementById("sel-vvf-" + idx);
+  const filtered = CORPI_VVF_TRENTINO.filter(c => c.toLowerCase().includes(q));
+  sel.innerHTML = filtered.map(c => `<option value="${c}">${c}</option>`).join("");
+  if (filtered[0]) updateEnte(idx, "corpoVVF", filtered[0]);
+}
+
+function changeEnteTipo(idx, val) {
+  const p = getCurrentUser();
+  p.enti[idx].tipo = val;
+  if (val === "Vigili del Fuoco" && !p.enti[idx].corpoVVF) {
+    p.enti[idx].corpoVVF = "VVF Bolbeno-Zuclo";
+  }
+  renderEntiList();
+}
+
+function updateEnte(idx, key, val) {
+  getCurrentUser().enti[idx][key] = val;
+}
+
+function toggleQual(idx, q) {
+  const p = getCurrentUser();
+  const list = p.enti[idx].abilitazioni || [];
+  const i = list.indexOf(q);
+  if (i >= 0) list.splice(i, 1); else list.push(q);
+  p.enti[idx].abilitazioni = list;
+  renderEntiList();
+}
+
+function addExtraEnte() {
+  getCurrentUser().enti.push({ tipo: "Croce Rossa Italiana", corpoVVF: "", grado: "", abilitazioni: [], sede: "" });
+  renderEntiList();
+}
+
+function removeEnte(idx) {
+  getCurrentUser().enti.splice(idx, 1);
+  renderEntiList();
+}
+
+function saveProfile() {
+  const p = getCurrentUser();
+  const nome = document.getElementById("profNome").value.trim();
+  const cognome = document.getElementById("profCognome").value.trim();
+  const tel = document.getElementById("profTel").value.trim();
+
+  if (!nome || !cognome || !tel) {
+    return showToast("Compila Nome, Cognome e Numero di telefono!", true);
+  }
+  p.nome = nome;
+  p.cognome = cognome;
+  p.tel = tel;
+  persist();
+  syncChrome();
+  showToast("Profilo salvato correttamente!");
+}
+
+function resetDemo() {
+  localStorage.removeItem("coord_interforze_v7_board");
+  state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  document.getElementById("drawer").classList.remove("open");
+  syncChrome();
+  renderHome();
+  showToast("Dati demo ripristinati");
+}
+
+const mainAdmin = state.users && state.users.find(u => u.id === "u1");
+if (mainAdmin) {
+  mainAdmin.isAdmin = true;
+  mainAdmin.isFounder = true;
+  mainAdmin.modAll = true;
+  mainAdmin.modForums = [...MODERATED_FORUMS];
+  mainAdmin.banned = false;
+  if (!state.activeUserId) state.activeUserId = "u1";
+  persist();
+}
 syncChrome();
-updatePwaInstallBar();
-renderSoundSettingsView();
 if (state.loggedIn) {
   renderHome();
 } else {
