@@ -593,7 +593,6 @@
     cursor: pointer;
   }
 
-
   .auth-box {
     background: var(--card);
     border: 1.5px solid #334155;
@@ -698,6 +697,97 @@
     padding: 4px;
   }
 
+  /* NOTIFICHE & SUONERIE */
+  .notif-banner {
+    position: fixed;
+    top: 66px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(456px, calc(100vw - 24px));
+    background: #172234;
+    border: 1.5px solid #38BDF8;
+    border-left: 5px solid #38BDF8;
+    border-radius: 12px;
+    padding: 10px 12px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.82);
+    z-index: 260;
+    display: none;
+    flex-direction: column;
+    gap: 3px;
+    animation: fadeIn 0.15s ease;
+  }
+  .notif-banner.open { display: flex; }
+  .notif-banner.emergency {
+    background: #2A1116;
+    border-color: #EF4444;
+    border-left-color: #EF4444;
+  }
+  .notif-banner.admin-alert {
+    background: #142620;
+    border-color: #10B981;
+    border-left-color: #34D399;
+  }
+  .notif-banner-top {
+    display: flex;
+    justify-content: space-between;
+    font-size: 10.5px;
+    font-weight: 800;
+    color: #7DD3FC;
+  }
+  .notif-banner-title { font-size: 13px; font-weight: 800; color: #fff; }
+  .notif-banner-body { font-size: 12px; color: #CBD5E1; }
+
+  .perm-backdrop {
+    position: fixed;
+    inset: 0;
+    background: rgba(2, 6, 23, 0.84);
+    backdrop-filter: blur(4px);
+    z-index: 400;
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  .perm-backdrop.open { display: flex; }
+  .perm-card {
+    width: 100%;
+    max-width: 390px;
+    background: #161E29;
+    border: 1.5px solid #38BDF8;
+    border-radius: 14px;
+    padding: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    box-shadow: 0 18px 40px rgba(0,0,0,0.85);
+  }
+  .perm-box {
+    background: #0B0F15;
+    border: 1px solid #263142;
+    border-radius: 10px;
+    padding: 10px;
+    font-size: 12px;
+    color: #E2E8F0;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+    line-height: 1.35;
+  }
+  .test-btn {
+    background: #1E3A8A;
+    border: 1px solid #60A5FA;
+    color: #EFF6FF;
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .sim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
 </style>
 </head>
 <body>
@@ -713,10 +803,41 @@
   </div>
 </header>
 
+<!-- MODALE CONSENSO NOTIFICHE & SUONERIE ALL'INSTALLAZIONE / PRIMO AVVIO -->
+<div id="permBackdrop" class="perm-backdrop">
+  <div class="perm-card">
+    <div style="font-size:15px; font-weight:800; color:#7DD3FC;">🔔 Abilita Notifiche &amp; Suonerie App</div>
+    <div style="font-size:12px; color:#CBD5E1; line-height:1.4;">
+      Dando il consenso, l'app abiliterà su Android e sul dispositivo:
+    </div>
+    <div class="perm-box">
+      <div>• <strong>Segnalazioni &amp; Nuovi Utenti</strong> (avviso agli admin su nuove richieste e segnalazioni)</div>
+      <div>• <strong>Messaggi da ogni chat</strong> (allerte ordinarie PC, eventi, logistica, discussioni, manuali)</div>
+      <div>• <strong>Messaggi da chat Emergenze</strong> (priorità alta con tono emergenza dedicato)</div>
+      <div>• <strong>Suonerie personalizzabili &amp; vibrazione</strong></div>
+    </div>
+    <div class="user-btns">
+      <button type="button" class="reject-btn" style="flex:1;" onclick="denyNotifConsent()">Non ora</button>
+      <button type="button" class="approve-btn" style="flex:1;" onclick="grantNotifConsent()">✓ Consenti e Abilita</button>
+    </div>
+  </div>
+</div>
+
+<!-- BANNER NOTIFICA IN-APP -->
+<div id="notifBanner" class="notif-banner" onclick="closeNotifBanner()">
+  <div class="notif-banner-top">
+    <span id="notifBannerCat">NOTIFICA</span>
+    <span style="color:#94A3B8;">Tocca per chiudere</span>
+  </div>
+  <div id="notifBannerTitle" class="notif-banner-title"></div>
+  <div id="notifBannerBody" class="notif-banner-body"></div>
+</div>
+
 <div id="drawer" class="drawer">
   <div class="drawer-item" onclick="switchView('home')"><span>🏠 Bacheca Principale</span></div>
   <div class="drawer-item" onclick="openTopic('EMERGENZE')"><span>🚨 Chat Emergenze</span></div>
   <div class="drawer-item" onclick="openTopic('MANUALI E PROCEDURE')"><span>📘 Manuali & PDF</span></div>
+  <div class="drawer-item" onclick="switchView('notifiche')"><span>🔔 Notifiche &amp; Suonerie</span></div>
   <div class="drawer-item" onclick="switchView('profilo')"><span>🪪 Profilo Operatore</span></div>
   <div class="drawer-item" onclick="switchView('privacy')"><span>🔒 Trattamento Privacy</span></div>
   <div id="drawerAdminApprovals" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('approvazioni')"><span>✅ Approvazione Nuovi Utenti</span></div>
@@ -829,6 +950,128 @@
       <button type="button" class="privacy-link-btn" onclick="switchView('privacy')">📄 Leggi pagina Trattamento Privacy completa →</button>
 
       <button type="button" class="save-btn" onclick="submitUserRegistration()">INVIA RICHIESTA DI REGISTRAZIONE</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISTA: NOTIFICHE & SUONERIE PERSONALIZZABILI -->
+<div id="view-notifiche" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#7DD3FC;">🔔 NOTIFICHE &amp; SUONERIE</span>
+    <span id="notifStatusBadge" style="font-size:11px; color:#6EE7B7;">Attive</span>
+  </div>
+
+  <div class="form-card" style="border-color:#0EA5E9;">
+    <h3>📲 Consenso &amp; Abilitazione su Android / Dispositivo</h3>
+    <div id="notifDeviceSummary" class="drive-note">
+      Controlla o abilita i permessi di notifica, suono e vibrazione dopo l'installazione dell'app su Android.
+    </div>
+    <div class="user-btns">
+      <button type="button" class="approve-btn" onclick="requestAndroidNotificationPermission()">✓ Consenti e Abilita Notifiche Android</button>
+      <button type="button" class="mini-btn" onclick="openNotifConsentModal(true)">Rivedi Consenso</button>
+    </div>
+  </div>
+
+  <!-- 1. SEGNALAZIONI & NUOVI UTENTI -->
+  <div class="form-card" style="border-color:#EAB308;">
+    <h3 style="color:#FDE047;">1️⃣ Segnalazioni &amp; Nuovi Utenti (Admin)</h3>
+    <div class="field">
+      <label>Abilita notifiche Segnalazioni &amp; Nuovi Utenti</label>
+      <select id="notifEnabledAdmin" onchange="updateNotifConfig('enabledAdmin', this.value === 'true')">
+        <option value="true">Attivate</option>
+        <option value="false">Disattivate</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Suoneria / Toni per Segnalazioni e Nuovi Utenti</label>
+      <select id="notifToneAdmin" onchange="updateNotifConfig('toneAdmin', this.value)">
+        <option value="new_user_chime">Melodia Nuovo Utente / Richiesta (predefinita)</option>
+        <option value="soft_report">Avviso Segnalazione Discreto</option>
+        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+        <option value="silent">Silenzioso</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Carica file audio personalizzato (Segnalazioni / Nuovi Utenti)</label>
+      <input type="file" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomToneFile(event, 'admin')">
+      <span id="customToneLabelAdmin" style="font-size:11px; color:#94A3B8;">Nessun file audio caricato</span>
+    </div>
+    <div class="user-btns">
+      <button type="button" class="test-btn" onclick="testNotificationType('admin')">🔊 Prova Segnalazioni / Nuovi Utenti</button>
+      <button type="button" class="mini-btn" onclick="clearCustomToneFile('admin')">Rimuovi file</button>
+    </div>
+  </div>
+
+  <!-- 2. MESSAGGI DA OGNI CHAT -->
+  <div class="form-card" style="border-color:#38BDF8;">
+    <h3 style="color:#7DD3FC;">2️⃣ Messaggi da Ogni Chat</h3>
+    <div class="field">
+      <label>Abilita notifiche per i messaggi delle chat</label>
+      <select id="notifEnabledChats" onchange="updateNotifConfig('enabledChats', this.value === 'true')">
+        <option value="true">Attivate</option>
+        <option value="false">Disattivate</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Suoneria per messaggi delle chat</label>
+      <select id="notifToneChats" onchange="updateNotifConfig('toneChats', this.value)">
+        <option value="chat_soft">Notifica Chat Soft (predefinita)</option>
+        <option value="chime_operativo">Chime Operativo</option>
+        <option value="ping_messaggio">Ping Messaggio</option>
+        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+        <option value="silent">Silenzioso</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Carica file audio personalizzato (Messaggi Chat)</label>
+      <input type="file" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomToneFile(event, 'chats')">
+      <span id="customToneLabelChats" style="font-size:11px; color:#94A3B8;">Nessun file audio caricato</span>
+    </div>
+    <div class="user-btns">
+      <button type="button" class="test-btn" onclick="testNotificationType('chats')">🔊 Prova Messaggi Chat</button>
+      <button type="button" class="mini-btn" onclick="clearCustomToneFile('chats')">Rimuovi file</button>
+    </div>
+  </div>
+
+  <!-- 3. MESSAGGI DA CHAT EMERGENZE -->
+  <div class="form-card" style="border-color:#EF4444;">
+    <h3 style="color:#FCA5A5;">3️⃣ Messaggi da Chat Emergenze</h3>
+    <div class="field">
+      <label>Abilita notifiche per chat Emergenze</label>
+      <select id="notifEnabledEmergencies" onchange="updateNotifConfig('enabledEmergencies', this.value === 'true')">
+        <option value="true">Attivate (consigliato)</option>
+        <option value="false">Disattivate</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Suoneria per chat Emergenze</label>
+      <select id="notifToneEmergencies" onchange="updateNotifConfig('toneEmergencies', this.value)">
+        <option value="sirena_vvf">Allarme Emergenza VVF (predefinita)</option>
+        <option value="doppio_impulso">Doppio Impulso Critico</option>
+        <option value="tono_urgenza">Tono Urgenza Operativa</option>
+        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+        <option value="silent">Silenzioso</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Carica file audio personalizzato (Chat Emergenze)</label>
+      <input type="file" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomToneFile(event, 'emergencies')">
+      <span id="customToneLabelEmergencies" style="font-size:11px; color:#94A3B8;">Nessun file audio caricato</span>
+    </div>
+    <div class="user-btns">
+      <button type="button" class="test-btn" onclick="testNotificationType('emergencies')">🚨 Prova Chat Emergenze</button>
+      <button type="button" class="mini-btn" onclick="clearCustomToneFile('emergencies')">Rimuovi file</button>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🧪 Simulazione Rapida Notifiche</h3>
+    <div class="sim-grid">
+      <button type="button" class="approve-btn" onclick="testNotificationType('admin')">👤 Simula Nuovo Utente</button>
+      <button type="button" class="mini-btn" onclick="testNotificationType('admin')">🚩 Simula Segnalazione</button>
+      <button type="button" class="photo-btn" onclick="testNotificationType('chats')">💬 Simula Messaggio Chat</button>
+      <button type="button" class="del-btn" onclick="testNotificationType('emergencies')">🚨 Simula Emergenza</button>
     </div>
   </div>
 </div>
@@ -1144,11 +1387,29 @@ const MODERATED_FORUMS = [
   "DISCUSSIONE OPERATIVA"
 ];
 
+const DEFAULT_NOTIF_CONFIG = {
+  consentAnswered: false,
+  consentGranted: false,
+  enabledAdmin: true,
+  enabledChats: true,
+  enabledEmergencies: true,
+  toneAdmin: "new_user_chime",
+  toneChats: "chat_soft",
+  toneEmergencies: "sirena_vvf",
+  customAudioAdmin: "",
+  customNameAdmin: "",
+  customAudioChats: "",
+  customNameChats: "",
+  customAudioEmergencies: "",
+  customNameEmergencies: ""
+};
+
 const DEFAULT_DATA = {
   selectedCat: "EMERGENZE",
   currentTopic: "EMERGENZE",
   activeUserId: "u1",
   loggedIn: false,
+  notifConfig: JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG)),
   users: [
     {
       id: "u1", isAdmin: true, isFounder: true, banned: false, modAll: true, modForums: [...MODERATED_FORUMS],
@@ -1381,7 +1642,6 @@ const DEFAULT_DATA = {
 
 const CLASSIC_EMOJIS = ["👍", "👎", "❤️", "😂", "🔥", "😮", "😢", "👏", "🙏", "🚒", "⚠️", "👀"];
 
-
 let pendingConfirmAction = null;
 
 function closeConfirmDropdown() {
@@ -1448,6 +1708,9 @@ document.addEventListener("click", function(e) {
 });
 
 let state = JSON.parse(localStorage.getItem("coord_interforze_v7_board")) || JSON.parse(JSON.stringify(DEFAULT_DATA));
+if (!state.notifConfig) {
+  state.notifConfig = JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+}
 let pendingPhotoEventId = null;
 let pendingPhotoCapture = false;
 let quickAttachedPhoto = null;
@@ -1464,6 +1727,337 @@ function showToast(msg, isErr = false) {
   t.className = "toast" + (isErr ? " err" : "");
   t.style.display = "block";
   setTimeout(() => { t.style.display = "none"; }, 2600);
+}
+
+/* SISTEMA NOTIFICHE, SUONERIE & CONVENZIONI ANDROID */
+let audioCtxInstance = null;
+let customTonePlayer = null;
+let notifBannerTimer = null;
+
+function ensureAudioContext() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!audioCtxInstance) audioCtxInstance = new AudioCtx();
+  if (audioCtxInstance.state === "suspended") audioCtxInstance.resume().catch(() => {});
+  return audioCtxInstance;
+}
+
+function playSynthSequence(notes, masterGain = 0.25) {
+  try {
+    const ctx = ensureAudioContext();
+    if (!ctx) return;
+    let t = ctx.currentTime + 0.02;
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = n.type || "sine";
+      osc.frequency.setValueAtTime(n.freq, t);
+      if (n.slideTo) osc.frequency.linearRampToValueAtTime(n.slideTo, t + n.dur);
+      const peak = Math.max(0.005, (n.gain || 1) * masterGain);
+      gain.gain.setValueAtTime(0.0001, t);
+      gain.gain.linearRampToValueAtTime(peak, t + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, t + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(t);
+      osc.stop(t + n.dur + 0.02);
+      t += n.dur + (n.gap || 0.04);
+    });
+  } catch (e) {}
+}
+
+function playCustomToneDataUrl(dataUrl, vol = 0.85) {
+  if (!dataUrl) return false;
+  try {
+    if (customTonePlayer) customTonePlayer.pause();
+    customTonePlayer = new Audio(dataUrl);
+    customTonePlayer.volume = vol;
+    customTonePlayer.play().catch(() => {});
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function playConfiguredSound(groupKey) {
+  const cfg = state.notifConfig || DEFAULT_NOTIF_CONFIG;
+  if (groupKey === "emergencies") {
+    const tone = cfg.toneEmergencies || "sirena_vvf";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customAudioEmergencies) {
+      playCustomToneDataUrl(cfg.customAudioEmergencies, 0.95);
+      return;
+    }
+    if (tone === "doppio_impulso") {
+      playSynthSequence([
+        { freq: 920, dur: 0.16, gap: 0.06, type: "sawtooth", gain: 0.9 },
+        { freq: 920, dur: 0.16, gap: 0.14, type: "sawtooth", gain: 0.9 },
+        { freq: 1180, dur: 0.22, gap: 0.06, type: "sawtooth", gain: 1.0 }
+      ], 0.32);
+    } else if (tone === "tono_urgenza") {
+      playSynthSequence([
+        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 1046, dur: 0.28, gap: 0.04, type: "square", gain: 0.95 }
+      ], 0.28);
+    } else {
+      playSynthSequence([
+        { freq: 620, slideTo: 1120, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
+        { freq: 1120, slideTo: 620, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 }
+      ], 0.34);
+    }
+    return;
+  }
+
+  if (groupKey === "chats") {
+    const tone = cfg.toneChats || "chat_soft";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customAudioChats) {
+      playCustomToneDataUrl(cfg.customAudioChats, 0.75);
+      return;
+    }
+    if (tone === "chime_operativo") {
+      playSynthSequence([
+        { freq: 587.33, dur: 0.14, gap: 0.03, type: "triangle", gain: 0.7 },
+        { freq: 880, dur: 0.22, gap: 0.04, type: "triangle", gain: 0.75 }
+      ], 0.22);
+    } else if (tone === "ping_messaggio") {
+      playSynthSequence([
+        { freq: 1046.5, dur: 0.11, gap: 0.04, type: "sine", gain: 0.65 },
+        { freq: 1318.5, dur: 0.16, gap: 0.04, type: "sine", gain: 0.65 }
+      ], 0.2);
+    } else {
+      playSynthSequence([
+        { freq: 523.25, dur: 0.18, gap: 0.04, type: "sine", gain: 0.55 },
+        { freq: 659.25, dur: 0.22, gap: 0.04, type: "sine", gain: 0.55 }
+      ], 0.18);
+    }
+    return;
+  }
+
+  if (groupKey === "admin") {
+    const tone = cfg.toneAdmin || "new_user_chime";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customAudioAdmin) {
+      playCustomToneDataUrl(cfg.customAudioAdmin, 0.85);
+      return;
+    }
+    if (tone === "soft_report") {
+      playSynthSequence([
+        { freq: 392, dur: 0.22, gap: 0.05, type: "sine", gain: 0.35 },
+        { freq: 440, dur: 0.25, gap: 0.04, type: "sine", gain: 0.32 }
+      ], 0.12);
+    } else {
+      playSynthSequence([
+        { freq: 440, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
+        { freq: 554.37, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
+        { freq: 659.25, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.85 },
+        { freq: 880, dur: 0.26, gap: 0.04, type: "triangle", gain: 0.9 }
+      ], 0.26);
+    }
+  }
+}
+
+function closeNotifBanner() {
+  const b = document.getElementById("notifBanner");
+  if (b) b.classList.remove("open");
+}
+
+function dispatchAppNotification({ groupKey, categoryLabel, title, body }) {
+  const cfg = state.notifConfig || DEFAULT_NOTIF_CONFIG;
+  if (groupKey === "emergencies" && cfg.enabledEmergencies === false) return;
+  if (groupKey === "chats" && cfg.enabledChats === false) return;
+  if (groupKey === "admin" && cfg.enabledAdmin === false) return;
+
+  playConfiguredSound(groupKey);
+
+  const banner = document.getElementById("notifBanner");
+  const catEl = document.getElementById("notifBannerCat");
+  const titleEl = document.getElementById("notifBannerTitle");
+  const bodyEl = document.getElementById("notifBannerBody");
+  if (banner && catEl && titleEl && bodyEl) {
+    banner.className = "notif-banner open" + (groupKey === "emergencies" ? " emergency" : (groupKey === "admin" ? " admin-alert" : ""));
+    catEl.textContent = categoryLabel || "NOTIFICA";
+    titleEl.textContent = title || "Nuovo avviso";
+    bodyEl.textContent = body || "";
+    if (notifBannerTimer) clearTimeout(notifBannerTimer);
+    notifBannerTimer = setTimeout(() => banner.classList.remove("open"), 4800);
+  }
+
+  try {
+    if (navigator.vibrate) {
+      navigator.vibrate(groupKey === "emergencies" ? [250, 110, 250, 110, 380] : [130]);
+    }
+  } catch (e) {}
+
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title || "Coordinamento Interforze", { body: body || "" });
+    }
+  } catch (e) {}
+}
+
+function openNotifConsentModal(force = false) {
+  const cfg = state.notifConfig || DEFAULT_NOTIF_CONFIG;
+  if (!force && cfg.consentAnswered) return;
+  const el = document.getElementById("permBackdrop");
+  if (el) el.classList.add("open");
+}
+
+function grantNotifConsent() {
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig.consentAnswered = true;
+  state.notifConfig.consentGranted = true;
+  state.notifConfig.enabledAdmin = true;
+  state.notifConfig.enabledChats = true;
+  state.notifConfig.enabledEmergencies = true;
+  persist();
+  document.getElementById("permBackdrop").classList.remove("open");
+  ensureAudioContext();
+  if ("Notification" in window && Notification.permission === "default") {
+    Notification.requestPermission().then(() => renderNotifSettingsView()).catch(() => {});
+  }
+  renderNotifSettingsView();
+  showToast("Notifiche e suonerie abilitate!");
+}
+
+function denyNotifConsent() {
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig.consentAnswered = true;
+  state.notifConfig.consentGranted = false;
+  persist();
+  document.getElementById("permBackdrop").classList.remove("open");
+  renderNotifSettingsView();
+  showToast("Puoi abilitare le notifiche in qualsiasi momento da Notifiche & Suonerie");
+}
+
+function requestAndroidNotificationPermission() {
+  ensureAudioContext();
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig.consentAnswered = true;
+  state.notifConfig.consentGranted = true;
+  if (!("Notification" in window)) {
+    persist();
+    renderNotifSettingsView();
+    return showToast("Notifiche e suoni in-app abilitati sul dispositivo");
+  }
+  Notification.requestPermission().then(perm => {
+    persist();
+    renderNotifSettingsView();
+    if (perm === "granted") {
+      showToast("Notifiche Android abilitate!");
+    } else {
+      showToast("Controlla Impostazioni Android > App > Notifiche", true);
+    }
+  });
+}
+
+function updateNotifConfig(key, val) {
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig[key] = val;
+  persist();
+  renderNotifSettingsView();
+  showToast("Impostazione notifiche salvata");
+}
+
+function handleCustomToneFile(e, groupKey) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    const cfg = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+    if (groupKey === "admin") {
+      cfg.customAudioAdmin = evt.target.result;
+      cfg.customNameAdmin = file.name;
+      cfg.toneAdmin = "custom";
+    } else if (groupKey === "chats") {
+      cfg.customAudioChats = evt.target.result;
+      cfg.customNameChats = file.name;
+      cfg.toneChats = "custom";
+    } else if (groupKey === "emergencies") {
+      cfg.customAudioEmergencies = evt.target.result;
+      cfg.customNameEmergencies = file.name;
+      cfg.toneEmergencies = "custom";
+    }
+    state.notifConfig = cfg;
+    persist();
+    renderNotifSettingsView();
+    showToast(`Suoneria "${file.name}" impostata`);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+}
+
+function clearCustomToneFile(groupKey) {
+  const cfg = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  if (groupKey === "admin") {
+    cfg.customAudioAdmin = "";
+    cfg.customNameAdmin = "";
+    if (cfg.toneAdmin === "custom") cfg.toneAdmin = "new_user_chime";
+  } else if (groupKey === "chats") {
+    cfg.customAudioChats = "";
+    cfg.customNameChats = "";
+    if (cfg.toneChats === "custom") cfg.toneChats = "chat_soft";
+  } else if (groupKey === "emergencies") {
+    cfg.customAudioEmergencies = "";
+    cfg.customNameEmergencies = "";
+    if (cfg.toneEmergencies === "custom") cfg.toneEmergencies = "sirena_vvf";
+  }
+  persist();
+  renderNotifSettingsView();
+  showToast("File audio rimosso");
+}
+
+function testNotificationType(groupKey) {
+  if (groupKey === "admin") {
+    dispatchAppNotification({
+      groupKey: "admin",
+      categoryLabel: "👤 NUOVO UTENTE / SEGNALAZIONE",
+      title: "Nuova richiesta o segnalazione",
+      body: "Test notifica personalizzata per Segnalazioni e Nuovi Utenti."
+    });
+  } else if (groupKey === "emergencies") {
+    dispatchAppNotification({
+      groupKey: "emergencies",
+      categoryLabel: "🚨 CHAT EMERGENZE",
+      title: "Allerta Emergenza Operativa",
+      body: "Test notifica personalizzata per la chat Emergenze."
+    });
+  } else {
+    dispatchAppNotification({
+      groupKey: "chats",
+      categoryLabel: "💬 MESSAGGI CHAT",
+      title: "Nuovo messaggio in chat",
+      body: "Test notifica personalizzata per i messaggi delle chat."
+    });
+  }
+}
+
+function renderNotifSettingsView() {
+  const cfg = state.notifConfig || DEFAULT_NOTIF_CONFIG;
+  const setVal = (id, v) => { const el = document.getElementById(id); if (el) el.value = v; };
+  setVal("notifEnabledAdmin", String(cfg.enabledAdmin !== false));
+  setVal("notifToneAdmin", cfg.toneAdmin || "new_user_chime");
+  setVal("notifEnabledChats", String(cfg.enabledChats !== false));
+  setVal("notifToneChats", cfg.toneChats || "chat_soft");
+  setVal("notifEnabledEmergencies", String(cfg.enabledEmergencies !== false));
+  setVal("notifToneEmergencies", cfg.toneEmergencies || "sirena_vvf");
+
+  const lAdm = document.getElementById("customToneLabelAdmin");
+  const lCht = document.getElementById("customToneLabelChats");
+  const lEmg = document.getElementById("customToneLabelEmergencies");
+  if (lAdm) lAdm.textContent = cfg.customNameAdmin ? `File caricato: ${cfg.customNameAdmin} ✓` : "Nessun file audio caricato";
+  if (lCht) lCht.textContent = cfg.customNameChats ? `File caricato: ${cfg.customNameChats} ✓` : "Nessun file audio caricato";
+  if (lEmg) lEmg.textContent = cfg.customNameEmergencies ? `File caricato: ${cfg.customNameEmergencies} ✓` : "Nessun file audio caricato";
+
+  const devSum = document.getElementById("notifDeviceSummary");
+  const permState = ("Notification" in window) ? Notification.permission : "in-app";
+  if (devSum) {
+    devSum.innerHTML = `
+      <div>• Consenso app: <strong>${cfg.consentGranted ? "Concesso ✓" : "Da confermare"}</strong></div>
+      <div>• Permesso notifiche Android / Browser: <strong>${permState === "granted" ? "Abilitato ✓" : (permState === "denied" ? "Bloccato (apri Impostazioni app)" : "In attesa / Abilitabile")}</strong></div>
+      <div>• Emergenze: <strong>${cfg.enabledEmergencies !== false ? "Attive" : "Disattivate"}</strong> • Chat: <strong>${cfg.enabledChats !== false ? "Attive" : "Disattivate"}</strong> • Admin (Segnalazioni/Utenti): <strong>${cfg.enabledAdmin !== false ? "Attive" : "Disattivate"}</strong></div>
+    `;
+  }
 }
 
 function getCurrentUser() {
@@ -1541,7 +2135,7 @@ function switchView(name) {
   const activeEl = document.querySelector(".view.active");
   const currentActiveId = activeEl ? activeEl.id.replace("view-", "") : "login";
 
-  if (!state.loggedIn && name !== "login" && name !== "privacy") {
+  if (!state.loggedIn && name !== "login" && name !== "privacy" && name !== "notifiche") {
     name = "login";
   }
   if ((name === "utenti" || name === "segnalazioni" || name === "bacheca" || name === "approvazioni") && (!state.loggedIn || !isAdmin())) {
@@ -1558,6 +2152,7 @@ function switchView(name) {
   if (name === "home") renderHome();
   if (name === "topic") renderTopic();
   if (name === "manuali") renderManuals();
+  if (name === "notifiche") renderNotifSettingsView();
   if (name === "profilo") renderProfile();
   if (name === "approvazioni") renderPendingApprovals();
   if (name === "bacheca") renderBoardAdmin();
@@ -1722,8 +2317,15 @@ function submitUserRegistration() {
 
   persist();
   syncChrome();
+  dispatchAppNotification({
+    groupKey: "admin",
+    categoryLabel: "👤 NUOVA RICHIESTA UTENTE (ADMIN)",
+    title: `Nuovo utente da approvare: ${nome} ${cognome}`.trim(),
+    body: `${enteTipo}${corpoVVF ? " — " + corpoVVF : ""} • Matricola: ${matricola}`,
+    forceSound: true
+  });
   setAuthTab("login");
-  showToast("Richiesta inviata! Attendi l'approvazione di un amministratore per accedere");
+  showToast("Richiesta inviata e notificata agli amministratori!");
 }
 
 function renderPendingApprovals() {
@@ -1925,6 +2527,12 @@ function publishQuick() {
     clearQuickPhoto();
     persist();
     renderHome();
+    dispatchAppNotification({
+      groupKey: "chats",
+      categoryLabel: `💬 ${cat}`,
+      title: `Nuovo documento in ${cat}`,
+      body: `${nome}: ${baseTitle}`
+    });
     return showToast("Voce aggiunta in MANUALI E PROCEDURE");
   }
 
@@ -1949,6 +2557,12 @@ function publishQuick() {
   clearQuickPhoto();
   persist();
   renderHome();
+  dispatchAppNotification({
+    groupKey: cat === "EMERGENZE" ? "emergencies" : "chats",
+    categoryLabel: cat === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${cat}`,
+    title: `Nuovo post in ${cat}`,
+    body: `${newPost.author}: ${finalTitle}`
+  });
   showToast("Pubblicato in " + cat);
 }
 
@@ -1962,12 +2576,19 @@ function addTopicPost() {
   if (topic === "EMERGENZE") {
     state.topics["EMERGENZE"].forEach(e => e.highlight = false);
   }
-  state.topics[topic].unshift(createPostObject(txt, topic === "EMERGENZE"));
+  const created = createPostObject(txt, topic === "EMERGENZE");
+  state.topics[topic].unshift(created);
   const ch = state.channels.find(c => c.name === topic);
   if (ch) { ch.time = "Adesso"; ch.unread += 1; }
   inp.value = "";
   persist();
   renderTopic();
+  dispatchAppNotification({
+    groupKey: topic === "EMERGENZE" ? "emergencies" : "chats",
+    categoryLabel: topic === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${topic}`,
+    title: `Nuovo post in ${topic}`,
+    body: `${created.author}: ${txt}`
+  });
   showToast("Post aggiunto in " + topic);
 }
 
@@ -2063,7 +2684,6 @@ function renderTopic() {
     const activeReacts = Object.entries(ev.reactions || {}).filter(([em, cnt]) => cnt > 0 || (ev.userReacts || []).includes(em));
     let reactsHtml = activeReacts.map(([em, cnt]) => {
       const isAct = (ev.userReacts || []).includes(em);
-      const safeEm = em.replace(/'/g, "&#39;");
       return `<button class="react-btn ${isAct ? "active" : ""}" onclick="toggleReactById(${ev.id}, decodeURIComponent('${encodeURIComponent(em)}'))">${em} ${cnt > 0 ? cnt : ""}</button>`;
     }).join("");
     reactsHtml += `<button class="add-react-btn" title="Scegli emoji" onclick="toggleEmojiPicker(${ev.id})">😊+</button>`;
@@ -2245,6 +2865,12 @@ function submitFlagWithReason(evId) {
   persist();
   syncChrome();
   renderTopic();
+  dispatchAppNotification({
+    groupKey: "admin",
+    categoryLabel: "🚩 NUOVA SEGNALAZIONE (ADMIN)",
+    title: `Segnalazione su ${topic}`,
+    body: reasonTxt
+  });
   showToast("Segnalazione inviata agli amministratori con motivazione");
 }
 
@@ -2324,27 +2950,6 @@ function toggleReactById(evId, em) {
   renderTopic();
 }
 
-function flagPostToAdmin(evId) {
-  const topic = state.currentTopic;
-  const ev = findPostInCurrentTopic(evId);
-  if (!ev) return;
-  const user = getCurrentUser();
-  const isMod = isModeratorForForum(topic);
-  const roleLabel = isAdmin() ? "Admin" : (isMod ? `Moderatore ${topic}` : "Operatore");
-  state.reports.unshift({
-    id: Date.now(),
-    topic,
-    postId: ev.id,
-    postTitle: ev.title,
-    reportedBy: `${user.nome} (${roleLabel})`,
-    reason: `Segnalazione inviata da ${user.nome} su post di ${ev.author}.`,
-    status: "pending"
-  });
-  persist();
-  syncChrome();
-  showToast("Post inviato nella pagina SEGNALAZIONI dell'Admin");
-}
-
 function deleteComment(evId, cIdx) {
   const topic = state.currentTopic;
   if (!isAdmin() && !isModeratorForForum(topic)) return showToast("Permesso negato", true);
@@ -2354,30 +2959,6 @@ function deleteComment(evId, cIdx) {
   persist();
   renderTopic();
   showToast("Commento eliminato");
-}
-
-function toggleReact(evId, em) {
-  const ev = findPostInCurrentTopic(evId);
-  if (!ev) return;
-  const idx = ev.userReacts.indexOf(em);
-  if (idx >= 0) {
-    ev.userReacts.splice(idx, 1);
-    ev.reactions[em] = Math.max(0, (ev.reactions[em] || 1) - 1);
-  } else {
-    ev.userReacts.push(em);
-    ev.reactions[em] = (ev.reactions[em] || 0) + 1;
-  }
-  persist();
-  renderTopic();
-}
-
-function toggleFollow(evId) {
-  const ev = findPostInCurrentTopic(evId);
-  if (!ev) return;
-  ev.following = !ev.following;
-  persist();
-  renderTopic();
-  showToast(ev.following ? "Notifiche commenti attivate per questo post" : "Notifiche disattivate per questo post");
 }
 
 function addComment(evId) {
@@ -2984,6 +3565,7 @@ function resetDemo() {
   state = JSON.parse(JSON.stringify(DEFAULT_DATA));
   document.getElementById("drawer").classList.remove("open");
   syncChrome();
+  renderNotifSettingsView();
   renderHome();
   showToast("Dati demo ripristinati");
 }
@@ -2999,11 +3581,13 @@ if (mainAdmin) {
   persist();
 }
 syncChrome();
+renderNotifSettingsView();
 if (state.loggedIn) {
   renderHome();
 } else {
   switchView("login");
 }
+openNotifConsentModal(false);
 </script>
 </body>
 </html>
