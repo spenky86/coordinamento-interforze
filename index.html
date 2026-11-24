@@ -973,6 +973,27 @@
     </div>
   </div>
 
+  
+  <div class="form-card" style="border-color:#10B981;">
+    <h3 style="color:#6EE7B7;">⚡ Notifiche Background &amp; Push (App Spenta / Chiusa)</h3>
+    <div id="bgPushStatusBox" class="drive-note">
+      Verifica stato Service Worker, notifiche di sistema e Push Server (VAPID).
+    </div>
+    <div class="field">
+      <label>Endpoint Push Server / Webhook (opzionale, per notifiche a app chiusa)</label>
+      <input type="url" id="pushServerUrlInput" placeholder="Es. https://tuo-server.it/api/push-subscribe" onchange="updatePushServerUrl(this.value)">
+    </div>
+    <div class="field">
+      <label>Chiave Pubblica VAPID (opzionale, per Web Push reale)</label>
+      <input type="text" id="vapidPublicKeyInput" placeholder="Es. BEl62iUYgUivxIkv69yViEuiBIa-Ib9-SkvMeAtA3LFgDzkrxZJjSgSnfckjBJuBkr3qBUYIHBQFLXYp5Nksh8U" onchange="updateVapidKey(this.value)">
+    </div>
+    <div class="user-btns">
+      <button type="button" class="approve-btn" onclick="enableBackgroundAndSystemNotifications()">🔔 Attiva Notifiche Sistema &amp; SW</button>
+      <button type="button" class="test-btn" onclick="testSystemServiceWorkerNotification()">📲 Test Notifica di Sistema</button>
+      <button type="button" class="mini-btn" onclick="subscribeWebPushIfConfigured()">☁️ Registra Web Push</button>
+    </div>
+  </div>
+
   <!-- 1. SEGNALAZIONI & NUOVI UTENTI -->
   <div class="form-card" style="border-color:#EAB308;">
     <h3 style="color:#FDE047;">1️⃣ Segnalazioni &amp; Nuovi Utenti (Admin)</h3>
@@ -3587,6 +3608,245 @@ if (state.loggedIn) {
 } else {
   switchView("login");
 }
+
+/* SERVICE WORKER + PWA + NOTIFICHE DI SISTEMA & WEB PUSH */
+let swRegistrationInstance = null;
+
+(function setupPwaAndServiceWorker() {
+  try {
+    const manifestObj = {
+      name: "Coordinamento Interforze",
+      short_name: "CoordInterforze",
+      start_url: "./",
+      display: "standalone",
+      background_color: "#0E131A",
+      theme_color: "#991B1B",
+      icons: []
+    };
+    const mBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
+    const mLink = document.createElement("link");
+    mLink.rel = "manifest";
+    mLink.href = URL.createObjectURL(mBlob);
+    document.head.appendChild(mLink);
+  } catch (e) {}
+
+  if ("serviceWorker" in navigator) {
+    const swCode = `
+      self.addEventListener("install", (event) => {
+        self.skipWaiting();
+      });
+      self.addEventListener("activate", (event) => {
+        event.waitUntil(self.clients.claim());
+      });
+      self.addEventListener("push", (event) => {
+        let data = { title: "Coordinamento Interforze", body: "Nuovo avviso operativo", groupKey: "chats" };
+        try {
+          if (event.data) {
+            const parsed = event.data.json();
+            data = Object.assign(data, parsed);
+          }
+        } catch (err) {
+          if (event.data) data.body = event.data.text();
+        }
+        event.waitUntil(
+          self.registration.showNotification(data.title, {
+            body: data.body,
+            tag: data.groupKey || "coord-interforze",
+            renotify: true,
+            vibrate: data.groupKey === "emergencies" ? [300, 120, 300, 120, 450] : [180],
+            data: data
+          })
+        );
+      });
+      self.addEventListener("notificationclick", (event) => {
+        event.notification.close();
+        event.waitUntil(
+          clients.matchAll({ type: "window", includeUncontrolled: true }).then((clientList) => {
+            for (const client of clientList) {
+              if ("focus" in client) return client.focus();
+            }
+            if (clients.openWindow) return clients.openWindow("./");
+          })
+        );
+      });
+    `;
+    const swBlob = new Blob([swCode], { type: "application/javascript" });
+    const swUrl = URL.createObjectURL(swBlob);
+    navigator.serviceWorker.register(swUrl).then((reg) => {
+      swRegistrationInstance = reg;
+      renderBgPushStatus();
+    }).catch(() => {
+      renderBgPushStatus();
+    });
+  }
+})();
+
+function urlBase64ToUint8Array(base64String) {
+  const padding = "=".repeat((4 - base64String.length % 4) % 4);
+  const base64 = (base64String + padding).replace(/-/g, "+").replace(/_/g, "/");
+  const rawData = window.atob(base64);
+  const outputArray = new Uint8Array(rawData.length);
+  for (let i = 0; i < rawData.length; ++i) {
+    outputArray[i] = rawData.charCodeAt(i);
+  }
+  return outputArray;
+}
+
+function updatePushServerUrl(val) {
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig.pushServerUrl = (val || "").trim();
+  persist();
+  renderBgPushStatus();
+  showToast("Endpoint Push salvato");
+}
+
+function updateVapidKey(val) {
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig.vapidPublicKey = (val || "").trim();
+  persist();
+  renderBgPushStatus();
+  showToast("Chiave VAPID salvata");
+}
+
+function enableBackgroundAndSystemNotifications() {
+  ensureAudioContext();
+  state.notifConfig = state.notifConfig || JSON.parse(JSON.stringify(DEFAULT_NOTIF_CONFIG));
+  state.notifConfig.consentAnswered = true;
+  state.notifConfig.consentGranted = true;
+  state.notifConfig.enabledAdmin = true;
+  state.notifConfig.enabledChats = true;
+  state.notifConfig.enabledEmergencies = true;
+  persist();
+
+  if (!("Notification" in window)) {
+    renderBgPushStatus();
+    return showToast("Notifiche di sistema non supportate in questo browser: usiamo banner + audio + vibrazione", true);
+  }
+
+  Notification.requestPermission().then((perm) => {
+    renderNotifSettingsView();
+    renderBgPushStatus();
+    if (perm === "granted") {
+      showToast("Notifiche di sistema e Service Worker abilitati!");
+    } else {
+      showToast("Permesso notifica non concesso: abilitalo nelle impostazioni del browser/Android", true);
+    }
+  });
+}
+
+function showSystemNotificationNow(title, body, groupKey = "chats") {
+  if (!("Notification" in window) || Notification.permission !== "granted") return false;
+  const opts = {
+    body: body || "",
+    tag: groupKey + "-" + Date.now(),
+    renotify: true,
+    vibrate: groupKey === "emergencies" ? [300, 120, 300, 120, 450] : [180]
+  };
+  if (swRegistrationInstance && swRegistrationInstance.showNotification) {
+    swRegistrationInstance.showNotification(title || "Coordinamento Interforze", opts).catch(() => {
+      try { new Notification(title || "Coordinamento Interforze", opts); } catch (e) {}
+    });
+    return true;
+  }
+  try {
+    new Notification(title || "Coordinamento Interforze", opts);
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+function testSystemServiceWorkerNotification() {
+  ensureAudioContext();
+  playConfiguredSound("emergencies");
+  if (!("Notification" in window)) {
+    return showToast("Browser senza API Notification: banner e suono riprodotti", true);
+  }
+  if (Notification.permission !== "granted") {
+    Notification.requestPermission().then((perm) => {
+      renderBgPushStatus();
+      if (perm === "granted") {
+        showSystemNotificationNow("🚨 Test Notifica Sistema — Emergenze", "Notifica di sistema attiva su questo dispositivo.", "emergencies");
+        showToast("Notifica di sistema inviata!");
+      } else {
+        showToast("Consenti prima le notifiche nel browser/Android", true);
+      }
+    });
+    return;
+  }
+  showSystemNotificationNow("🚨 Test Notifica Sistema — Emergenze", "Notifica di sistema attiva su questo dispositivo.", "emergencies");
+  showToast("Notifica di sistema inviata!");
+}
+
+function subscribeWebPushIfConfigured() {
+  const cfg = state.notifConfig || {};
+  if (!swRegistrationInstance || !swRegistrationInstance.pushManager) {
+    return showToast("PushManager non disponibile in questo contesto (serve HTTPS e Service Worker)", true);
+  }
+  if (!cfg.vapidPublicKey) {
+    return showToast("Inserisci prima la Chiave Pubblica VAPID per registrare Web Push", true);
+  }
+  if (Notification.permission !== "granted") {
+    return showToast("Abilita prima i permessi di notifica", true);
+  }
+  swRegistrationInstance.pushManager.subscribe({
+    userVisibleOnly: true,
+    applicationServerKey: urlBase64ToUint8Array(cfg.vapidPublicKey)
+  }).then((sub) => {
+    const jsonSub = sub.toJSON();
+    if (cfg.pushServerUrl) {
+      fetch(cfg.pushServerUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ subscription: jsonSub, userId: state.activeUserId })
+      }).catch(() => {});
+    }
+    showToast("Sottoscrizione Web Push registrata!");
+    renderBgPushStatus();
+  }).catch((err) => {
+    showToast("Errore Web Push: controlla chiave VAPID o connessione", true);
+  });
+}
+
+function renderBgPushStatus() {
+  const box = document.getElementById("bgPushStatusBox");
+  if (!box) return;
+  const cfg = state.notifConfig || {};
+  const perm = ("Notification" in window) ? Notification.permission : "non supportato";
+  const swOk = !!swRegistrationInstance;
+  const pushConfigured = !!(cfg.vapidPublicKey && cfg.pushServerUrl);
+
+  const urlInp = document.getElementById("pushServerUrlInput");
+  const vapidInp = document.getElementById("vapidPublicKeyInput");
+  if (urlInp && document.activeElement !== urlInp) urlInp.value = cfg.pushServerUrl || "";
+  if (vapidInp && document.activeElement !== vapidInp) vapidInp.value = cfg.vapidPublicKey || "";
+
+  box.innerHTML = `
+    <div>• Service Worker: <strong>${swOk ? "Registrato ✓" : "In attesa / locale"}</strong> • Permesso Notifiche: <strong>${perm}</strong></div>
+    <div>• Web Push Server (per app completamente chiusa/spenta): <strong>${pushConfigured ? "Configurato ✓" : "Da collegare (serve server Push + VAPID)"}</strong></div>
+    <div style="margin-top:4px; color:#94A3B8;">
+      Nota tecnica: un singolo file HTML locale senza server Push non può svegliare l'app da spenta/chiusa da solo; con un server Push + VAPID (configurabile qui sopra) le notifiche arrivano anche a schermo spento o app chiusa.
+    </div>
+  `;
+}
+
+const _origDispatchAppNotification = dispatchAppNotification;
+dispatchAppNotification = function(opts) {
+  _origDispatchAppNotification(opts);
+  const cfg = state.notifConfig || DEFAULT_NOTIF_CONFIG;
+  if (opts.groupKey === "emergencies" && cfg.enabledEmergencies === false) return;
+  if (opts.groupKey === "chats" && cfg.enabledChats === false) return;
+  if (opts.groupKey === "admin" && cfg.enabledAdmin === false) return;
+  showSystemNotificationNow(opts.title, opts.body, opts.groupKey);
+};
+
+const _origRenderNotifSettingsView = renderNotifSettingsView;
+renderNotifSettingsView = function() {
+  _origRenderNotifSettingsView();
+  renderBgPushStatus();
+};
+
+renderBgPushStatus();
 openNotifConsentModal(false);
 </script>
 </body>
