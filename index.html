@@ -1,1290 +1,2326 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>Coordinamento Interforze</title>
-  <style>
-    :root {
-      --bg: #0f172a;
-      --panel: #1e293b;
-      --panel-2: #162032;
-      --text: #f8fafc;
-      --muted: #94a3b8;
-      --accent: #38bdf8;
-      --accent-2: #0284c7;
-      --danger: #ef4444;
-      --warning: #f59e0b;
-      --success: #22c55e;
-      --border: rgba(148, 163, 184, 0.18);
-      --radius: 12px;
-    }
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#991B1B">
+<meta name="description" content="Applicazione PWA di coordinamento interforze per il Corpo Vigili del Fuoco Volontari di Bolbeno Zuclo">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VVF Bolbeno Zuclo">
+<title>Coordinamento Interforze — VVF Bolbeno Zuclo</title>
+<style>
+  :root {
+    --bg: #0E131A;
+    --surface: #161E29;
+    --surface-2: #1E293B;
+    --border: #2D3B4E;
+    --text: #F8FAFC;
+    --muted: #94A3B8;
+    --vvf: #DC2626;
+    --vvf-dark: #991B1B;
+    --pc: #EA580C;
+    --cri: #16A34A;
+    --cnsas: #2563EB;
+    --pol: #0284C7;
+    --accent: #38BDF8;
+    --ok: #22C55E;
+    --warn: #EAB308;
+  }
 
-    * {
-      box-sizing: border-box;
-      -webkit-tap-highlight-color: transparent;
-    }
+  * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+  body {
+    margin: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    display: flex;
+    justify-content: center;
+  }
 
-    body {
-      margin: 0;
-      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-      background: var(--bg);
-      color: var(--text);
-      line-height: 1.45;
-      min-height: 100vh;
-    }
+  .app-shell {
+    width: 100%;
+    max-width: 480px;
+    min-height: 100vh;
+    background: var(--bg);
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    box-shadow: 0 0 40px rgba(0,0,0,0.65);
+  }
 
-    button, input, select, textarea {
-      font-family: inherit;
-      color: var(--text);
-    }
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+    background: rgba(14, 19, 26, 0.94);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 12px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+  }
 
-    button {
-      cursor: pointer;
-      border: 1px solid var(--border);
-      background: var(--panel-2);
-      border-radius: 10px;
-      padding: 9px 14px;
-      font-weight: 600;
-      font-size: 0.9rem;
-      transition: transform 0.08s ease, opacity 0.15s ease, background 0.15s ease;
-    }
+  header h1 {
+    margin: 0;
+    font-size: 16px;
+    font-weight: 800;
+    letter-spacing: 0.2px;
+  }
 
-    button:active {
-      transform: scale(0.98);
-    }
+  .header-right {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
 
-    button.primary {
-      background: var(--accent-2);
-      border-color: var(--accent);
-      color: #fff;
-    }
+  .role-badge, .mod-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 7px;
+    border-radius: 999px;
+    letter-spacing: 0.4px;
+  }
+  .role-badge {
+    background: rgba(234, 179, 8, 0.2);
+    color: #FDE047;
+    border: 1px solid rgba(234, 179, 8, 0.5);
+  }
+  .mod-badge {
+    background: rgba(56, 189, 248, 0.18);
+    color: #7DD3FC;
+    border: 1px solid rgba(56, 189, 248, 0.45);
+  }
 
-    button.success {
-      background: #15803d;
-      border-color: var(--success);
-      color: #fff;
-    }
+  .menu-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    width: 36px;
+    height: 36px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 4px;
+    cursor: pointer;
+    padding: 0;
+  }
+  .menu-btn span {
+    width: 17px;
+    height: 2px;
+    background: var(--text);
+    border-radius: 2px;
+  }
 
-    button.danger {
-      background: #991b1b;
-      border-color: var(--danger);
-      color: #fff;
-    }
+  .drawer {
+    position: fixed;
+    top: 60px;
+    right: max(10px, calc(50% - 230px));
+    width: 265px;
+    max-width: calc(100vw - 20px);
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 6px;
+    box-shadow: 0 14px 32px rgba(0,0,0,0.75);
+    z-index: 120;
+    display: none;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .drawer.open { display: flex; }
+  .drawer-item {
+    padding: 10px 12px;
+    border-radius: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: var(--text);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+  .drawer-item:hover { background: var(--surface-2); }
+  .drawer-admin { color: #FDE047; }
 
-    button.ghost {
-      background: transparent;
-    }
+  .view { display: none; padding: 14px; flex-direction: column; gap: 12px; padding-bottom: 40px; }
+  .view.active { display: flex; }
 
-    input, select, textarea {
-      width: 100%;
-      background: #0b1220;
-      border: 1px solid var(--border);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.95rem;
-    }
+  .subbar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 8px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 11px;
+    padding: 9px 12px;
+  }
+  .subbar-title { font-size: 13px; font-weight: 800; }
 
-    input:focus, select:focus, textarea:focus {
-      outline: 2px solid var(--accent);
-      border-color: transparent;
-    }
+  .back-btn, .mini-btn {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--text);
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .mini-btn.switch-user { background: #1E3A8A; border-color: #3B82F6; }
+  .approve-btn {
+    background: #14532D;
+    border: 1px solid #22C55E;
+    color: #DCFCE7;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .reject-btn, .del-btn {
+    background: #7F1D1D;
+    border: 1px solid #EF4444;
+    color: #FEE2E2;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .photo-btn {
+    background: #0C4A6E;
+    border: 1px solid #38BDF8;
+    color: #E0F2FE;
+    border-radius: 8px;
+    padding: 6px 10px;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+  }
 
-    .topbar {
-      position: sticky;
-      top: 0;
-      z-index: 40;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 10px;
-      padding: 12px 16px;
-      background: rgba(15, 23, 42, 0.94);
-      backdrop-filter: blur(10px);
-      border-bottom: 1px solid var(--border);
-    }
+  .composer {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .composer textarea, .composer input[type="text"], .form-card input, .form-card select, .form-card textarea {
+    width: 100%;
+    background: #0B0F15;
+    border: 1px solid var(--border);
+    border-radius: 9px;
+    padding: 9px 11px;
+    color: var(--text);
+    font-size: 13px;
+    font-family: inherit;
+  }
+  .cat-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .cat-chip {
+    border: 1px solid var(--border);
+    background: var(--surface-2);
+    color: var(--muted);
+    border-radius: 999px;
+    padding: 5px 10px;
+    font-size: 11px;
+    font-weight: 700;
+    cursor: pointer;
+  }
+  .cat-chip.active {
+    background: var(--vvf);
+    border-color: #F87171;
+    color: #fff;
+  }
 
-    .brand {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-    }
+  .channel-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .channel-card:hover { border-color: var(--accent); }
+  .channel-top { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+  .channel-name { font-size: 14px; font-weight: 800; }
+  .channel-meta { font-size: 11px; color: var(--muted); }
+  .channel-preview { font-size: 12.5px; color: #E2E8F0; }
+  .unread-pill {
+    background: var(--vvf);
+    color: #fff;
+    font-size: 10.5px;
+    font-weight: 800;
+    padding: 2px 7px;
+    border-radius: 999px;
+  }
 
-    .brand-badge {
-      width: 36px;
-      height: 36px;
-      border-radius: 10px;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #0284c7, #1d4ed8);
-      font-weight: 800;
-      font-size: 0.9rem;
-    }
+  .post-card, .report-card, .form-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  .post-card.highlight { border-color: #EF4444; background: #221318; }
+  .ev-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 8px; }
+  .ev-title { font-size: 14px; font-weight: 800; }
+  .ev-author { font-size: 11px; color: var(--muted); }
+  .ev-body { font-size: 13px; color: #E2E8F0; white-space: pre-wrap; }
+  .ev-img { width: 100%; max-height: 240px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+  .ev-actions, .user-btns { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
 
-    .brand-title {
-      font-weight: 700;
-      font-size: 1rem;
-    }
+  .drive-note {
+    background: rgba(30, 41, 59, 0.75);
+    border: 1px solid var(--border);
+    border-radius: 10px;
+    padding: 9px 11px;
+    font-size: 11.5px;
+    color: #CBD5E1;
+    line-height: 1.4;
+  }
+  .field { display: flex; flex-direction: column; gap: 5px; margin-bottom: 8px; }
+  .field label { font-size: 12px; font-weight: 700; color: #CBD5E1; }
 
-    .brand-sub {
-      font-size: 0.75rem;
-      color: var(--muted);
-    }
+  .report-badge {
+    font-size: 10px;
+    font-weight: 800;
+    padding: 3px 8px;
+    border-radius: 999px;
+    background: rgba(234, 179, 8, 0.2);
+    color: #FDE047;
+  }
+  .report-badge.approved { background: rgba(34, 197, 94, 0.2); color: #86EFAC; }
+  .report-badge.rejected { background: rgba(239, 68, 68, 0.2); color: #FCA5A5; }
 
-    .container {
-      max-width: 980px;
-      margin: 0 auto;
-      padding: 16px;
-      padding-bottom: 84px;
-    }
+  .pending-badge-thumb {
+    width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+    background: #0B0F15;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 4px;
+  }
 
-    .card {
-      background: var(--panel);
-      border: 1px solid var(--border);
-      border-radius: var(--radius);
-      padding: 16px;
-      margin-bottom: 14px;
-    }
+  /* PWA BANNER & NOTIFICHE IN-APP */
+  .pwa-install-bar {
+    display: none;
+    background: linear-gradient(135deg, #172554 0%, #1E293B 100%);
+    border: 1px solid #38BDF8;
+    border-radius: 12px;
+    padding: 10px 12px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .pwa-install-bar.visible { display: flex; }
+  .pwa-install-btn {
+    background: #0284C7;
+    border: 1px solid #38BDF8;
+    color: #fff;
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .inapp-notif-banner {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(456px, calc(100vw - 20px));
+    background: #162032;
+    border: 1.5px solid #38BDF8;
+    border-left: 5px solid #38BDF8;
+    border-radius: 12px;
+    padding: 11px 13px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.78);
+    z-index: 250;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeIn 0.16s ease;
+  }
+  .inapp-notif-banner.open { display: flex; }
+  .inapp-notif-banner.emergency {
+    background: #291116;
+    border-color: #EF4444;
+    border-left-color: #EF4444;
+  }
+  .inapp-notif-banner.quiet-report {
+    background: #171B24;
+    border-color: #64748B;
+    border-left-color: #94A3B8;
+  }
+  .inapp-notif-banner.new-user {
+    background: #14241E;
+    border-color: #10B981;
+    border-left-color: #34D399;
+  }
+  .inapp-notif-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .inapp-notif-title { font-size: 13.5px; font-weight: 800; color: #fff; }
+  .inapp-notif-body { font-size: 12px; color: #CBD5E1; line-height: 1.35; }
+  .ringtone-preview-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .test-sound-btn {
+    background: #1E3A8A;
+    border: 1px solid #60A5FA;
+    color: #EFF6FF;
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .sim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
 
-    .card-title {
-      margin: 0 0 8px 0;
-      font-size: 1.05rem;
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 8px;
-    }
+  .auth-tabs { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+  .auth-tab {
+    background: var(--surface-2);
+    border: 1px solid var(--border);
+    color: var(--muted);
+    border-radius: 10px;
+    padding: 9px;
+    font-size: 12.5px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .auth-tab.active {
+    background: var(--vvf-dark);
+    border-color: #F87171;
+    color: #fff;
+  }
 
-    .muted {
-      color: var(--muted);
-      font-size: 0.88rem;
-    }
+  .toast {
+    position: fixed;
+    bottom: 18px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #1E293B;
+    color: #fff;
+    border: 1px solid #38BDF8;
+    border-radius: 10px;
+    padding: 9px 14px;
+    font-size: 12px;
+    font-weight: 700;
+    z-index: 300;
+    display: none;
+    max-width: calc(100vw - 24px);
+    text-align: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.65);
+  }
+  .toast.error { border-color: #EF4444; background: #450A0A; }
+  .toast.show { display: block; }
 
-    .row {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      align-items: center;
-    }
-
-    .grid-2 {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
-      gap: 12px;
-    }
-
-    .tabs {
-      display: flex;
-      gap: 8px;
-      overflow-x: auto;
-      padding-bottom: 6px;
-      margin-bottom: 14px;
-    }
-
-    .tab-btn {
-      white-space: nowrap;
-      background: var(--panel);
-    }
-
-    .tab-btn.active {
-      background: var(--accent-2);
-      border-color: var(--accent);
-      color: #fff;
-    }
-
-    .pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 5px;
-      padding: 3px 9px;
-      border-radius: 999px;
-      font-size: 0.76rem;
-      font-weight: 700;
-      background: rgba(56, 189, 248, 0.14);
-      color: var(--accent);
-    }
-
-    .pill.emergenza {
-      background: rgba(239, 68, 68, 0.2);
-      color: #fca5a5;
-    }
-
-    .pill.admin {
-      background: rgba(245, 158, 11, 0.2);
-      color: #fcd34d;
-    }
-
-    .pill.ok {
-      background: rgba(34, 197, 94, 0.2);
-      color: #86efac;
-    }
-
-    .feed-item {
-      border: 1px solid var(--border);
-      background: var(--panel-2);
-      border-radius: 10px;
-      padding: 12px;
-      margin-top: 10px;
-    }
-
-    .feed-item.emergenza {
-      border-color: rgba(239, 68, 68, 0.55);
-      background: rgba(127, 29, 29, 0.22);
-    }
-
-    .feed-meta {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      font-size: 0.78rem;
-      color: var(--muted);
-      margin-bottom: 6px;
-    }
-
-    .list-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      border: 1px solid var(--border);
-      background: var(--panel-2);
-      border-radius: 10px;
-      margin-top: 8px;
-    }
-
-    .toast-banner {
-      position: fixed;
-      left: 12px;
-      right: 12px;
-      bottom: 14px;
-      z-index: 100;
-      max-width: 720px;
-      margin: 0 auto;
-      background: #0b1324;
-      border: 1px solid var(--accent);
-      box-shadow: 0 12px 30px rgba(0, 0, 0, 0.55);
-      border-radius: 12px;
-      padding: 12px 14px;
-      display: none;
-      align-items: center;
-      justify-content: space-between;
-      gap: 12px;
-    }
-
-    .toast-banner.emergenza {
-      border-color: var(--danger);
-      background: #2a0c12;
-    }
-
-    .toast-banner.show {
-      display: flex;
-    }
-
-    .hidden {
-      display: none !important;
-    }
-
-    label {
-      display: block;
-      font-size: 0.84rem;
-      color: var(--muted);
-      margin-bottom: 4px;
-      margin-top: 8px;
-    }
-
-    .notice-box {
-      background: rgba(245, 158, 11, 0.12);
-      border: 1px solid rgba(245, 158, 11, 0.35);
-      border-radius: 10px;
-      padding: 10px 12px;
-      font-size: 0.85rem;
-      color: #fde68a;
-      margin-top: 10px;
-    }
-  </style>
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translate(-50%, -6px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
+  }
+</style>
 </head>
 <body>
-  <header class="topbar">
-    <div class="brand">
-      <div class="brand-badge">CI</div>
-      <div>
-        <div class="brand-title">Coordinamento Interforze</div>
-        <div class="brand-sub" id="headerStatus">Accesso non effettuato</div>
-      </div>
+<div class="app-shell">
+  <header>
+    <h1>Coordinamento Interforze</h1>
+    <div class="header-right">
+      <span id="headerFounderBadge" class="role-badge" style="display:none;">FOUNDER</span>
+      <span id="headerAdminBadge" class="role-badge" style="display:none;">ADMIN</span>
+      <span id="headerModBadge" class="mod-badge" style="display:none;">MOD</span>
+      <button class="menu-btn" onclick="toggleDrawer()" aria-label="Menu">
+        <span></span><span></span><span></span>
+      </button>
     </div>
-    <div class="row" id="headerActions"></div>
   </header>
 
-  <main class="container">
-    <!-- SCHERMATA LOGIN / REGISTRAZIONE -->
-    <section id="authView">
-      <div class="grid-2">
-        <div class="card">
-          <h2 class="card-title">Accedi</h2>
-          <p class="muted">Inserisci il tuo nome utente/matricola o usa un profilo rapido di test.</p>
-          <label for="loginUsername">Username o Nominativo</label>
-          <input id="loginUsername" placeholder="es. michele.piccina" />
-          <label for="loginPin">PIN / Password</label>
-          <input id="loginPin" type="password" placeholder="••••" />
-          <div class="row" style="margin-top: 14px;">
-            <button class="primary" onclick="handleLogin()">Entra</button>
-            <button class="ghost" onclick="quickLogin('Michele Piccina', 'Founder')">Demo Founder</button>
-            <button class="ghost" onclick="quickLogin('Operatore Test', 'Utente')">Demo Operatore</button>
-          </div>
-          <div class="notice-box">
-            <strong>Nota su telefoni diversi:</strong> i dati salvati solo nel browser/WebView restano sul singolo dispositivo. Per ricevere in automatico le richieste di registrazione fatte da altri telefoni, nella scheda <em>Richieste &amp; Sync</em> puoi configurare un endpoint/webhook o usare Esporta/Importa pacchetto.
-          </div>
-        </div>
-
-        <div class="card">
-          <h2 class="card-title">Richiedi Registrazione</h2>
-          <p class="muted">Compila i dati per inviare una richiesta di accesso agli amministratori.</p>
-          <label for="regName">Nome e Cognome</label>
-          <input id="regName" placeholder="Es. Luca Rossi" />
-          <label for="regUsername">Username desiderato</label>
-          <input id="regUsername" placeholder="es. luca.rossi" />
-          <label for="regCorpo">Corpo / Ente (Trentino)</label>
-          <select id="regCorpo"></select>
-          <label for="regBadge">Numero Tesserino / Matricola</label>
-          <input id="regBadge" placeholder="Es. TN-402" />
-          <label for="regPin">PIN di accesso</label>
-          <input id="regPin" type="password" placeholder="Almeno 4 caratteri" />
-          <div class="row" style="margin-top: 14px;">
-            <button class="success" onclick="handleRegisterRequest()">Invia Richiesta</button>
-          </div>
-          <div id="regFeedback" class="muted" style="margin-top: 8px;"></div>
-        </div>
-      </div>
-    </section>
-
-    <!-- APPLICAZIONE PRINCIPALE -->
-    <section id="appView" class="hidden">
-      <div class="tabs">
-        <button class="tab-btn active" data-tab="bacheca" onclick="switchTab('bacheca')">Bacheca &amp; Chat</button>
-        <button class="tab-btn" data-tab="corpi" onclick="switchTab('corpi')">Corpi Trentino</button>
-        <button class="tab-btn" data-tab="notifiche" onclick="switchTab('notifiche')">Notifiche &amp; Suonerie</button>
-        <button class="tab-btn" data-tab="richieste" onclick="switchTab('richieste')">Richieste &amp; Sync <span class="pill" id="pendingBadge">0</span></button>
-      </div>
-
-      <!-- TAB 1: BACHECA & CHAT -->
-      <div id="tab-bacheca" class="tab-panel">
-        <div class="card">
-          <h2 class="card-title">
-            Nuovo Messaggio / Segnalazione
-            <span class="pill" id="currentUserPill"></span>
-          </h2>
-          <div class="grid-2">
-            <div>
-              <label for="msgCategory">Canale di notifica / tipologia</label>
-              <select id="msgCategory">
-                <option value="emergenza">Emergenza (Messaggio urgente)</option>
-                <option value="normale">Messaggio normale (Chat ordinaria)</option>
-                <option value="segnalazione">Segnalazione (Per Admin/Moderatori)</option>
-              </select>
-            </div>
-            <div>
-              <label for="msgCorpo">Corpo / Zona coinvolta</label>
-              <select id="msgCorpo"></select>
-            </div>
-          </div>
-          <label for="msgText">Testo comunicazione</label>
-          <textarea id="msgText" rows="3" placeholder="Scrivi aggiornamento operativo, segnalazione o messaggio..."></textarea>
-          <div class="row" style="margin-top: 12px;">
-            <button class="primary" onclick="publishMessage()">Pubblica e Notifica</button>
-            <button onclick="simulateIncomingTest()">Simula Arrivo Notifica</button>
-          </div>
-        </div>
-
-        <div class="card">
-          <div class="row" style="justify-content: space-between; margin-bottom: 8px;">
-            <h2 class="card-title" style="margin: 0;">Flusso Operativo</h2>
-            <select id="filterCategory" style="width: auto; min-width: 170px;" onchange="renderFeed()">
-              <option value="tutte">Tutte le categorie</option>
-              <option value="emergenza">Solo Emergenze</option>
-              <option value="normale">Solo Messaggi normali</option>
-              <option value="segnalazione">Solo Segnalazioni</option>
-            </select>
-          </div>
-          <div id="feedList"></div>
-        </div>
-      </div>
-
-      <!-- TAB 2: CORPI TRENTINO -->
-      <div id="tab-corpi" class="tab-panel hidden">
-        <div class="card">
-          <h2 class="card-title">Gestione Corpi e Enti del Trentino</h2>
-          <p class="muted">Aggiungi, rinomina, attiva/disattiva o elimina i corpi presenti nell'elenco. Le modifiche aggiornano subito il menu di registrazione e le comunicazioni.</p>
-
-          <div class="grid-2">
-            <div>
-              <label for="newCorpoName">Nome Corpo / Ente</label>
-              <input id="newCorpoName" placeholder="Es. Corpo Vigili del Fuoco Volontari di..." />
-            </div>
-            <div>
-              <label for="newCorpoCode">Sigla / Categoria (opzionale)</label>
-              <input id="newCorpoCode" placeholder="Es. VVF / Soccorso / Polizia Locale" />
-            </div>
-          </div>
-          <div class="row" style="margin-top: 12px;">
-            <button class="primary" onclick="addCorpo()">Aggiungi Corpo</button>
-            <button class="danger" onclick="resetCorpiDefaults()">Ripristina Lista Base</button>
-          </div>
-
-          <div id="corpiList" style="margin-top: 14px;"></div>
-        </div>
-      </div>
-
-      <!-- TAB 3: NOTIFICHE & SUONERIE -->
-      <div id="tab-notifiche" class="tab-panel hidden">
-        <div class="card">
-          <h2 class="card-title">Impostazione 4 Tipi di Notifica e Suonerie</h2>
-          <p class="muted">Configura separatamente <strong>Segnalazioni</strong>, <strong>Nuovi Utenti</strong>, <strong>Messaggi Normali</strong> e <strong>Messaggi di Emergenza</strong>. Puoi scegliere un tono integrato o caricare un file audio (MP3, WAV, OGG) dal telefono.</p>
-
-          <div class="row" style="margin-bottom: 12px;">
-            <button class="primary" onclick="requestSystemNotificationPermission()">Abilita Notifiche Dispositivo</button>
-            <span class="pill" id="sysNotifStatus">Permesso: da verificare</span>
-          </div>
-
-          <div id="notifChannelsContainer"></div>
-        </div>
-      </div>
-
-      <!-- TAB 4: RICHIESTE REGISTRAZIONE & SYNC -->
-      <div id="tab-richieste" class="tab-panel hidden">
-        <div class="card">
-          <h2 class="card-title">Richieste di Registrazione Utenti</h2>
-          <p class="muted">Approva o rifiuta le richieste di registrazione. Quando arriva una nuova richiesta viene attivata la notifica dedicata ai <strong>Nuovi Utenti</strong>.</p>
-          <div id="requestsList"></div>
-        </div>
-
-        <div class="card">
-          <h2 class="card-title">Condivisione tra Dispositivi (Esporta / Importa &amp; Webhook)</h2>
-          <p class="muted">Poiché l'app gira in HTML/WebView, se un amico si registra sul proprio telefono la sua richiesta resta sul suo dispositivo salvo sincronizzazione esterna. Puoi esportare/importare i dati oppure impostare un URL webhook JSON.</p>
-
-          <label for="syncEndpointUrl">URL Endpoint / Webhook sincronizzazione (opzionale)</label>
-          <input id="syncEndpointUrl" placeholder="https://tuo-server-o-webhook.example/sync" />
-          <div class="row" style="margin-top: 10px;">
-            <button class="primary" onclick="saveSyncUrl()">Salva URL</button>
-            <button onclick="pullFromSyncUrl()">Scarica Aggiornamenti Remoti</button>
-            <button onclick="pushToSyncUrl()">Invia Stato al Server</button>
-          </div>
-
-          <div class="row" style="margin-top: 14px;">
-            <button onclick="exportStateJson()">Copia / Scarica Backup JSON</button>
-            <button onclick="triggerImportJson()">Importa Backup JSON</button>
-            <input type="file" id="importJsonFile" accept="application/json,.json" class="hidden" onchange="handleImportJsonFile(event)" />
-          </div>
-          <div id="syncStatusMsg" class="muted" style="margin-top: 8px;"></div>
-        </div>
-      </div>
-    </section>
-  </main>
-
-  <!-- BANNER NOTIFICA IN-APP -->
-  <div id="toastBanner" class="toast-banner">
-    <div>
-      <div id="toastTitle" style="font-weight: 700;"></div>
-      <div id="toastBody" class="muted"></div>
+  <div id="inappNotifBanner" class="inapp-notif-banner" onclick="closeInAppNotif()">
+    <div class="inapp-notif-top">
+      <span id="inappNotifCategory" style="color:#7DD3FC;">NOTIFICA</span>
+      <span style="color:#94A3B8; font-size:10.5px;">Tocca per chiudere</span>
     </div>
-    <div class="row">
-      <button onclick="stopPreviewAudio()">Stop</button>
-      <button class="ghost" onclick="hideToast()">Chiudi</button>
+    <div id="inappNotifTitle" class="inapp-notif-title"></div>
+    <div id="inappNotifBody" class="inapp-notif-body"></div>
+  </div>
+
+  <div id="drawer" class="drawer">
+    <div class="drawer-item" onclick="switchView('home')"><span>🏠 Bacheca Principale</span></div>
+    <div class="drawer-item" onclick="openTopic('EMERGENZE')"><span>🚨 Chat Emergenze</span></div>
+    <div class="drawer-item" onclick="openTopic('MANUALI E PROCEDURE')"><span>📘 Manuali & PDF</span></div>
+    <div class="drawer-item" onclick="switchView('corpi')"><span>🏛️ Corpi Trentino</span></div>
+    <div class="drawer-item" onclick="switchView('suonerie')"><span>🔔 Suonerie & Notifiche App</span></div>
+    <div class="drawer-item" onclick="switchView('profilo')"><span>🪪 Profilo Operatore</span></div>
+    <div class="drawer-item" onclick="switchView('privacy')"><span>🔒 Trattamento Privacy</span></div>
+    <div id="drawerAdminApprovals" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('approvazioni')"><span>✅ Approvazione Nuovi Utenti</span></div>
+    <div id="drawerAdminBoard" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('bacheca')"><span>📋 Gestione Bacheca</span></div>
+    <div id="drawerAdminUsers" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('utenti')"><span>👥 Gestione Utenti & Ruoli</span></div>
+    <div id="drawerAdminReports" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('segnalazioni')"><span>🚩 Segnalazioni & Accessi</span></div>
+    <div class="drawer-item" onclick="logoutToLogin()"><span>🚪 Esci / Cambia Utente</span></div>
+    <div class="drawer-item" onclick="resetDemo()"><span>🔄 Ripristina Stato Vuoto</span></div>
+  </div>
+
+  <!-- VISTA LOGIN / REGISTRAZIONE -->
+  <div id="view-login" class="view">
+    <div class="form-card">
+      <h3>🚒 Accesso Operatori — Coordinamento Interforze</h3>
+      <div class="auth-tabs">
+        <button type="button" id="tabLoginBtn" class="auth-tab active" onclick="setAuthTab('login')">Accedi</button>
+        <button type="button" id="tabRegBtn" class="auth-tab" onclick="setAuthTab('register')">Richiedi Registrazione</button>
+      </div>
+    </div>
+
+    <div id="authLoginBox" class="form-card">
+      <div class="field">
+        <label>Seleziona Utente o Inserisci Telefono / Nome</label>
+        <select id="loginUserSelect"></select>
+      </div>
+      <button type="button" class="approve-btn" style="width:100%; padding:10px;" onclick="performLogin()">Entra nell'Applicazione</button>
+    </div>
+
+    <div id="authRegisterBox" class="form-card" style="display:none;">
+      <h3>📝 Richiesta Registrazione Nuovo Operatore</h3>
+      <div class="field">
+        <label>Nome *</label>
+        <input type="text" id="regNome" placeholder="Nome">
+      </div>
+      <div class="field">
+        <label>Cognome</label>
+        <input type="text" id="regCognome" placeholder="Cognome">
+      </div>
+      <div class="field">
+        <label>Numero di Telefono *</label>
+        <input type="text" id="regTel" placeholder="Es. 3331234567">
+      </div>
+      <div class="field">
+        <label>Ente / Corpo di Appartenenza</label>
+        <select id="regEnteTipo" onchange="toggleRegEnteFields()">
+          <option value="Vigili del Fuoco">Vigili del Fuoco</option>
+          <option value="Protezione Civile">Protezione Civile</option>
+          <option value="Croce Rossa / 118">Croce Rossa / 118</option>
+          <option value="Soccorso Alpino">Soccorso Alpino</option>
+          <option value="Forze dell'Ordine / Polizia Locale">Forze dell'Ordine / Polizia Locale</option>
+          <option value="Altro Ente">Altro Ente</option>
+        </select>
+      </div>
+      <div id="regVvfCorpoWrap" class="field">
+        <label>Corpo del Trentino</label>
+        <select id="regVvfCorpo"></select>
+      </div>
+      <div id="regSedeWrap" class="field" style="display:none;">
+        <label>Sede / Distaccamento / Stazione *</label>
+        <input type="text" id="regSede" placeholder="Indica la sede di appartenenza">
+      </div>
+      <div class="field">
+        <label>Numero Tesserino / Codice Matricola *</label>
+        <input type="text" id="regMatricola" placeholder="Es. MAT-1024">
+      </div>
+      <div class="field">
+        <label>Foto Tesserino / Badge *</label>
+        <input type="file" id="regBadgeFile" accept="image/*" onchange="handleBadgeUpload(event)">
+        <span id="regBadgeStatus" style="font-size:11px; color:#94A3B8;">Obbligatorio: allega foto chiara del tesserino</span>
+        <img id="regBadgePreview" class="pending-badge-thumb" style="display:none;" alt="Anteprima tesserino">
+      </div>
+      <label style="display:flex; gap:8px; align-items:flex-start; font-size:12px; color:#CBD5E1; margin-bottom:10px;">
+        <input type="checkbox" id="regPrivacyAccept">
+        <span>Accetto il Trattamento della Privacy per la verifica dell'identità operativa.</span>
+      </label>
+      <button type="button" class="approve-btn" style="width:100%; padding:10px;" onclick="submitUserRegistration()">Invia Richiesta di Registrazione</button>
     </div>
   </div>
 
-  <script>
-    const STORAGE_KEY = "coordinamento_interforze_v1";
-    const MAX_CUSTOM_AUDIO_BYTES = 1.8 * 1024 * 1024; // ~1.8 MB per restare entro limiti localStorage
+  <!-- VISTA 1: HOME -->
+  <div id="view-home" class="view active">
+    <div id="pwaInstallBar" class="pwa-install-bar">
+      <div>
+        <div style="font-size:12px; font-weight:800; color:#BAE6FD;">📲 Installa App su Android / Desktop</div>
+        <div id="pwaInstallHint" style="font-size:11px; color:#CBD5E1;">Aggiungi alla schermata Home per uso rapido e notifiche</div>
+      </div>
+      <button type="button" id="pwaInstallBtn" class="pwa-install-btn" onclick="triggerPwaInstall()">Installa App</button>
+    </div>
 
-    const DEFAULT_CORPI = [
-      { id: "c1", name: "Corpo Vigili del Fuoco Volontari (Trentino)", tag: "VVF", active: true },
-      { id: "c2", name: "Servizio Antincendi e Protezione Civile PAT", tag: "Protezione Civile", active: true },
-      { id: "c3", name: "Soccorso Alpino e Speleologico Trentino (CNSAS)", tag: "Soccorso Alpino", active: true },
-      { id: "c4", name: "Polizia Locale del Trentino", tag: "Polizia Locale", active: true },
-      { id: "c5", name: "Croce Rossa Italiana / Trentino Emergenza 118", tag: "Sanitario", active: true }
-    ];
+    <div class="composer">
+      <textarea id="quickPostInput" rows="2" placeholder="Scrivi una comunicazione o emergenza nella bacheca..."></textarea>
+      <div class="cat-row" id="quickCatChips">
+        <button type="button" class="cat-chip active" data-cat="EMERGENZE" onclick="selectQuickCat('EMERGENZE')">🚨 Emergenze</button>
+        <button type="button" class="cat-chip" data-cat="ALLERTE PC" onclick="selectQuickCat('ALLERTE PC')">🟠 Allerte PC</button>
+        <button type="button" class="cat-chip" data-cat="EVENTI & TURNI" onclick="selectQuickCat('EVENTI & TURNI')">📅 Eventi & Turni</button>
+        <button type="button" class="cat-chip" data-cat="DISCUSSIONE OPERATIVA" onclick="selectQuickCat('DISCUSSIONE OPERATIVA')">💬 Discussione</button>
+        <button type="button" class="cat-chip" data-cat="MANUALI E PROCEDURE" onclick="selectQuickCat('MANUALI E PROCEDURE')">📘 Manuali</button>
+      </div>
+      <div style="display:flex; justify-content:space-between; align-items:center; gap:8px; flex-wrap:wrap;">
+        <div style="display:flex; gap:6px; align-items:center;">
+          <button type="button" class="photo-btn" onclick="document.getElementById('quickPhotoInput').click()">📷 Foto</button>
+          <input type="file" id="quickPhotoInput" accept="image/*" style="display:none;" onchange="handleQuickPhoto(event)">
+          <span id="quickPhotoLabel" style="font-size:11px; color:#94A3B8;"></span>
+        </div>
+        <button type="button" class="approve-btn" onclick="publishQuickPost()">Pubblica</button>
+      </div>
+    </div>
 
-    const DEFAULT_CHANNELS = {
-      segnalazione: {
-        key: "segnalazione",
-        label: "1. Segnalazioni (Admin / Moderatori)",
-        description: "Avviso quando viene inviata una nuova segnalazione operativa.",
-        enabled: true,
-        preset: "chime",
-        customAudioName: "",
-        customAudioDataUrl: ""
+    <div id="channelsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- VISTA TOPIC / CHAT -->
+  <div id="view-topic" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Home</button>
+      <span id="topicTitle" class="subbar-title">CANALE</span>
+      <span id="topicModTag" style="font-size:11px; color:#7DD3FC;"></span>
+    </div>
+    <div class="composer">
+      <textarea id="newTopicPostInput" rows="2" placeholder="Scrivi un nuovo messaggio in questo canale..."></textarea>
+      <div style="display:flex; justify-content:flex-end;">
+        <button type="button" class="approve-btn" onclick="addTopicPost()">Invia Messaggio</button>
+      </div>
+    </div>
+    <div id="topicPostsContainer" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- VISTA CORPI TRENTINO -->
+  <div id="view-corpi" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title" style="color:#7DD3FC;">🏛️ CORPI DEL TRENTINO</span>
+      <span style="font-size:11px; color:#94A3B8;">Modificabile</span>
+    </div>
+    <div class="form-card">
+      <h3>Aggiungi o Modifica Corpi del Trentino</h3>
+      <div class="drive-note">
+        Qui puoi aggiungere, rinominare, attivare/disattivare o eliminare tutti i Corpi del Trentino. L'elenco viene salvato e aggiornato subito nel form di registrazione.
+      </div>
+      <div class="field" style="margin-top:8px;">
+        <label>Nome Nuovo Corpo / Ente del Trentino</label>
+        <input type="text" id="newCorpoTrentinoInput" placeholder="Es. Corpo Vigili del Fuoco Volontari di Tione di Trento">
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="approve-btn" onclick="addCorpoTrentino()">+ Aggiungi Corpo</button>
+        <button type="button" class="mini-btn" onclick="resetCorpiTrentinoDefault()">Ripristina Lista Base</button>
+      </div>
+    </div>
+    <div id="corpiTrentinoList" style="display:flex; flex-direction:column; gap:8px;"></div>
+  </div>
+
+  <!-- VISTA SUONERIE E NOTIFICHE APP / ANDROID -->
+  <div id="view-suonerie" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title" style="color:#7DD3FC;">🔔 SUONERIE & NOTIFICHE APP</span>
+      <span id="notifPermStatus" style="font-size:11px; color:#94A3B8;">Browser</span>
+    </div>
+
+    <div class="form-card">
+      <h3>📲 Installazione PWA & Notifiche Dispositivo</h3>
+      <div class="drive-note">
+        Su <strong>Android (Chrome)</strong> puoi installare l'app tramite il pulsante <strong>Installa App</strong> oppure dal menu del browser <em>"Aggiungi a schermata Home"</em>. Attiva i permessi di notifica per ricevere avvisi e suonerie ogni volta che arriva una notifica.
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="test-sound-btn" onclick="requestDeviceNotificationPermission()">🔔 Attiva Notifiche Dispositivo</button>
+        <button type="button" class="mini-btn switch-user" onclick="triggerPwaInstall()">📲 Installa / Guida Android</button>
+      </div>
+    </div>
+
+    <!-- 1. SEGNALAZIONI (ADMIN) -->
+    <div class="form-card" style="border-color:#EAB308;">
+      <h3 style="color:#FDE047;">1️⃣ Notifica SEGNALAZIONI (Admin / Moderatori)</h3>
+      <div class="field">
+        <label>Modalità / Suoneria nuove SEGNALAZIONI</label>
+        <select id="selAdminReportMode" onchange="updateSoundSetting('adminReportMode', this.value)">
+          <option value="quiet_chime">Molto silenziata — Soft Admin Chime (volume basso)</option>
+          <option value="whisper_tick">Discreta — Tocchi soffusi appena percettibili</option>
+          <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+          <option value="silent">Completamente muta (solo badge / banner discreto)</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Carica file audio Segnalazioni dal telefono</label>
+        <input type="file" id="reportAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'adminReport')">
+        <span id="reportCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="mini-btn" onclick="previewRingtone('adminReport')">🤫 Prova Notifica Segnalazioni</button>
+        <button type="button" class="mini-btn" onclick="clearCustomRingtone('adminReport')">Rimuovi File</button>
+      </div>
+    </div>
+
+    <!-- 2. NUOVI UTENTI -->
+    <div class="form-card" style="border-color:#10B981;">
+      <h3 style="color:#6EE7B7;">2️⃣ Notifica NUOVI UTENTI / Richieste Registrazione</h3>
+      <div class="field">
+        <label>Suoneria nuove RICHIESTE UTENTI</label>
+        <select id="selNewUserTone" onchange="updateSoundSetting('newUserTone', this.value)">
+          <option value="new_user_distinct">Nuovo Utente in Attesa (melodia ascendente dedicata)</option>
+          <option value="door_chime">Segnale Ingresso Operatore (doppio accordo distinto)</option>
+          <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+          <option value="silent">Silenzioso</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Carica file audio Nuovi Utenti dal telefono</label>
+        <input type="file" id="newUserAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'newUser')">
+        <span id="newUserCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="test-sound-btn" onclick="previewRingtone('newUser')">👤 Prova Suoneria Nuovo Utente</button>
+        <button type="button" class="mini-btn" onclick="clearCustomRingtone('newUser')">Rimuovi File</button>
+      </div>
+    </div>
+
+    <!-- 3. MESSAGGI NORMALI (ALTRE CHAT) -->
+    <div class="form-card" style="border-color:#38BDF8;">
+      <h3 style="color:#7DD3FC;">3️⃣ Notifica MESSAGGI NORMALI (Altre Chat)</h3>
+      <div class="field">
+        <label>Suoneria per Allerte PC, Eventi & Turni, Discussione o Manuali</label>
+        <select id="selChatTone" onchange="updateSoundSetting('chatTone', this.value)">
+          <option value="chat_soft">Notifica Chat Soft</option>
+          <option value="chime_operativo">Chime Operativo</option>
+          <option value="ping_messaggio">Ping Messaggio</option>
+          <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+          <option value="silent">Silenzioso</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Carica file audio Messaggi Normali dal telefono</label>
+        <input type="file" id="chatAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'chat')">
+        <span id="chatCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="test-sound-btn" onclick="previewRingtone('chat')">💬 Prova Suoneria Messaggi Normali</button>
+        <button type="button" class="mini-btn" onclick="clearCustomRingtone('chat')">Rimuovi File</button>
+      </div>
+    </div>
+
+    <!-- 4. MESSAGGI DI EMERGENZA -->
+    <div class="form-card" style="border-color:#EF4444;">
+      <h3 style="color:#FCA5A5;">4️⃣ Notifica MESSAGGI DI EMERGENZA</h3>
+      <div class="field">
+        <label>Suoneria per nuovi post / allerte in EMERGENZE</label>
+        <select id="selEmergencyTone" onchange="updateSoundSetting('emergencyTone', this.value)">
+          <option value="sirena_vvf">Allarme Emergenza Sirena VVF</option>
+          <option value="doppio_impulso">Doppio Impulso Critico</option>
+          <option value="tono_urgenza">Tono Urgenza Operativa</option>
+          <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+          <option value="silent">Silenzioso</option>
+        </select>
+      </div>
+      <div class="field">
+        <label>Carica file audio Emergenze dal telefono</label>
+        <input type="file" id="emergencyAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'emergency')">
+        <span id="emergencyCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="test-sound-btn" onclick="previewRingtone('emergency')">🚨 Prova Suoneria Emergenze</button>
+        <button type="button" class="mini-btn" onclick="clearCustomRingtone('emergency')">Rimuovi File</button>
+      </div>
+    </div>
+
+    <div class="form-card">
+      <h3>🧪 Test Rapido Tutti i 4 Tipi di Notifica</h3>
+      <div class="sim-grid">
+        <button type="button" class="mini-btn" style="padding:9px;" onclick="simulateAdminReport()">🤫 1. Segnalazioni</button>
+        <button type="button" class="approve-btn" style="padding:9px;" onclick="simulateNewUserRequest()">👤 2. Nuovi Utenti</button>
+        <button type="button" class="photo-btn" style="padding:9px;" onclick="simulateIncomingPost('DISCUSSIONE OPERATIVA')">💬 3. Messaggi Normali</button>
+        <button type="button" class="del-btn" style="padding:9px;" onclick="simulateIncomingPost('EMERGENZE')">🚨 4. Emergenze</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- VISTA ADMIN: APPROVAZIONE NUOVI UTENTI -->
+  <div id="view-approvazioni" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title" style="color:#6EE7B7;">✅ APPROVAZIONE NUOVI UTENTI</span>
+      <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
+    </div>
+    <div id="pendingApprovalsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- VISTA ADMIN: GESTIONE BACHECA -->
+  <div id="view-bacheca" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title" style="color:#FDE047;">📋 GESTIONE BACHECA</span>
+      <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
+    </div>
+    <div id="boardAdminList" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- VISTA ADMIN: GESTIONE UTENTI & RUOLI -->
+  <div id="view-utenti" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title" style="color:#FDE047;">👥 GESTIONE UTENTI & RUOLI</span>
+      <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
+    </div>
+    <div id="usersAdminList" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- VISTA 5 (ADMIN): SEGNALAZIONI & RICHIESTE ACCESSO + SYNC DISPOSITIVI -->
+  <div id="view-segnalazioni" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title" style="color:#FDE047;">🚩 SEGNALAZIONI & ACCESSI</span>
+      <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
+    </div>
+    <div class="drive-note">
+      Coda revisione segnalazioni e richieste di ingresso nuovi utenti. Se un amico si registra su un <strong>altro telefono</strong>, usa Esporta/Importa JSON o un URL di sincronizzazione per far comparire la sua richiesta anche qui.
+    </div>
+    <div class="sim-grid">
+      <button type="button" class="mini-btn" onclick="simulateAdminReport()">🤫 Simula Nuova Segnalazione</button>
+      <button type="button" class="approve-btn" onclick="simulateNewUserRequest()">👤 Simula Richiesta Nuovo Utente</button>
+    </div>
+
+    <div class="form-card">
+      <h3>🔄 Sincronizzazione Richieste tra Telefoni</h3>
+      <div class="field">
+        <label>URL Endpoint JSON condiviso (opzionale)</label>
+        <input type="text" id="deviceSyncUrl" placeholder="https://..." onchange="updateDeviceSyncUrl(this.value)">
+      </div>
+      <div class="ringtone-preview-row">
+        <button type="button" class="mini-btn" onclick="pullRemoteRegistrations()">⬇️ Scarica Richieste Remoto</button>
+        <button type="button" class="mini-btn" onclick="pushRemoteRegistrations()">⬆️ Invia Stato Remoto</button>
+        <button type="button" class="photo-btn" onclick="exportAppStateJson()">📤 Esporta JSON</button>
+        <button type="button" class="approve-btn" onclick="document.getElementById('importStateFileInput').click()">📥 Importa JSON</button>
+        <input type="file" id="importStateFileInput" accept="application/json,.json" style="display:none;" onchange="importAppStateJson(event)">
+      </div>
+      <div id="deviceSyncStatus" style="font-size:11px; color:#94A3B8; margin-top:4px;"></div>
+    </div>
+
+    <div id="pendingAccessSection" style="display:flex; flex-direction:column; gap:10px;"></div>
+    <div id="reportsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+  </div>
+
+  <!-- VISTA PROFILO -->
+  <div id="view-profilo" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title">🪪 PROFILO OPERATORE</span>
+      <span></span>
+    </div>
+    <div id="profileCard" class="form-card"></div>
+  </div>
+
+  <!-- VISTA PRIVACY -->
+  <div id="view-privacy" class="view">
+    <div class="subbar">
+      <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+      <span class="subbar-title">🔒 TRATTAMENTO PRIVACY</span>
+      <span></span>
+    </div>
+    <div class="form-card">
+      <h3>Informativa Operativa sul Trattamento dei Dati</h3>
+      <div class="drive-note">
+        I dati inseriti (nominativo, recapito telefonico, ente/corpo di appartenenza, matricola e tesserino) sono utilizzati esclusivamente per il coordinamento interforze e la verifica dell'identità operativa degli utenti autorizzati.
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+</div>
+
+<script>
+const STORAGE_KEY = "coord_interforze_v8_empty_founder";
+
+const DEFAULT_CORPI_TRENTINO = [
+  "VVF Bolbeno-Zuclo",
+  "VVF Tione di Trento",
+  "VVF Borgo Lares",
+  "VVF Condino",
+  "VVF Storo",
+  "VVF Pieve di Bono",
+  "VVF Madonna di Campiglio",
+  "VVF Pinzolo",
+  "VVF Riva del Garda",
+  "VVF Arco",
+  "VVF Trento",
+  "Protezione Civile Trentino",
+  "Soccorso Alpino Trentino (CNSAS)",
+  "Croce Rossa / Trentino Emergenza 118",
+  "Polizia Locale Giudicarie / Trentino"
+];
+
+const DEFAULT_DATA = {
+  selectedCat: "EMERGENZE",
+  currentTopic: "EMERGENZE",
+  activeUserId: "u_michele",
+  loggedIn: true,
+  deviceSyncUrl: "",
+  corpiTrentino: [...DEFAULT_CORPI_TRENTINO],
+  soundSettings: {
+    emergencyTone: "sirena_vvf",
+    chatTone: "chat_soft",
+    adminReportMode: "quiet_chime",
+    newUserTone: "new_user_distinct",
+    customEmergencyAudio: "",
+    customEmergencyName: "",
+    customChatAudio: "",
+    customChatName: "",
+    customNewUserAudio: "",
+    customNewUserName: "",
+    customAdminReportAudio: "",
+    customAdminReportName: ""
+  },
+  users: [
+    {
+      id: "u_michele",
+      nome: "Michele",
+      cognome: "Piccina",
+      tel: "3400000001",
+      enteTipo: "Vigili del Fuoco",
+      corpoVVF: "VVF Bolbeno-Zuclo",
+      sede: "",
+      matricola: "FOUNDER-01",
+      role: "Founder",
+      modForums: ["EMERGENZE", "ALLERTE PC", "EVENTI & TURNI", "DISCUSSIONE OPERATIVA", "MANUALI E PROCEDURE"],
+      banned: false
+    }
+  ],
+  pendingRegistrations: [],
+  reports: [],
+  channels: [
+    { name: "EMERGENZE", tag: "ALLERTA IMMEDIATA", color: "#DC2626", time: "—", unread: 0 },
+    { name: "ALLERTE PC", tag: "PROTEZIONE CIVILE", color: "#EA580C", time: "—", unread: 0 },
+    { name: "EVENTI & TURNI", tag: "SERVIZIO & ADDESTRAMENTO", color: "#2563EB", time: "—", unread: 0 },
+    { name: "DISCUSSIONE OPERATIVA", tag: "COORDINAMENTO", color: "#16A34A", time: "—", unread: 0 },
+    { name: "MANUALI E PROCEDURE", tag: "DOCUMENTAZIONE PDF", color: "#0284C7", time: "—", unread: 0 }
+  ],
+  topics: {
+    "EMERGENZE": [],
+    "ALLERTE PC": [],
+    "EVENTI & TURNI": [],
+    "DISCUSSIONE OPERATIVA": [],
+    "MANUALI E PROCEDURE": []
+  }
+};
+
+let state = loadState();
+let quickPhotoTempDataUrl = "";
+let quickPhotoTempName = "";
+let regBadgeTempDataUrl = "";
+let openFlagBoxPostId = null;
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (!raw) return JSON.parse(JSON.stringify(DEFAULT_DATA));
+    const parsed = JSON.parse(raw);
+    const base = JSON.parse(JSON.stringify(DEFAULT_DATA));
+    return {
+      ...base,
+      ...parsed,
+      corpiTrentino: Array.isArray(parsed.corpiTrentino) && parsed.corpiTrentino.length
+        ? parsed.corpiTrentino
+        : [...DEFAULT_CORPI_TRENTINO],
+      soundSettings: {
+        ...base.soundSettings,
+        ...(parsed.soundSettings || {})
       },
-      nuovo_utente: {
-        key: "nuovo_utente",
-        label: "2. Nuovi Utenti / Richieste Registrazione",
-        description: "Avviso quando un operatore richiede la registrazione all'app.",
-        enabled: true,
-        preset: "bell",
-        customAudioName: "",
-        customAudioDataUrl: ""
-      },
-      normale: {
-        key: "normale",
-        label: "3. Messaggi Normali (Chat Ordinaria)",
-        description: "Notifica discreta per messaggi non urgenti e aggiornamenti generali.",
-        enabled: true,
-        preset: "soft",
-        customAudioName: "",
-        customAudioDataUrl: ""
-      },
-      emergenza: {
-        key: "emergenza",
-        label: "4. Messaggi di Emergenza",
-        description: "Allerta ad alta priorità per comunicazioni critiche o urgenti.",
-        enabled: true,
-        preset: "siren",
-        customAudioName: "",
-        customAudioDataUrl: ""
+      users: Array.isArray(parsed.users) && parsed.users.length ? parsed.users : base.users,
+      pendingRegistrations: Array.isArray(parsed.pendingRegistrations) ? parsed.pendingRegistrations : [],
+      reports: Array.isArray(parsed.reports) ? parsed.reports : [],
+      channels: Array.isArray(parsed.channels) && parsed.channels.length ? parsed.channels : base.channels,
+      topics: {
+        ...base.topics,
+        ...(parsed.topics || {})
       }
     };
+  } catch (e) {
+    return JSON.parse(JSON.stringify(DEFAULT_DATA));
+  }
+}
 
-    function createDefaultState() {
-      return {
-        currentUser: null,
-        corpi: JSON.parse(JSON.stringify(DEFAULT_CORPI)),
-        channels: JSON.parse(JSON.stringify(DEFAULT_CHANNELS)),
-        users: [
-          {
-            username: "michele.piccina",
-            name: "Michele Piccina",
-            role: "Founder",
-            corpo: "Coordinamento Interforze",
-            badge: "FOUNDER-01",
-            pin: "1234"
-          }
-        ],
-        requests: [],
-        messages: [
-          {
-            id: "m-init-1",
-            category: "normale",
-            corpo: "Coordinamento Interforze",
-            author: "Sistema",
-            text: "Applicazione avviata. Configura i Corpi del Trentino e i 4 canali di notifica nelle rispettive schede.",
-            timestamp: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })
-          }
-        ],
-        syncEndpointUrl: ""
-      };
+function enforceFounderIntegrity() {
+  if (!Array.isArray(state.users)) state.users = [];
+  let founder = state.users.find(u => u.id === "u_michele");
+  if (!founder) {
+    founder = {
+      id: "u_michele",
+      nome: "Michele",
+      cognome: "Piccina",
+      tel: "3400000001",
+      enteTipo: "Vigili del Fuoco",
+      corpoVVF: "VVF Bolbeno-Zuclo",
+      sede: "",
+      matricola: "FOUNDER-01",
+      role: "Founder",
+      modForums: ["EMERGENZE", "ALLERTE PC", "EVENTI & TURNI", "DISCUSSIONE OPERATIVA", "MANUALI E PROCEDURE"],
+      banned: false
+    };
+    state.users.unshift(founder);
+  } else {
+    founder.role = "Founder";
+    founder.banned = false;
+  }
+}
+
+function persist() {
+  enforceFounderIntegrity();
+  if (!state.soundSettings) {
+    state.soundSettings = JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+  }
+  if (!Array.isArray(state.corpiTrentino) || !state.corpiTrentino.length) {
+    state.corpiTrentino = [...DEFAULT_CORPI_TRENTINO];
+  }
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+  } catch (err) {
+    showToast("Spazio locale pieno: riduci la dimensione del file audio o foto", true);
+  }
+}
+
+function getCurrentUser() {
+  enforceFounderIntegrity();
+  return state.users.find(u => u.id === state.activeUserId) || state.users[0];
+}
+
+function isFounderUser(user) {
+  return !!(user && user.role === "Founder");
+}
+
+function isAdmin() {
+  const u = getCurrentUser();
+  return !!(u && (u.role === "Founder" || u.role === "Admin" || u.role === "Amministratore"));
+}
+
+function isModeratorForForum(forumName) {
+  const u = getCurrentUser();
+  if (!u) return false;
+  if (isAdmin()) return true;
+  return Array.isArray(u.modForums) && u.modForums.includes(forumName);
+}
+
+function showToast(msg, isError = false) {
+  const el = document.getElementById("toast");
+  if (!el) return;
+  el.textContent = msg;
+  el.className = "toast show" + (isError ? " error" : "");
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(() => {
+    el.className = "toast";
+  }, 3200);
+}
+
+function toggleDrawer() {
+  const d = document.getElementById("drawer");
+  if (!d) return;
+  d.classList.toggle("open");
+}
+
+document.addEventListener("click", (e) => {
+  const drawer = document.getElementById("drawer");
+  const menuBtn = document.querySelector(".menu-btn");
+  if (drawer && drawer.classList.contains("open")) {
+    if (!drawer.contains(e.target) && (!menuBtn || !menuBtn.contains(e.target))) {
+      drawer.classList.remove("open");
     }
+  }
+});
 
-    let state = loadState();
-    let activeAudio = null;
-    let audioCtx = null;
+function switchView(viewName) {
+  document.querySelectorAll(".view").forEach(v => v.classList.remove("active"));
+  const target = document.getElementById("view-" + viewName);
+  if (target) target.classList.add("active");
+  const drawer = document.getElementById("drawer");
+  if (drawer) drawer.classList.remove("open");
 
-    function loadState() {
-      try {
-        const raw = localStorage.getItem(STORAGE_KEY);
-        if (!raw) return createDefaultState();
-        const parsed = JSON.parse(raw);
-        const def = createDefaultState();
-        return {
-          ...def,
-          ...parsed,
-          corpi: Array.isArray(parsed.corpi) && parsed.corpi.length ? parsed.corpi : def.corpi,
-          channels: {
-            ...def.channels,
-            ...(parsed.channels || {})
-          },
-          users: Array.isArray(parsed.users) && parsed.users.length ? parsed.users : def.users,
-          requests: Array.isArray(parsed.requests) ? parsed.requests : [],
-          messages: Array.isArray(parsed.messages) ? parsed.messages : def.messages
-        };
-      } catch (e) {
-        return createDefaultState();
-      }
-    }
+  if (viewName === "home") renderHome();
+  else if (viewName === "topic") renderTopic();
+  else if (viewName === "corpi") renderCorpiTrentinoView();
+  else if (viewName === "suonerie") renderSoundSettingsView();
+  else if (viewName === "approvazioni") renderPendingApprovals();
+  else if (viewName === "bacheca") renderBoardAdmin();
+  else if (viewName === "utenti") renderUsersAdmin();
+  else if (viewName === "segnalazioni") renderReportsAdmin();
+  else if (viewName === "profilo") renderProfileView();
+  else if (viewName === "login") renderLoginView();
+}
 
-    function saveState() {
-      try {
-        localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
-      } catch (e) {
-        showToast("Spazio locale pieno", "Il file audio scelto è troppo grande per il salvataggio locale. Prova un file MP3/WAV più leggero.", "emergenza", false);
-      }
-    }
+function openTopic(topicName) {
+  state.currentTopic = topicName;
+  const ch = state.channels.find(c => c.name === topicName);
+  if (ch) ch.unread = 0;
+  persist();
+  switchView("topic");
+}
 
-    function isAdminUser(user) {
-      if (!user) return false;
-      return ["Founder", "Admin", "Amministratore"].includes(user.role);
-    }
+function syncChrome() {
+  enforceFounderIntegrity();
+  const u = getCurrentUser();
+  const fBadge = document.getElementById("headerFounderBadge");
+  const aBadge = document.getElementById("headerAdminBadge");
+  const mBadge = document.getElementById("headerModBadge");
 
-    function renderAll() {
-      populateCorpiSelects();
-      renderHeader();
-      updateSysNotifBadge();
+  if (fBadge) fBadge.style.display = u && u.role === "Founder" ? "inline-block" : "none";
+  if (aBadge) aBadge.style.display = u && (u.role === "Admin" || u.role === "Amministratore") ? "inline-block" : "none";
+  const hasMod = u && u.role !== "Founder" && u.role !== "Admin" && Array.isArray(u.modForums) && u.modForums.length > 0;
+  if (mBadge) mBadge.style.display = hasMod ? "inline-block" : "none";
 
-      if (!state.currentUser) {
-        document.getElementById("authView").classList.remove("hidden");
-        document.getElementById("appView").classList.add("hidden");
-      } else {
-        document.getElementById("authView").classList.add("hidden");
-        document.getElementById("appView").classList.remove("hidden");
-        document.getElementById("currentUserPill").textContent = `${state.currentUser.name} (${state.currentUser.role})`;
-        renderFeed();
-        renderCorpiList();
-        renderNotifChannels();
-        renderRequestsList();
-        document.getElementById("syncEndpointUrl").value = state.syncEndpointUrl || "";
-      }
-      document.getElementById("pendingBadge").textContent = String(state.requests.length);
-    }
+  const admin = isAdmin();
+  ["drawerAdminApprovals", "drawerAdminBoard", "drawerAdminUsers", "drawerAdminReports"].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.style.display = admin ? "flex" : "none";
+  });
 
-    function renderHeader() {
-      const statusEl = document.getElementById("headerStatus");
-      const actionsEl = document.getElementById("headerActions");
-      if (!state.currentUser) {
-        statusEl.textContent = "Accesso non effettuato";
-        actionsEl.innerHTML = "";
-      } else {
-        statusEl.textContent = `${state.currentUser.name} • ${state.currentUser.corpo || "Trentino"}`;
-        actionsEl.innerHTML = `<button class="ghost" onclick="logout()">Esci</button>`;
-      }
-    }
+  populateCorpiSelects();
+}
 
-    function populateCorpiSelects() {
-      const activeCorpi = state.corpi.filter(c => c.active !== false);
-      const optionsHtml = activeCorpi.length
-        ? activeCorpi.map(c => `<option value="${escapeHtml(c.name)}">${escapeHtml(c.name)}</option>`).join("")
-        : `<option value="Altro Corpo Trentino">Altro Corpo Trentino</option>`;
+/* CORPI DEL TRENTINO */
+function populateCorpiSelects() {
+  const sel = document.getElementById("regVvfCorpo");
+  if (!sel) return;
+  const list = Array.isArray(state.corpiTrentino) && state.corpiTrentino.length
+    ? state.corpiTrentino
+    : DEFAULT_CORPI_TRENTINO;
+  const currentVal = sel.value;
+  sel.innerHTML = list.map(c => `<option value="${escapeHtml(c)}">${escapeHtml(c)}</option>`).join("");
+  if (currentVal && list.includes(currentVal)) {
+    sel.value = currentVal;
+  }
+}
 
-      const regCorpo = document.getElementById("regCorpo");
-      const msgCorpo = document.getElementById("msgCorpo");
-      if (regCorpo) regCorpo.innerHTML = optionsHtml;
-      if (msgCorpo) msgCorpo.innerHTML = optionsHtml;
-    }
+function addCorpoTrentino() {
+  const inp = document.getElementById("newCorpoTrentinoInput");
+  const val = (inp ? inp.value : "").trim();
+  if (!val) return showToast("Inserisci il nome del Corpo del Trentino", true);
+  state.corpiTrentino = state.corpiTrentino || [...DEFAULT_CORPI_TRENTINO];
+  if (state.corpiTrentino.includes(val)) {
+    return showToast("Questo Corpo è già presente nell'elenco", true);
+  }
+  state.corpiTrentino.push(val);
+  inp.value = "";
+  persist();
+  syncChrome();
+  renderCorpiTrentinoView();
+  showToast(`Corpo "${val}" aggiunto`);
+}
 
-    function switchTab(tabName) {
-      document.querySelectorAll(".tab-btn").forEach(btn => {
-        btn.classList.toggle("active", btn.dataset.tab === tabName);
-      });
-      document.querySelectorAll(".tab-panel").forEach(panel => {
-        panel.classList.toggle("hidden", panel.id !== `tab-${tabName}`);
-      });
-    }
+function renameCorpoTrentino(index) {
+  const list = state.corpiTrentino || [];
+  const current = list[index];
+  if (current === undefined) return;
+  const updated = prompt("Rinomina Corpo del Trentino:", current);
+  if (updated && updated.trim()) {
+    list[index] = updated.trim();
+    persist();
+    syncChrome();
+    renderCorpiTrentinoView();
+    showToast("Corpo aggiornato");
+  }
+}
 
-    // AUTH & REGISTRAZIONE
-    function handleLogin() {
-      const u = document.getElementById("loginUsername").value.trim().toLowerCase();
-      const pin = document.getElementById("loginPin").value.trim();
-      if (!u) {
-        alert("Inserisci username o nominativo.");
-        return;
-      }
-      const found = state.users.find(
-        item => item.username.toLowerCase() === u || item.name.toLowerCase() === u
-      );
-      if (found) {
-        if (found.pin && pin && found.pin !== pin) {
-          alert("PIN errato.");
-          return;
-        }
-        state.currentUser = found;
-      } else {
-        state.currentUser = {
-          username: u,
-          name: document.getElementById("loginUsername").value.trim(),
-          role: "Operatore",
-          corpo: state.corpi[0]?.name || "Trentino",
-          badge: "N/D"
-        };
-      }
-      saveState();
-      renderAll();
-    }
+function deleteCorpoTrentino(index) {
+  const list = state.corpiTrentino || [];
+  if (list.length <= 1) return showToast("Deve restare almeno un Corpo nell'elenco", true);
+  const removed = list[index];
+  list.splice(index, 1);
+  persist();
+  syncChrome();
+  renderCorpiTrentinoView();
+  showToast(`Rimosso "${removed}"`);
+}
 
-    function quickLogin(name, role) {
-      state.currentUser = {
-        username: name.toLowerCase().replace(/\s+/g, "."),
-        name,
-        role,
-        corpo: state.corpi[0]?.name || "Trentino",
-        badge: role === "Founder" ? "FOUNDER-01" : "OP-TEST"
-      };
-      saveState();
-      renderAll();
-    }
+function resetCorpiTrentinoDefault() {
+  state.corpiTrentino = [...DEFAULT_CORPI_TRENTINO];
+  persist();
+  syncChrome();
+  renderCorpiTrentinoView();
+  showToast("Elenco Corpi del Trentino ripristinato");
+}
 
-    function logout() {
-      state.currentUser = null;
-      saveState();
-      renderAll();
-    }
-
-    function handleRegisterRequest() {
-      const name = document.getElementById("regName").value.trim();
-      const username = document.getElementById("regUsername").value.trim() || name.toLowerCase().replace(/\s+/g, ".");
-      const corpo = document.getElementById("regCorpo").value;
-      const badge = document.getElementById("regBadge").value.trim();
-      const pin = document.getElementById("regPin").value.trim();
-      const feedback = document.getElementById("regFeedback");
-
-      if (!name || !corpo) {
-        feedback.textContent = "Compila almeno Nome e Cognome e scegli il Corpo.";
-        return;
-      }
-
-      const req = {
-        id: "req-" + Date.now(),
-        name,
-        username,
-        corpo,
-        badge: badge || "Non indicato",
-        pin: pin || "1234",
-        createdAt: new Date().toLocaleString("it-IT")
-      };
-
-      state.requests.unshift(req);
-      saveState();
-      renderAll();
-
-      document.getElementById("regName").value = "";
-      document.getElementById("regUsername").value = "";
-      document.getElementById("regBadge").value = "";
-      document.getElementById("regPin").value = "";
-      feedback.textContent = `Richiesta registrata per ${name} (${corpo}).`;
-
-      triggerNotification("nuovo_utente", "Nuova richiesta di registrazione", `${name} (${corpo}) ha richiesto l'accesso.`);
-    }
-
-    function renderRequestsList() {
-      const el = document.getElementById("requestsList");
-      if (!state.requests.length) {
-        el.innerHTML = `<p class="muted">Nessuna richiesta di registrazione in attesa su questo dispositivo.</p>`;
-        return;
-      }
-      el.innerHTML = state.requests.map(r => `
-        <div class="list-row">
-          <div>
-            <strong>${escapeHtml(r.name)}</strong> <span class="pill">${escapeHtml(r.corpo)}</span>
-            <div class="muted">Utente: ${escapeHtml(r.username)} • Tesserino: ${escapeHtml(r.badge)} • ${escapeHtml(r.createdAt)}</div>
-          </div>
-          <div class="row">
-            <button class="success" onclick="approveRequest('${r.id}')">Approva</button>
-            <button class="danger" onclick="rejectRequest('${r.id}')">Rifiuta</button>
-          </div>
+function renderCorpiTrentinoView() {
+  const wrap = document.getElementById("corpiTrentinoList");
+  if (!wrap) return;
+  const list = state.corpiTrentino || [];
+  wrap.innerHTML = "";
+  list.forEach((corpo, idx) => {
+    const card = document.createElement("div");
+    card.className = "post-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div class="ev-title">🏛️ ${escapeHtml(corpo)}</div>
+        <div class="ev-actions">
+          <button type="button" class="mini-btn" onclick="renameCorpoTrentino(${idx})">✏️ Rinomina</button>
+          <button type="button" class="del-btn" onclick="deleteCorpoTrentino(${idx})">Elimina</button>
         </div>
-      `).join("");
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+/* PWA: MANIFEST DINAMICO & SERVICE WORKER */
+let deferredPwaPrompt = null;
+
+function setupPwaManifestAndServiceWorker() {
+  try {
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#991B1B"/><path d="M96 28L154 62v58c0 34-25 52-58 60-33-8-58-26-58-60V62l58-34z" fill="#DC2626" stroke="#FACC15" stroke-width="6"/><text x="96" y="110" text-anchor="middle" fill="#FFFFFF" font-size="40" font-weight="900" font-family="sans-serif">VVF</text></svg>`;
+    const iconDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIcon);
+    const manifestObj = {
+      name: "Coordinamento Interforze — VVF Bolbeno Zuclo",
+      short_name: "VVF Bolbeno Zuclo",
+      start_url: "./",
+      display: "standalone",
+      background_color: "#0E131A",
+      theme_color: "#991B1B",
+      orientation: "portrait",
+      icons: [
+        { src: iconDataUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any" },
+        { src: iconDataUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    let linkEl = document.querySelector('link[rel="manifest"]');
+    if (!linkEl) {
+      linkEl = document.createElement("link");
+      linkEl.rel = "manifest";
+      document.head.appendChild(linkEl);
     }
+    linkEl.href = manifestUrl;
 
-    function approveRequest(id) {
-      const idx = state.requests.findIndex(r => r.id === id);
-      if (idx === -1) return;
-      const req = state.requests[idx];
-      state.users.push({
-        username: req.username,
-        name: req.name,
-        role: "Operatore",
-        corpo: req.corpo,
-        badge: req.badge,
-        pin: req.pin
-      });
-      state.requests.splice(idx, 1);
-      saveState();
-      renderAll();
-    }
-
-    function rejectRequest(id) {
-      state.requests = state.requests.filter(r => r.id !== id);
-      saveState();
-      renderAll();
-    }
-
-    // MESSAGGI & BACHECA
-    function publishMessage() {
-      const category = document.getElementById("msgCategory").value;
-      const corpo = document.getElementById("msgCorpo").value;
-      const text = document.getElementById("msgText").value.trim();
-
-      if (!text) {
-        alert("Scrivi un messaggio prima di pubblicare.");
-        return;
-      }
-
-      const msg = {
-        id: "msg-" + Date.now(),
-        category,
-        corpo,
-        author: state.currentUser?.name || "Operatore",
-        text,
-        timestamp: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" })
-      };
-
-      state.messages.unshift(msg);
-      document.getElementById("msgText").value = "";
-      saveState();
-      renderFeed();
-
-      const titles = {
-        emergenza: "EMERGENZA OPERATIVA",
-        segnalazione: "Nuova Segnalazione",
-        normale: "Nuovo Messaggio"
-      };
-      triggerNotification(category, `${titles[category] || "Notifica"} • ${corpo}`, `${msg.author}: ${text}`);
-    }
-
-    function simulateIncomingTest() {
-      const cat = document.getElementById("msgCategory").value;
-      const corpo = document.getElementById("msgCorpo").value;
-      triggerNotification(cat, `Test notifica (${cat}) • ${corpo}`, "Prova di ricezione messaggio e suoneria configurata.");
-    }
-
-    function renderFeed() {
-      const filter = document.getElementById("filterCategory").value;
-      const list = document.getElementById("feedList");
-      const items = filter === "tutte"
-        ? state.messages
-        : state.messages.filter(m => m.category === filter);
-
-      if (!items.length) {
-        list.innerHTML = `<p class="muted">Nessun messaggio presente per questo filtro.</p>`;
-        return;
-      }
-
-      list.innerHTML = items.map(m => {
-        const isEmerg = m.category === "emergenza";
-        const pillClass = isEmerg ? "pill emergenza" : (m.category === "segnalazione" ? "pill admin" : "pill");
-        return `
-          <div class="feed-item ${isEmerg ? "emergenza" : ""}">
-            <div class="feed-meta">
-              <span><span class="${pillClass}">${escapeHtml(m.category.toUpperCase())}</span> • <strong>${escapeHtml(m.corpo)}</strong></span>
-              <span>${escapeHtml(m.author)} • ${escapeHtml(m.timestamp)}</span>
-            </div>
-            <div>${escapeHtml(m.text)}</div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    // CORPI TRENTINO
-    function addCorpo() {
-      const name = document.getElementById("newCorpoName").value.trim();
-      const tag = document.getElementById("newCorpoCode").value.trim() || "Trentino";
-      if (!name) {
-        alert("Inserisci il nome del Corpo o Ente.");
-        return;
-      }
-      state.corpi.push({
-        id: "c-" + Date.now(),
-        name,
-        tag,
-        active: true
-      });
-      document.getElementById("newCorpoName").value = "";
-      document.getElementById("newCorpoCode").value = "";
-      saveState();
-      renderAll();
-    }
-
-    function toggleCorpo(id) {
-      const c = state.corpi.find(item => item.id === id);
-      if (!c) return;
-      c.active = c.active === false ? true : false;
-      saveState();
-      renderAll();
-    }
-
-    function editCorpo(id) {
-      const c = state.corpi.find(item => item.id === id);
-      if (!c) return;
-      const updated = prompt("Modifica nome del Corpo / Ente:", c.name);
-      if (updated && updated.trim()) {
-        c.name = updated.trim();
-        saveState();
-        renderAll();
-      }
-    }
-
-    function deleteCorpo(id) {
-      state.corpi = state.corpi.filter(item => item.id !== id);
-      saveState();
-      renderAll();
-    }
-
-    function resetCorpiDefaults() {
-      if (!confirm("Ripristinare l'elenco predefinito dei Corpi del Trentino?")) return;
-      state.corpi = JSON.parse(JSON.stringify(DEFAULT_CORPI));
-      saveState();
-      renderAll();
-    }
-
-    function renderCorpiList() {
-      const el = document.getElementById("corpiList");
-      if (!state.corpi.length) {
-        el.innerHTML = `<p class="muted">Nessun corpo configurato. Aggiungine uno sopra.</p>`;
-        return;
-      }
-      el.innerHTML = state.corpi.map(c => {
-        const isActive = c.active !== false;
-        return `
-          <div class="list-row">
-            <div>
-              <strong>${escapeHtml(c.name)}</strong>
-              <span class="pill">${escapeHtml(c.tag || "Trentino")}</span>
-              <span class="pill ${isActive ? "ok" : ""}">${isActive ? "Attivo" : "Disattivato"}</span>
-            </div>
-            <div class="row">
-              <button onclick="editCorpo('${c.id}')">Modifica</button>
-              <button onclick="toggleCorpo('${c.id}')">${isActive ? "Disattiva" : "Attiva"}</button>
-              <button class="danger" onclick="deleteCorpo('${c.id}')">Elimina</button>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    // NOTIFICHE & SUONERIE (4 CANALI)
-    function updateSysNotifBadge() {
-      const badge = document.getElementById("sysNotifStatus");
-      if (!badge) return;
-      if (!("Notification" in window)) {
-        badge.textContent = "Notifiche Web: non supportate";
-      } else {
-        badge.textContent = `Permesso: ${Notification.permission}`;
-      }
-    }
-
-    async function requestSystemNotificationPermission() {
-      if (!("Notification" in window)) {
-        alert("Questo ambiente non espone l'API Notification; verranno usati banner e suonerie interne.");
-        return;
-      }
-      const res = await Notification.requestPermission();
-      updateSysNotifBadge();
-      if (res === "granted") {
-        triggerNotification("normale", "Notifiche abilitate", "Riceverai avvisi e suonerie quando arrivano nuovi eventi.");
-      }
-    }
-
-    function renderNotifChannels() {
-      const container = document.getElementById("notifChannelsContainer");
-      const keys = ["segnalazione", "nuovo_utente", "normale", "emergenza"];
-
-      container.innerHTML = keys.map(key => {
-        const ch = state.channels[key];
-        const customInfo = ch.customAudioName
-          ? `<span class="pill ok">File caricato: ${escapeHtml(ch.customAudioName)}</span>`
-          : `<span class="muted">Nessun file audio caricato dal telefono</span>`;
-
-        return `
-          <div class="feed-item ${key === "emergenza" ? "emergenza" : ""}">
-            <div class="feed-meta">
-              <strong style="color: var(--text); font-size: 0.98rem;">${escapeHtml(ch.label)}</strong>
-              <label style="display: inline-flex; align-items: center; gap: 6px; margin: 0; cursor: pointer;">
-                <input type="checkbox" style="width: auto;" ${ch.enabled ? "checked" : ""} onchange="toggleChannelEnabled('${key}', this.checked)" />
-                <span>Attiva</span>
-              </label>
-            </div>
-            <p class="muted" style="margin: 4px 0 10px 0;">${escapeHtml(ch.description)}</p>
-
-            <div class="grid-2">
-              <div>
-                <label>Suoneria / Tipo tono</label>
-                <select onchange="changeChannelPreset('${key}', this.value)">
-                  <option value="chime" ${ch.preset === "chime" ? "selected" : ""}>Tono Segnalazione (Doppio impulso)</option>
-                  <option value="bell" ${ch.preset === "bell" ? "selected" : ""}>Campanello Nuovo Utente</option>
-                  <option value="soft" ${ch.preset === "soft" ? "selected" : ""}>Avviso Messaggio Normale (Morbido)</option>
-                  <option value="siren" ${ch.preset === "siren" ? "selected" : ""}>Allarme Emergenza (Ripetuto)</option>
-                  <option value="custom" ${ch.preset === "custom" ? "selected" : ""}>File Audio Caricato dal Telefono</option>
-                </select>
-              </div>
-              <div>
-                <label>Carica suoneria dal telefono (MP3, WAV, OGG)</label>
-                <input type="file" accept="audio/*" onchange="handleAudioUpload('${key}', event)" />
-              </div>
-            </div>
-
-            <div class="row" style="margin-top: 10px; justify-content: space-between;">
-              <div>${customInfo}</div>
-              <div class="row">
-                <button class="primary" onclick="previewChannelSound('${key}')">Prova Suoneria</button>
-                <button onclick="stopPreviewAudio()">Stop</button>
-                ${ch.customAudioDataUrl ? `<button class="ghost" onclick="clearCustomAudio('${key}')">Rimuovi File</button>` : ""}
-              </div>
-            </div>
-          </div>
-        `;
-      }).join("");
-    }
-
-    function toggleChannelEnabled(key, checked) {
-      state.channels[key].enabled = checked;
-      saveState();
-    }
-
-    function changeChannelPreset(key, preset) {
-      state.channels[key].preset = preset;
-      saveState();
-    }
-
-    function handleAudioUpload(key, event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      if (file.size > MAX_CUSTOM_AUDIO_BYTES) {
-        alert("File audio troppo grande (massimo ~1.8 MB per il salvataggio locale). Scegli un clip audio più breve.");
-        event.target.value = "";
-        return;
-      }
-      const reader = new FileReader();
-      reader.onload = function () {
-        state.channels[key].customAudioName = file.name;
-        state.channels[key].customAudioDataUrl = String(reader.result || "");
-        state.channels[key].preset = "custom";
-        saveState();
-        renderNotifChannels();
-        previewChannelSound(key);
-      };
-      reader.readAsDataURL(file);
-    }
-
-    function clearCustomAudio(key) {
-      state.channels[key].customAudioName = "";
-      state.channels[key].customAudioDataUrl = "";
-      if (state.channels[key].preset === "custom") {
-        state.channels[key].preset = key === "emergenza" ? "siren" : "chime";
-      }
-      saveState();
-      renderNotifChannels();
-    }
-
-    function stopPreviewAudio() {
-      if (activeAudio) {
-        try {
-          activeAudio.pause();
-          activeAudio.currentTime = 0;
-        } catch (e) {}
-        activeAudio = null;
-      }
-      if (audioCtx) {
-        try {
-          audioCtx.close();
-        } catch (e) {}
-        audioCtx = null;
-      }
-    }
-
-    function previewChannelSound(key) {
-      stopPreviewAudio();
-      const ch = state.channels[key] || DEFAULT_CHANNELS[key];
-      if (ch.preset === "custom" && ch.customAudioDataUrl) {
-        activeAudio = new Audio(ch.customAudioDataUrl);
-        activeAudio.play().catch(() => playSynthPreset(ch.preset));
-        return;
-      }
-      playSynthPreset(ch.preset);
-    }
-
-    function playSynthPreset(preset) {
-      const AudioContextClass = window.AudioContext || window.webkitAudioContext;
-      if (!AudioContextClass) return;
-      audioCtx = new AudioContextClass();
-
-      const notesMap = {
-        soft: [{ freq: 523.25, start: 0, dur: 0.18 }],
-        chime: [
-          { freq: 659.25, start: 0, dur: 0.16 },
-          { freq: 880.0, start: 0.18, dur: 0.24 }
-        ],
-        bell: [
-          { freq: 783.99, start: 0, dur: 0.14 },
-          { freq: 1046.5, start: 0.16, dur: 0.14 },
-          { freq: 1318.5, start: 0.32, dur: 0.28 }
-        ],
-        siren: [
-          { freq: 880, start: 0, dur: 0.22 },
-          { freq: 620, start: 0.22, dur: 0.22 },
-          { freq: 880, start: 0.44, dur: 0.22 },
-          { freq: 620, start: 0.66, dur: 0.25 }
-        ]
-      };
-
-      const seq = notesMap[preset] || notesMap.chime;
-      const now = audioCtx.currentTime;
-
-      seq.forEach(n => {
-        const osc = audioCtx.createOscillator();
-        const gain = audioCtx.createGain();
-        osc.type = preset === "siren" ? "sawtooth" : "triangle";
-        osc.frequency.setValueAtTime(n.freq, now + n.start);
-
-        gain.gain.setValueAtTime(0.001, now + n.start);
-        gain.gain.exponentialRampToValueAtTime(0.18, now + n.start + 0.02);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + n.start + n.dur);
-
-        osc.connect(gain);
-        gain.connect(audioCtx.destination);
-        osc.start(now + n.start);
-        osc.stop(now + n.start + n.dur + 0.02);
-      });
-    }
-
-    function triggerNotification(channelKey, title, body) {
-      const ch = state.channels[channelKey] || DEFAULT_CHANNELS.normale;
-      if (!ch.enabled) return;
-
-      showToast(title, body, channelKey === "emergenza" ? "emergenza" : "", true);
-      previewChannelSound(channelKey);
-
-      if (navigator.vibrate) {
-        navigator.vibrate(channelKey === "emergenza" ? [250, 120, 250, 120, 400] : [140]);
-      }
-
-      if ("Notification" in window && Notification.permission === "granted") {
-        try {
-          new Notification(title, { body });
-        } catch (e) {}
-      }
-    }
-
-    function showToast(title, body, extraClass = "", autoHide = true) {
-      const banner = document.getElementById("toastBanner");
-      document.getElementById("toastTitle").textContent = title;
-      document.getElementById("toastBody").textContent = body;
-      banner.className = `toast-banner show ${extraClass}`.trim();
-
-      clearTimeout(showToast._timer);
-      if (autoHide) {
-        showToast._timer = setTimeout(() => {
-          banner.classList.remove("show");
-        }, 6500);
-      }
-    }
-
-    function hideToast() {
-      document.getElementById("toastBanner").classList.remove("show");
-    }
-
-    // SYNC / EXPORT / IMPORT
-    function saveSyncUrl() {
-      state.syncEndpointUrl = document.getElementById("syncEndpointUrl").value.trim();
-      saveState();
-      document.getElementById("syncStatusMsg").textContent = "URL di sincronizzazione salvato.";
-    }
-
-    async function pushToSyncUrl() {
-      const url = document.getElementById("syncEndpointUrl").value.trim();
-      state.syncEndpointUrl = url;
-      saveState();
-      if (!url) {
-        document.getElementById("syncStatusMsg").textContent = "Inserisci prima un URL endpoint valido.";
-        return;
-      }
-      try {
-        const res = await fetch(url, {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            requests: state.requests,
-            messages: state.messages,
-            corpi: state.corpi
-          })
+    if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+      const swCode = `
+        const CACHE_NAME = 'vvf-bolbeno-zuclo-pwa-v1';
+        self.addEventListener('install', event => {
+          self.skipWaiting();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./']).catch(() => {})));
         });
-        document.getElementById("syncStatusMsg").textContent = res.ok
-          ? "Stato inviato al server remoto."
-          : `Risposta server: ${res.status}`;
-      } catch (e) {
-        document.getElementById("syncStatusMsg").textContent = "Invio non riuscito (controlla URL, CORS o rete).";
+        self.addEventListener('activate', event => {
+          event.waitUntil(self.clients.claim());
+        });
+        self.addEventListener('fetch', event => {
+          if (event.request.method !== 'GET') return;
+          event.respondWith(
+            caches.match(event.request).then(cached => cached || fetch(event.request).catch(() => cached))
+          );
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: "application/javascript" });
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+  } catch (err) {}
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  updatePwaInstallBar();
+});
+
+function updatePwaInstallBar() {
+  const bar = document.getElementById("pwaInstallBar");
+  if (!bar) return;
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if (isStandalone) {
+    bar.classList.remove("visible");
+    return;
+  }
+  bar.classList.add("visible");
+}
+
+function triggerPwaInstall() {
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    deferredPwaPrompt.userChoice.then(() => {
+      deferredPwaPrompt = null;
+      updatePwaInstallBar();
+    });
+    return;
+  }
+  showToast("Su Android: apri il menu (⋮) in alto a destra e seleziona 'Installa app' o 'Aggiungi a schermata Home'");
+}
+
+/* AUDIO & SUONERIE DIFFERENZIATE (WEB AUDIO + FILE AUDIO UTENTE) */
+let sharedAudioCtx = null;
+let customAudioPlayer = null;
+
+function getAudioContext() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx) {
+    sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx.state === "suspended") {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+function playToneNotes(notes, baseGain = 0.25) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    let cursor = ctx.currentTime + 0.02;
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = n.type || "sine";
+      osc.frequency.setValueAtTime(n.freq, cursor);
+      if (n.slideTo) {
+        osc.frequency.linearRampToValueAtTime(n.slideTo, cursor + n.dur);
       }
-    }
+      const peak = Math.max(0.005, (n.gain !== undefined ? n.gain : 1) * baseGain);
+      gain.gain.setValueAtTime(0.0001, cursor);
+      gain.gain.linearRampToValueAtTime(peak, cursor + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, cursor + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(cursor);
+      osc.stop(cursor + n.dur + 0.02);
+      cursor += n.dur + (n.gap || 0.04);
+    });
+  } catch (err) {}
+}
 
-    async function pullFromSyncUrl() {
-      const url = document.getElementById("syncEndpointUrl").value.trim();
-      state.syncEndpointUrl = url;
-      saveState();
-      if (!url) {
-        document.getElementById("syncStatusMsg").textContent = "Inserisci prima un URL endpoint valido.";
-        return;
+function playCustomAudioFile(dataUrl, volume = 0.85) {
+  try {
+    if (!dataUrl) return false;
+    if (customAudioPlayer) {
+      customAudioPlayer.pause();
+    }
+    customAudioPlayer = new Audio(dataUrl);
+    customAudioPlayer.volume = Math.max(0, Math.min(1, volume));
+    customAudioPlayer.play().catch(() => {});
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function playRingtoneByKind(kind) {
+  const cfg = state.soundSettings || DEFAULT_DATA.soundSettings;
+  if (kind === "emergency") {
+    const tone = cfg.emergencyTone || "sirena_vvf";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customEmergencyAudio) {
+      playCustomAudioFile(cfg.customEmergencyAudio, 0.95);
+      return;
+    }
+    if (tone === "doppio_impulso") {
+      playToneNotes([
+        { freq: 920, dur: 0.16, gap: 0.06, type: "sawtooth", gain: 0.9 },
+        { freq: 920, dur: 0.16, gap: 0.14, type: "sawtooth", gain: 0.9 },
+        { freq: 1180, dur: 0.22, gap: 0.06, type: "sawtooth", gain: 1.0 },
+        { freq: 1180, dur: 0.22, gap: 0.04, type: "sawtooth", gain: 1.0 }
+      ], 0.32);
+    } else if (tone === "tono_urgenza") {
+      playToneNotes([
+        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 1046, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 1046, dur: 0.30, gap: 0.04, type: "square", gain: 0.95 }
+      ], 0.28);
+    } else {
+      playToneNotes([
+        { freq: 620, slideTo: 1120, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
+        { freq: 1120, slideTo: 620, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
+        { freq: 620, slideTo: 1120, dur: 0.38, gap: 0.04, type: "sawtooth", gain: 1.0 }
+      ], 0.34);
+    }
+    return;
+  }
+
+  if (kind === "chat") {
+    const tone = cfg.chatTone || "chat_soft";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customChatAudio) {
+      playCustomAudioFile(cfg.customChatAudio, 0.75);
+      return;
+    }
+    if (tone === "chime_operativo") {
+      playToneNotes([
+        { freq: 587.33, dur: 0.14, gap: 0.03, type: "triangle", gain: 0.7 },
+        { freq: 880, dur: 0.22, gap: 0.04, type: "triangle", gain: 0.75 }
+      ], 0.22);
+    } else if (tone === "ping_messaggio") {
+      playToneNotes([
+        { freq: 1046.5, dur: 0.11, gap: 0.04, type: "sine", gain: 0.65 },
+        { freq: 1318.5, dur: 0.16, gap: 0.04, type: "sine", gain: 0.65 }
+      ], 0.2);
+    } else {
+      playToneNotes([
+        { freq: 523.25, dur: 0.18, gap: 0.04, type: "sine", gain: 0.55 },
+        { freq: 659.25, dur: 0.22, gap: 0.04, type: "sine", gain: 0.55 }
+      ], 0.18);
+    }
+    return;
+  }
+
+  if (kind === "adminReport") {
+    const mode = cfg.adminReportMode || "quiet_chime";
+    if (mode === "silent") return;
+    if (mode === "custom" && cfg.customAdminReportAudio) {
+      playCustomAudioFile(cfg.customAdminReportAudio, 0.35);
+      return;
+    }
+    if (mode === "whisper_tick") {
+      playToneNotes([
+        { freq: 440, dur: 0.08, gap: 0.06, type: "sine", gain: 0.22 }
+      ], 0.06);
+    } else {
+      playToneNotes([
+        { freq: 392, dur: 0.24, gap: 0.05, type: "sine", gain: 0.25 },
+        { freq: 440, dur: 0.28, gap: 0.04, type: "sine", gain: 0.22 }
+      ], 0.08);
+    }
+    return;
+  }
+
+  if (kind === "newUser") {
+    const tone = cfg.newUserTone || "new_user_distinct";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customNewUserAudio) {
+      playCustomAudioFile(cfg.customNewUserAudio, 0.85);
+      return;
+    }
+    if (tone === "door_chime") {
+      playToneNotes([
+        { freq: 659.25, dur: 0.16, gap: 0.05, type: "triangle", gain: 0.8 },
+        { freq: 493.88, dur: 0.26, gap: 0.06, type: "triangle", gain: 0.8 },
+        { freq: 783.99, dur: 0.24, gap: 0.04, type: "triangle", gain: 0.85 }
+      ], 0.25);
+    } else {
+      playToneNotes([
+        { freq: 440, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
+        { freq: 554.37, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
+        { freq: 659.25, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.85 },
+        { freq: 880, dur: 0.28, gap: 0.04, type: "triangle", gain: 0.9 }
+      ], 0.26);
+    }
+  }
+}
+
+let inAppNotifTimer = null;
+
+function closeInAppNotif() {
+  const b = document.getElementById("inappNotifBanner");
+  if (b) b.classList.remove("open");
+}
+
+function triggerNotificationAlert({ categoryLabel, title, body, soundKind, bannerStyle }) {
+  playRingtoneByKind(soundKind);
+
+  const banner = document.getElementById("inappNotifBanner");
+  const catEl = document.getElementById("inappNotifCategory");
+  const titleEl = document.getElementById("inappNotifTitle");
+  const bodyEl = document.getElementById("inappNotifBody");
+
+  if (banner && catEl && titleEl && bodyEl) {
+    banner.className = "inapp-notif-banner open" + (bannerStyle ? " " + bannerStyle : "");
+    catEl.textContent = categoryLabel || "NOTIFICA";
+    titleEl.textContent = title || "Nuovo aggiornamento";
+    bodyEl.textContent = body || "";
+    if (inAppNotifTimer) clearTimeout(inAppNotifTimer);
+    inAppNotifTimer = setTimeout(() => {
+      banner.classList.remove("open");
+    }, 5000);
+  }
+
+  try {
+    if (navigator.vibrate) {
+      navigator.vibrate(soundKind === "emergency" ? [250, 120, 250, 120, 400] : [140]);
+    }
+  } catch (err) {}
+
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title || "Coordinamento Interforze", {
+        body: body || "",
+        silent: soundKind === "adminReport"
+      });
+    }
+  } catch (err) {}
+}
+
+function requestDeviceNotificationPermission() {
+  if (!("Notification" in window)) {
+    return showToast("Notifiche browser non supportate: attive notifiche in-app e suoni", true);
+  }
+  Notification.requestPermission().then(perm => {
+    renderSoundSettingsView();
+    if (perm === "granted") {
+      showToast("Notifiche del dispositivo attivate!");
+    } else {
+      showToast("Permesso non concesso: resteranno attive le notifiche interne con suoni", true);
+    }
+  });
+}
+
+function updateSoundSetting(key, val) {
+  state.soundSettings = state.soundSettings || JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+  state.soundSettings[key] = val;
+  persist();
+  renderSoundSettingsView();
+  showToast("Impostazione suoneria salvata");
+}
+
+function handleCustomRingtoneUpload(e, targetKind) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    state.soundSettings = state.soundSettings || JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+    if (targetKind === "emergency") {
+      state.soundSettings.customEmergencyAudio = evt.target.result;
+      state.soundSettings.customEmergencyName = file.name;
+      state.soundSettings.emergencyTone = "custom";
+    } else if (targetKind === "chat") {
+      state.soundSettings.customChatAudio = evt.target.result;
+      state.soundSettings.customChatName = file.name;
+      state.soundSettings.chatTone = "custom";
+    } else if (targetKind === "newUser") {
+      state.soundSettings.customNewUserAudio = evt.target.result;
+      state.soundSettings.customNewUserName = file.name;
+      state.soundSettings.newUserTone = "custom";
+    } else if (targetKind === "adminReport") {
+      state.soundSettings.customAdminReportAudio = evt.target.result;
+      state.soundSettings.customAdminReportName = file.name;
+      state.soundSettings.adminReportMode = "custom";
+    }
+    persist();
+    renderSoundSettingsView();
+    showToast(`File audio "${file.name}" impostato`);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+}
+
+function clearCustomRingtone(targetKind) {
+  const cfg = state.soundSettings;
+  if (!cfg) return;
+  if (targetKind === "emergency") {
+    cfg.customEmergencyAudio = "";
+    cfg.customEmergencyName = "";
+    if (cfg.emergencyTone === "custom") cfg.emergencyTone = "sirena_vvf";
+  } else if (targetKind === "chat") {
+    cfg.customChatAudio = "";
+    cfg.customChatName = "";
+    if (cfg.chatTone === "custom") cfg.chatTone = "chat_soft";
+  } else if (targetKind === "newUser") {
+    cfg.customNewUserAudio = "";
+    cfg.customNewUserName = "";
+    if (cfg.newUserTone === "custom") cfg.newUserTone = "new_user_distinct";
+  } else if (targetKind === "adminReport") {
+    cfg.customAdminReportAudio = "";
+    cfg.customAdminReportName = "";
+    if (cfg.adminReportMode === "custom") cfg.adminReportMode = "quiet_chime";
+  }
+  persist();
+  renderSoundSettingsView();
+  showToast("File audio rimosso");
+}
+
+function previewRingtone(kind) {
+  playRingtoneByKind(kind);
+  const labels = {
+    emergency: "Anteprima suoneria EMERGENZE",
+    chat: "Anteprima suoneria MESSAGGI NORMALI",
+    adminReport: "Anteprima notifica SEGNALAZIONI (Admin)",
+    newUser: "Anteprima suoneria NUOVI UTENTI (Admin)"
+  };
+  showToast(labels[kind] || "Riproduzione anteprima");
+}
+
+function renderSoundSettingsView() {
+  const cfg = state.soundSettings || DEFAULT_DATA.soundSettings;
+  const sEm = document.getElementById("selEmergencyTone");
+  const sCh = document.getElementById("selChatTone");
+  const sAd = document.getElementById("selAdminReportMode");
+  const sNu = document.getElementById("selNewUserTone");
+  if (sEm) sEm.value = cfg.emergencyTone || "sirena_vvf";
+  if (sCh) sCh.value = cfg.chatTone || "chat_soft";
+  if (sAd) sAd.value = cfg.adminReportMode || "quiet_chime";
+  if (sNu) sNu.value = cfg.newUserTone || "new_user_distinct";
+
+  const emLbl = document.getElementById("emergencyCustomAudioLabel");
+  const chLbl = document.getElementById("chatCustomAudioLabel");
+  const nuLbl = document.getElementById("newUserCustomAudioLabel");
+  const rpLbl = document.getElementById("reportCustomAudioLabel");
+  if (emLbl) emLbl.textContent = cfg.customEmergencyName ? `File caricato: ${cfg.customEmergencyName} ✓` : "Nessun file audio personalizzato caricato";
+  if (chLbl) chLbl.textContent = cfg.customChatName ? `File caricato: ${cfg.customChatName} ✓` : "Nessun file audio personalizzato caricato";
+  if (nuLbl) nuLbl.textContent = cfg.customNewUserName ? `File caricato: ${cfg.customNewUserName} ✓` : "Nessun file audio personalizzato caricato";
+  if (rpLbl) rpLbl.textContent = cfg.customAdminReportName ? `File caricato: ${cfg.customAdminReportName} ✓` : "Nessun file audio personalizzato caricato";
+
+  const permTag = document.getElementById("notifPermStatus");
+  if (permTag && "Notification" in window) {
+    permTag.textContent = Notification.permission === "granted" ? "Attive ✓" : (Notification.permission === "denied" ? "Bloccate" : "Da attivare");
+  }
+}
+
+function simulateIncomingPost(topicName) {
+  const isEm = topicName === "EMERGENZE";
+  triggerNotificationAlert({
+    categoryLabel: isEm ? "🚨 NUOVO POST EMERGENZE" : `💬 MESSAGGIO NORMALE • ${topicName}`,
+    title: isEm ? "Allerta Emergenza — Test Notifica" : `Nuovo messaggio su ${topicName}`,
+    body: isEm ? "Suoneria dedicata alle Emergenze attiva." : `Suoneria dedicata ai Messaggi Normali attiva per ${topicName}.`,
+    soundKind: isEm ? "emergency" : "chat",
+    bannerStyle: isEm ? "emergency" : ""
+  });
+}
+
+function simulateAdminReport() {
+  state.reports = state.reports || [];
+  state.reports.unshift({
+    id: Date.now(),
+    topic: "DISCUSSIONE OPERATIVA",
+    postId: 0,
+    postTitle: "Post segnalato (simulazione admin)",
+    reportedBy: "Moderatore",
+    reason: "Controllo discreto segnalazione — avviso silenziato.",
+    status: "pending"
+  });
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "🤫 NUOVA SEGNALAZIONE (AVVISO TRANQUILLO)",
+    title: "Nuova segnalazione in coda",
+    body: "Avviso discreto a volume ridotto per gli amministratori.",
+    soundKind: "adminReport",
+    bannerStyle: "quiet-report"
+  });
+  if (document.getElementById("view-segnalazioni").classList.contains("active")) {
+    renderReportsAdmin();
+  }
+}
+
+function simulateNewUserRequest() {
+  state.pendingRegistrations = state.pendingRegistrations || [];
+  state.pendingRegistrations.unshift({
+    id: "reg_" + Date.now(),
+    nome: "Operatore",
+    cognome: "In Attesa",
+    tel: "333000111",
+    enteTipo: "Vigili del Fuoco",
+    corpoVVF: state.corpiTrentino?.[0] || "VVF Bolbeno-Zuclo",
+    sede: "",
+    matricola: "MAT-TEST",
+    badgeImg: "",
+    privacyAccepted: true,
+    submittedAt: "Adesso"
+  });
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
+    title: "Nuovo utente in attesa di approvazione",
+    body: "Suoneria dedicata ai Nuovi Utenti attiva.",
+    soundKind: "newUser",
+    bannerStyle: "new-user"
+  });
+  if (document.getElementById("view-segnalazioni").classList.contains("active")) {
+    renderReportsAdmin();
+  }
+  if (document.getElementById("view-approvazioni").classList.contains("active")) {
+    renderPendingApprovals();
+  }
+}
+
+/* AUTH & REGISTRAZIONE */
+function setAuthTab(mode) {
+  const isReg = mode === "register";
+  document.getElementById("tabLoginBtn").classList.toggle("active", !isReg);
+  document.getElementById("tabRegBtn").classList.toggle("active", isReg);
+  document.getElementById("authLoginBox").style.display = isReg ? "none" : "flex";
+  document.getElementById("authRegisterBox").style.display = isReg ? "flex" : "none";
+}
+
+function toggleRegEnteFields() {
+  const tipo = document.getElementById("regEnteTipo").value;
+  document.getElementById("regVvfCorpoWrap").style.display = tipo === "Vigili del Fuoco" ? "flex" : "none";
+  document.getElementById("regSedeWrap").style.display = tipo !== "Vigili del Fuoco" ? "flex" : "none";
+}
+
+function renderLoginView() {
+  populateCorpiSelects();
+  const sel = document.getElementById("loginUserSelect");
+  if (!sel) return;
+  sel.innerHTML = state.users.map(u => `<option value="${escapeHtml(u.id)}">${escapeHtml(u.nome)} ${escapeHtml(u.cognome || "")} (${escapeHtml(u.role)})</option>`).join("");
+}
+
+function performLogin() {
+  const sel = document.getElementById("loginUserSelect");
+  const userId = sel ? sel.value : state.users[0].id;
+  state.activeUserId = userId;
+  state.loggedIn = true;
+  persist();
+  syncChrome();
+  switchView("home");
+  showToast("Accesso effettuato");
+}
+
+function logoutToLogin() {
+  state.loggedIn = false;
+  persist();
+  const d = document.getElementById("drawer");
+  if (d) d.classList.remove("open");
+  switchView("login");
+}
+
+function resetDemo() {
+  if (!confirm("Ripristinare l'applicazione allo stato iniziale vuoto?")) return;
+  localStorage.removeItem(STORAGE_KEY);
+  state = JSON.parse(JSON.stringify(DEFAULT_DATA));
+  persist();
+  syncChrome();
+  switchView("home");
+  showToast("Stato ripristinato");
+}
+
+function handleBadgeUpload(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    regBadgeTempDataUrl = evt.target.result;
+    const prev = document.getElementById("regBadgePreview");
+    const status = document.getElementById("regBadgeStatus");
+    if (prev) {
+      prev.src = regBadgeTempDataUrl;
+      prev.style.display = "block";
+    }
+    if (status) status.textContent = `Tesserino allegato: ${file.name} ✓`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function submitUserRegistration() {
+  const nome = (document.getElementById("regNome").value || "").trim();
+  const cognome = (document.getElementById("regCognome").value || "").trim();
+  const tel = (document.getElementById("regTel").value || "").trim();
+  const enteTipo = document.getElementById("regEnteTipo").value;
+  const corpoVVF = enteTipo === "Vigili del Fuoco" ? document.getElementById("regVvfCorpo").value : "";
+  const sede = enteTipo !== "Vigili del Fuoco" ? (document.getElementById("regSede").value || "").trim() : "";
+  const matricola = (document.getElementById("regMatricola").value || "").trim();
+  const privacyOk = !!document.getElementById("regPrivacyAccept").checked;
+
+  if (!nome) return showToast("Inserisci almeno il Nome per registrarti", true);
+  if (!tel) return showToast("Inserisci il Numero di telefono", true);
+  if (!matricola) return showToast("Inserisci il numero del tesserino / codice matricola", true);
+  if (!regBadgeTempDataUrl) return showToast("Allega la foto del tesserino prima di inviare la richiesta", true);
+  if (enteTipo !== "Vigili del Fuoco" && !sede) return showToast("Indica la sede di appartenenza", true);
+  if (!privacyOk) return showToast("Devi accettare il Trattamento della Privacy per proseguire", true);
+
+  state.pendingRegistrations = state.pendingRegistrations || [];
+  state.pendingRegistrations.unshift({
+    id: "reg_" + Date.now(),
+    nome,
+    cognome,
+    tel,
+    enteTipo,
+    corpoVVF,
+    sede,
+    matricola,
+    badgeImg: regBadgeTempDataUrl,
+    privacyAccepted: true,
+    submittedAt: new Date().toLocaleString("it-IT")
+  });
+
+  document.getElementById("regNome").value = "";
+  document.getElementById("regCognome").value = "";
+  document.getElementById("regTel").value = "";
+  document.getElementById("regMatricola").value = "";
+  document.getElementById("regSede").value = "";
+  document.getElementById("regBadgeFile").value = "";
+  document.getElementById("regBadgePreview").src = "";
+  document.getElementById("regBadgePreview").style.display = "none";
+  document.getElementById("regBadgeStatus").textContent = "Obbligatorio: allega foto chiara del tesserino";
+  document.getElementById("regPrivacyAccept").checked = false;
+  regBadgeTempDataUrl = "";
+
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
+    title: `Richiesta ingresso: ${nome} ${cognome}`.trim(),
+    body: `Ente: ${enteTipo}${corpoVVF ? " (" + corpoVVF + ")" : ""} • Matricola: ${matricola}`,
+    soundKind: "newUser",
+    bannerStyle: "new-user"
+  });
+  setAuthTab("login");
+  showToast("Richiesta inviata! Attendi l'approvazione di un amministratore");
+}
+
+/* HOME & POST */
+function selectQuickCat(cat) {
+  state.selectedCat = cat;
+  document.querySelectorAll("#quickCatChips .cat-chip").forEach(btn => {
+    btn.classList.toggle("active", btn.dataset.cat === cat);
+  });
+}
+
+function handleQuickPhoto(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    quickPhotoTempDataUrl = evt.target.result;
+    quickPhotoTempName = file.name;
+    const lbl = document.getElementById("quickPhotoLabel");
+    if (lbl) lbl.textContent = `📷 ${file.name}`;
+  };
+  reader.readAsDataURL(file);
+}
+
+function clearQuickPhoto() {
+  quickPhotoTempDataUrl = "";
+  quickPhotoTempName = "";
+  const inp = document.getElementById("quickPhotoInput");
+  const lbl = document.getElementById("quickPhotoLabel");
+  if (inp) inp.value = "";
+  if (lbl) lbl.textContent = "";
+}
+
+function createPostObject(text, highlight = false, photo = "") {
+  const u = getCurrentUser();
+  return {
+    id: Date.now() + Math.floor(Math.random() * 1000),
+    title: text.slice(0, 65),
+    body: text,
+    author: `${u.nome} ${u.cognome || ""}`.trim(),
+    time: new Date().toLocaleTimeString("it-IT", { hour: "2-digit", minute: "2-digit" }),
+    highlight: !!highlight,
+    photo: photo || ""
+  };
+}
+
+function publishQuickPost() {
+  const inp = document.getElementById("quickPostInput");
+  const txt = (inp ? inp.value : "").trim();
+  if (!txt) return showToast("Scrivi un messaggio prima di pubblicare", true);
+  const cat = state.selectedCat || "EMERGENZE";
+  if (!state.topics[cat]) state.topics[cat] = [];
+  if (cat === "EMERGENZE") {
+    state.topics["EMERGENZE"].forEach(p => p.highlight = false);
+  }
+  const newPost = createPostObject(txt, cat === "EMERGENZE", quickPhotoTempDataUrl);
+  state.topics[cat].unshift(newPost);
+  const ch = state.channels.find(c => c.name === cat);
+  if (ch) {
+    ch.time = "Adesso";
+    ch.unread = (ch.unread || 0) + 1;
+  }
+  inp.value = "";
+  clearQuickPhoto();
+  persist();
+  renderHome();
+  triggerNotificationAlert({
+    categoryLabel: cat === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${cat}`,
+    title: `Nuovo post in ${cat}`,
+    body: `${newPost.author}: ${txt}`,
+    soundKind: cat === "EMERGENZE" ? "emergency" : "chat",
+    bannerStyle: cat === "EMERGENZE" ? "emergency" : ""
+  });
+  showToast("Pubblicato in " + cat);
+}
+
+function renderHome() {
+  const wrap = document.getElementById("channelsContainer");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  state.channels.forEach(ch => {
+    const posts = state.topics[ch.name] || [];
+    const last = posts[0];
+    const card = document.createElement("div");
+    card.className = "channel-card";
+    card.onclick = () => openTopic(ch.name);
+    card.innerHTML = `
+      <div class="channel-top">
+        <span class="channel-name" style="color:${ch.color};">${escapeHtml(ch.name)}</span>
+        <div style="display:flex; gap:6px; align-items:center;">
+          ${ch.unread > 0 ? `<span class="unread-pill">${ch.unread}</span>` : ""}
+          <span class="channel-meta">${escapeHtml(ch.time || "—")}</span>
+        </div>
+      </div>
+      <div class="channel-meta">${escapeHtml(ch.tag)} • ${posts.length} post</div>
+      <div class="channel-preview">${last ? `<strong>${escapeHtml(last.author)}:</strong> ${escapeHtml(last.body)}` : `<span style="color:#64748B;">Nessun messaggio ancora in questo canale.</span>`}</div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function addTopicPost() {
+  const inp = document.getElementById("newTopicPostInput");
+  const txt = (inp ? inp.value : "").trim();
+  if (!txt) return showToast("Scrivi un messaggio prima di pubblicare", true);
+
+  const topic = state.currentTopic;
+  if (!state.topics[topic]) state.topics[topic] = [];
+  if (topic === "EMERGENZE") {
+    state.topics["EMERGENZE"].forEach(e => e.highlight = false);
+  }
+  const created = createPostObject(txt, topic === "EMERGENZE");
+  state.topics[topic].unshift(created);
+  const ch = state.channels.find(c => c.name === topic);
+  if (ch) { ch.time = "Adesso"; ch.unread = 0; }
+  inp.value = "";
+  persist();
+  renderTopic();
+  triggerNotificationAlert({
+    categoryLabel: topic === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${topic}`,
+    title: `Nuovo post in ${topic}`,
+    body: `${created.author}: ${txt}`,
+    soundKind: topic === "EMERGENZE" ? "emergency" : "chat",
+    bannerStyle: topic === "EMERGENZE" ? "emergency" : ""
+  });
+  showToast("Post aggiunto in " + topic);
+}
+
+function renderTopic() {
+  const topic = state.currentTopic;
+  document.getElementById("topicTitle").textContent = topic;
+  const modTag = document.getElementById("topicModTag");
+  modTag.textContent = isModeratorForForum(topic) ? "Mod/Admin" : "";
+  const wrap = document.getElementById("topicPostsContainer");
+  wrap.innerHTML = "";
+  const posts = state.topics[topic] || [];
+  if (!posts.length) {
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessun messaggio in ${escapeHtml(topic)}.</div>`;
+    return;
+  }
+  posts.forEach(ev => {
+    const canDelete = isModeratorForForum(topic);
+    const card = document.createElement("div");
+    card.className = "post-card" + (ev.highlight ? " highlight" : "");
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${escapeHtml(ev.title)}</div>
+          <div class="ev-author">${escapeHtml(ev.author)} • ${escapeHtml(ev.time)}</div>
+        </div>
+      </div>
+      <div class="ev-body">${escapeHtml(ev.body)}</div>
+      ${ev.photo ? `<img class="ev-img" src="${ev.photo}" alt="Allegato">` : ""}
+      <div class="ev-actions">
+        <button type="button" class="mini-btn" onclick="openReportBox(${ev.id})">🚩 Segnala</button>
+        ${canDelete ? `<button type="button" class="del-btn" onclick="deleteTopicPost('${escapeJs(topic)}', ${ev.id})">Elimina</button>` : ""}
+      </div>
+      ${openFlagBoxPostId === ev.id ? `
+        <div class="field" style="margin-top:6px;">
+          <input type="text" id="reportReason_${ev.id}" placeholder="Motivo della segnalazione...">
+          <button type="button" class="mini-btn" style="margin-top:6px;" onclick="submitPostReport('${escapeJs(topic)}', ${ev.id})">Invia Segnalazione</button>
+        </div>
+      ` : ""}
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function openReportBox(postId) {
+  openFlagBoxPostId = openFlagBoxPostId === postId ? null : postId;
+  renderTopic();
+}
+
+function submitPostReport(topic, postId) {
+  const inp = document.getElementById("reportReason_" + postId);
+  const reasonTxt = (inp ? inp.value : "").trim() || "Segnalazione operativa";
+  const posts = state.topics[topic] || [];
+  const ev = posts.find(p => p.id === postId);
+  const user = getCurrentUser();
+  const isMod = isModeratorForForum(topic);
+  const roleLabel = isFounderUser(user) ? "Founder/Admin" : (isAdmin() ? "Admin" : (isMod ? `Moderatore ${topic}` : "Utente"));
+  state.reports = state.reports || [];
+  state.reports.unshift({
+    id: Date.now(),
+    topic,
+    postId,
+    postTitle: ev ? ev.title : `Post #${postId}`,
+    reportedBy: `${user.nome} ${user.cognome || ""} (${roleLabel})`.trim(),
+    reason: reasonTxt,
+    status: "pending"
+  });
+  openFlagBoxPostId = null;
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "🤫 NUOVA SEGNALAZIONE (AVVISO TRANQUILLO)",
+    title: `Segnalazione su ${topic}`,
+    body: reasonTxt,
+    soundKind: "adminReport",
+    bannerStyle: "quiet-report"
+  });
+  renderTopic();
+  showToast("Segnalazione inviata agli amministratori con motivazione");
+}
+
+function deleteTopicPost(topic, postId) {
+  if (!isModeratorForForum(topic)) return;
+  state.topics[topic] = (state.topics[topic] || []).filter(p => p.id !== postId);
+  persist();
+  renderTopic();
+  showToast("Post eliminato");
+}
+
+/* ADMIN VIEWS */
+function renderPendingApprovals() {
+  const wrap = document.getElementById("pendingApprovalsList");
+  if (!wrap) return;
+  const list = state.pendingRegistrations || [];
+  if (!list.length) {
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessuna richiesta di registrazione in attesa.</div>`;
+    return;
+  }
+  wrap.innerHTML = "";
+  list.forEach(reg => {
+    const card = document.createElement("div");
+    card.className = "report-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${escapeHtml(reg.nome)} ${escapeHtml(reg.cognome || "")}</div>
+          <div class="ev-author">Tel: ${escapeHtml(reg.tel)} • Ente: ${escapeHtml(reg.enteTipo)}${reg.corpoVVF ? " (" + escapeHtml(reg.corpoVVF) + ")" : ""}${reg.sede ? " — Sede: " + escapeHtml(reg.sede) : ""}</div>
+          <div class="ev-author">Matricola: <strong>${escapeHtml(reg.matricola)}</strong> • ${escapeHtml(reg.submittedAt || "")}</div>
+        </div>
+      </div>
+      ${reg.badgeImg ? `<img class="pending-badge-thumb" src="${reg.badgeImg}" alt="Tesserino">` : ""}
+      <div class="user-btns">
+        <button type="button" class="approve-btn" onclick="approveRegistration('${escapeJs(reg.id)}')">✓ Approva Utente</button>
+        <button type="button" class="reject-btn" onclick="rejectRegistration('${escapeJs(reg.id)}')">✕ Rifiuta</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function approveRegistration(regId) {
+  if (!isAdmin()) return;
+  const idx = (state.pendingRegistrations || []).findIndex(r => r.id === regId);
+  if (idx === -1) return;
+  const reg = state.pendingRegistrations[idx];
+  state.users.push({
+    id: "u_" + Date.now(),
+    nome: reg.nome,
+    cognome: reg.cognome || "",
+    tel: reg.tel,
+    enteTipo: reg.enteTipo,
+    corpoVVF: reg.corpoVVF || "",
+    sede: reg.sede || "",
+    matricola: reg.matricola,
+    role: "Operatore",
+    modForums: [],
+    banned: false
+  });
+  state.pendingRegistrations.splice(idx, 1);
+  persist();
+  syncChrome();
+  renderPendingApprovals();
+  renderReportsAdmin();
+  showToast(`Utente ${reg.nome} approvato`);
+}
+
+function rejectRegistration(regId) {
+  if (!isAdmin()) return;
+  state.pendingRegistrations = (state.pendingRegistrations || []).filter(r => r.id !== regId);
+  persist();
+  syncChrome();
+  renderPendingApprovals();
+  renderReportsAdmin();
+  showToast("Richiesta rifiutata");
+}
+
+function renderBoardAdmin() {
+  const wrap = document.getElementById("boardAdminList");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  Object.keys(state.topics || {}).forEach(topic => {
+    (state.topics[topic] || []).forEach(ev => {
+      const card = document.createElement("div");
+      card.className = "post-card";
+      card.innerHTML = `
+        <div class="ev-top">
+          <div>
+            <div class="ev-title">[${escapeHtml(topic)}] ${escapeHtml(ev.title)}</div>
+            <div class="ev-author">${escapeHtml(ev.author)} • ${escapeHtml(ev.time)}</div>
+          </div>
+          <button type="button" class="del-btn" onclick="deleteTopicPost('${escapeJs(topic)}', ${ev.id}); renderBoardAdmin();">Elimina</button>
+        </div>
+        <div class="ev-body">${escapeHtml(ev.body)}</div>
+      `;
+      wrap.appendChild(card);
+    });
+  });
+}
+
+function renderUsersAdmin() {
+  const wrap = document.getElementById("usersAdminList");
+  if (!wrap) return;
+  wrap.innerHTML = "";
+  state.users.forEach(u => {
+    const isF = u.role === "Founder";
+    const card = document.createElement("div");
+    card.className = "post-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${escapeHtml(u.nome)} ${escapeHtml(u.cognome || "")} <span class="role-badge">${escapeHtml(u.role)}</span></div>
+          <div class="ev-author">${escapeHtml(u.enteTipo || "")}${u.corpoVVF ? " • " + escapeHtml(u.corpoVVF) : ""} • Matricola: ${escapeHtml(u.matricola || "—")}</div>
+        </div>
+        ${!isF ? `
+          <div class="ev-actions">
+            <button type="button" class="mini-btn" onclick="toggleUserAdminRole('${escapeJs(u.id)}')">${u.role === "Admin" ? "Togli Admin" : "Rendi Admin"}</button>
+          </div>
+        ` : ""}
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function toggleUserAdminRole(userId) {
+  if (!isAdmin()) return;
+  const u = state.users.find(item => item.id === userId);
+  if (!u || u.role === "Founder") return;
+  u.role = u.role === "Admin" ? "Operatore" : "Admin";
+  persist();
+  syncChrome();
+  renderUsersAdmin();
+  showToast(`Ruolo aggiornato per ${u.nome}`);
+}
+
+function renderReportsAdmin() {
+  if (!isAdmin()) return;
+  const pendWrap = document.getElementById("pendingAccessSection");
+  const wrap = document.getElementById("reportsList");
+  const urlInp = document.getElementById("deviceSyncUrl");
+  if (urlInp) urlInp.value = state.deviceSyncUrl || "";
+
+  if (pendWrap) {
+    const pendList = state.pendingRegistrations || [];
+    pendWrap.innerHTML = pendList.length
+      ? `<div class="form-card" style="border-color:#10B981;"><h3 style="color:#6EE7B7;">👤 Richieste Accesso Nuovi Utenti (${pendList.length})</h3><div style="font-size:12px; color:#CBD5E1;">Vai su <strong>Approvazione Nuovi Utenti</strong> dal menu per visionare tesserino e approvare/rifiutare.</div></div>`
+      : "";
+  }
+  wrap.innerHTML = "";
+  const reps = state.reports || [];
+  if (reps.length === 0) {
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessuna segnalazione o richiesta presente.</div>`;
+    return;
+  }
+
+  reps.forEach(r => {
+    const badgeClass = r.status === "approved" ? "approved" : (r.status === "rejected" ? "rejected" : "");
+    const badgeText = r.status === "approved" ? "APPROVATA" : (r.status === "rejected" ? "NON APPROVATA" : "IN ATTESA");
+
+    const card = document.createElement("div");
+    card.className = "report-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${escapeHtml(r.postTitle)}</div>
+          <div class="ev-author">Forum: <strong>${escapeHtml(r.topic)}</strong> • Segnalato da ${escapeHtml(r.reportedBy)}</div>
+        </div>
+        <span class="report-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div style="font-size:12px; color:#CBD5E1;">${escapeHtml(r.reason)}</div>
+      <div class="user-btns">
+        <button class="approve-btn" onclick="decideReport(${r.id}, 'approved')">✓ Approva (rimuovi post)</button>
+        <button class="reject-btn" onclick="decideReport(${r.id}, 'rejected')">✕ Non approvare</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+
+function decideReport(reportId, status) {
+  if (!isAdmin()) return;
+  const rep = (state.reports || []).find(r => r.id === reportId);
+  if (!rep) return;
+  rep.status = status;
+  if (status === "approved" && rep.postId && state.topics[rep.topic]) {
+    state.topics[rep.topic] = state.topics[rep.topic].filter(p => p.id !== rep.postId);
+  }
+  persist();
+  renderReportsAdmin();
+  showToast(status === "approved" ? "Segnalazione approvata" : "Segnalazione non approvata");
+}
+
+/* SYNC TRA TELEFONI / EXPORT & IMPORT */
+function updateDeviceSyncUrl(val) {
+  state.deviceSyncUrl = (val || "").trim();
+  persist();
+}
+
+function exportAppStateJson() {
+  const payload = {
+    pendingRegistrations: state.pendingRegistrations || [],
+    reports: state.reports || [],
+    corpiTrentino: state.corpiTrentino || DEFAULT_CORPI_TRENTINO,
+    topics: state.topics || {}
+  };
+  const blob = new Blob([JSON.stringify(payload, null, 2)], { type: "application/json" });
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement("a");
+  a.href = url;
+  a.download = "coordinamento-interforze-richieste.json";
+  a.click();
+  URL.revokeObjectURL(url);
+  showToast("File JSON esportato");
+}
+
+function importAppStateJson(e) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    try {
+      const data = JSON.parse(String(evt.target.result || "{}"));
+      mergeImportedData(data);
+      showToast("Dati e richieste importati");
+    } catch (err) {
+      showToast("File JSON non valido", true);
+    }
+  };
+  reader.readAsText(file);
+  e.target.value = "";
+}
+
+function mergeImportedData(data) {
+  let addedNewReg = false;
+  if (Array.isArray(data.pendingRegistrations)) {
+    state.pendingRegistrations = state.pendingRegistrations || [];
+    const existingIds = new Set(state.pendingRegistrations.map(r => r.id));
+    data.pendingRegistrations.forEach(reg => {
+      if (!existingIds.has(reg.id)) {
+        state.pendingRegistrations.unshift(reg);
+        addedNewReg = true;
       }
-      try {
-        const res = await fetch(url);
-        if (!res.ok) {
-          document.getElementById("syncStatusMsg").textContent = `Errore lettura server: ${res.status}`;
-          return;
-        }
-        const data = await res.json();
-        if (Array.isArray(data.requests)) {
-          const prevCount = state.requests.length;
-          const mergedIds = new Set(state.requests.map(r => r.id));
-          data.requests.forEach(r => {
-            if (!mergedIds.has(r.id)) state.requests.unshift(r);
-          });
-          if (state.requests.length > prevCount) {
-            triggerNotification("nuovo_utente", "Nuova richiesta da remoto", "Sono arrivate nuove richieste di registrazione.");
-          }
-        }
-        if (Array.isArray(data.messages)) {
-          const msgIds = new Set(state.messages.map(m => m.id));
-          data.messages.forEach(m => {
-            if (!msgIds.has(m.id)) state.messages.unshift(m);
-          });
-        }
-        if (Array.isArray(data.corpi) && data.corpi.length) {
-          state.corpi = data.corpi;
-        }
-        saveState();
-        renderAll();
-        document.getElementById("syncStatusMsg").textContent = "Dati sincronizzati dal server remoto.";
-      } catch (e) {
-        document.getElementById("syncStatusMsg").textContent = "Impossibile scaricare i dati remoti.";
-      }
-    }
+    });
+  }
+  if (Array.isArray(data.corpiTrentino) && data.corpiTrentino.length) {
+    state.corpiTrentino = data.corpiTrentino;
+  }
+  persist();
+  syncChrome();
+  renderReportsAdmin();
+  renderPendingApprovals();
+  if (addedNewReg) {
+    triggerNotificationAlert({
+      categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
+      title: "Nuova richiesta di registrazione ricevuta",
+      body: "Controlla la coda approvazioni utenti.",
+      soundKind: "newUser",
+      bannerStyle: "new-user"
+    });
+  }
+}
 
-    function exportStateJson() {
-      const blob = new Blob([JSON.stringify(state, null, 2)], { type: "application/json" });
-      const url = URL.createObjectURL(blob);
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "coordinamento-interforze-backup.json";
-      a.click();
-      URL.revokeObjectURL(url);
-    }
+async function pullRemoteRegistrations() {
+  const statusEl = document.getElementById("deviceSyncStatus");
+  const url = (state.deviceSyncUrl || "").trim();
+  if (!url) {
+    if (statusEl) statusEl.textContent = "Inserisci prima un URL endpoint JSON.";
+    return showToast("Inserisci prima un URL endpoint JSON", true);
+  }
+  try {
+    if (statusEl) statusEl.textContent = "Scaricamento in corso...";
+    const res = await fetch(url);
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    const data = await res.json();
+    mergeImportedData(data);
+    if (statusEl) statusEl.textContent = "Sincronizzazione completata.";
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "Errore sincronizzazione remota (controlla URL o CORS).";
+    showToast("Impossibile scaricare da remoto", true);
+  }
+}
 
-    function triggerImportJson() {
-      document.getElementById("importJsonFile").click();
-    }
+async function pushRemoteRegistrations() {
+  const statusEl = document.getElementById("deviceSyncStatus");
+  const url = (state.deviceSyncUrl || "").trim();
+  if (!url) {
+    if (statusEl) statusEl.textContent = "Inserisci prima un URL endpoint JSON.";
+    return showToast("Inserisci prima un URL endpoint JSON", true);
+  }
+  try {
+    if (statusEl) statusEl.textContent = "Invio stato in corso...";
+    const res = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        pendingRegistrations: state.pendingRegistrations || [],
+        corpiTrentino: state.corpiTrentino || DEFAULT_CORPI_TRENTINO
+      })
+    });
+    if (!res.ok) throw new Error("HTTP " + res.status);
+    if (statusEl) statusEl.textContent = "Stato inviato al server.";
+    showToast("Stato inviato con successo");
+  } catch (err) {
+    if (statusEl) statusEl.textContent = "Invio non riuscito (controlla URL o CORS).";
+    showToast("Errore invio stato", true);
+  }
+}
 
-    function handleImportJsonFile(event) {
-      const file = event.target.files?.[0];
-      if (!file) return;
-      const reader = new FileReader();
-      reader.onload = function () {
-        try {
-          const imported = JSON.parse(String(reader.result || "{}"));
-          state = {
-            ...createDefaultState(),
-            ...imported,
-            channels: {
-              ...createDefaultState().channels,
-              ...(imported.channels || {})
-            }
-          };
-          saveState();
-          renderAll();
-          document.getElementById("syncStatusMsg").textContent = "Backup JSON importato correttamente.";
-        } catch (e) {
-          alert("File JSON non valido.");
-        }
-      };
-      reader.readAsText(file);
-      event.target.value = "";
-    }
+function renderProfileView() {
+  const wrap = document.getElementById("profileCard");
+  if (!wrap) return;
+  const u = getCurrentUser();
+  wrap.innerHTML = `
+    <h3>${escapeHtml(u.nome)} ${escapeHtml(u.cognome || "")}</h3>
+    <div style="font-size:12.5px; color:#CBD5E1; line-height:1.6;">
+      <div><strong>Ruolo:</strong> ${escapeHtml(u.role)}</div>
+      <div><strong>Ente:</strong> ${escapeHtml(u.enteTipo || "—")}</div>
+      <div><strong>Corpo Trentino:</strong> ${escapeHtml(u.corpoVVF || "—")}</div>
+      <div><strong>Matricola:</strong> ${escapeHtml(u.matricola || "—")}</div>
+      <div><strong>Telefono:</strong> ${escapeHtml(u.tel || "—")}</div>
+    </div>
+  `;
+}
 
-    function escapeHtml(str) {
-      return String(str ?? "")
-        .replace(/&/g, "&amp;")
-        .replace(/</g, "&lt;")
-        .replace(/>/g, "&gt;")
-        .replace(/"/g, "&quot;")
-        .replace(/'/g, "&#39;");
-    }
+function escapeHtml(str) {
+  return String(str ?? "")
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/"/g, "&quot;")
+    .replace(/'/g, "&#39;");
+}
 
-    renderAll();
-  </script>
+function escapeJs(str) {
+  return String(str ?? "").replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+}
+
+setupPwaManifestAndServiceWorker();
+enforceFounderIntegrity();
+syncChrome();
+updatePwaInstallBar();
+renderSoundSettingsView();
+if (state.loggedIn) {
+  renderHome();
+} else {
+  switchView("login");
+}
+</script>
 </body>
 </html>
