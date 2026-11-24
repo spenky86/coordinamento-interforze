@@ -1,0 +1,934 @@
+<!-- ... existing code ... -->
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="theme-color" content="#991B1B">
+<meta name="description" content="Applicazione PWA di coordinamento interforze per il Corpo Vigili del Fuoco Volontari di Bolbeno Zuclo">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="VVF Bolbeno Zuclo">
+<title>Coordinamento Interforze — VVF Bolbeno Zuclo</title>
+<style>
+  :root {
+<!-- ... existing code ... -->
+  .pending-badge-thumb {
+    width: 100%;
+    max-height: 150px;
+    object-fit: contain;
+    background: #0B0F15;
+    border: 1px solid #334155;
+    border-radius: 8px;
+    padding: 4px;
+  }
+
+  /* PWA BANNER & NOTIFICHE IN-APP */
+  .pwa-install-bar {
+    display: none;
+    background: linear-gradient(135deg, #172554 0%, #1E293B 100%);
+    border: 1px solid #38BDF8;
+    border-radius: 12px;
+    padding: 10px 12px;
+    align-items: center;
+    justify-content: space-between;
+    gap: 10px;
+  }
+  .pwa-install-bar.visible { display: flex; }
+  .pwa-install-btn {
+    background: #0284C7;
+    border: 1px solid #38BDF8;
+    color: #fff;
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+    white-space: nowrap;
+  }
+  .inapp-notif-banner {
+    position: fixed;
+    top: 70px;
+    left: 50%;
+    transform: translateX(-50%);
+    width: min(456px, calc(100vw - 20px));
+    background: #162032;
+    border: 1.5px solid #38BDF8;
+    border-left: 5px solid #38BDF8;
+    border-radius: 12px;
+    padding: 11px 13px;
+    box-shadow: 0 12px 28px rgba(0,0,0,0.78);
+    z-index: 250;
+    display: none;
+    flex-direction: column;
+    gap: 4px;
+    animation: fadeIn 0.16s ease;
+  }
+  .inapp-notif-banner.open { display: flex; }
+  .inapp-notif-banner.emergency {
+    background: #291116;
+    border-color: #EF4444;
+    border-left-color: #EF4444;
+  }
+  .inapp-notif-banner.quiet-report {
+    background: #171B24;
+    border-color: #64748B;
+    border-left-color: #94A3B8;
+  }
+  .inapp-notif-banner.new-user {
+    background: #14241E;
+    border-color: #10B981;
+    border-left-color: #34D399;
+  }
+  .inapp-notif-top {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+    font-size: 11px;
+    font-weight: 800;
+  }
+  .inapp-notif-title { font-size: 13.5px; font-weight: 800; color: #fff; }
+  .inapp-notif-body { font-size: 12px; color: #CBD5E1; line-height: 1.35; }
+  .ringtone-preview-row {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+    margin-top: 4px;
+  }
+  .test-sound-btn {
+    background: #1E3A8A;
+    border: 1px solid #60A5FA;
+    color: #EFF6FF;
+    border-radius: 8px;
+    padding: 7px 11px;
+    font-size: 11.5px;
+    font-weight: 800;
+    cursor: pointer;
+  }
+  .sim-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Coordinamento Interforze</h1>
+  <div class="header-right">
+    <span id="headerFounderBadge" class="role-badge" style="display:none;">FOUNDER</span>
+    <span id="headerAdminBadge" class="role-badge" style="display:none;">ADMIN</span>
+    <span id="headerModBadge" class="mod-badge" style="display:none;">MOD</span>
+    <button class="menu-btn" onclick="toggleDrawer()" aria-label="Menu">
+      <span></span><span></span><span></span>
+    </button>
+  </div>
+</header>
+
+<div id="inappNotifBanner" class="inapp-notif-banner" onclick="closeInAppNotif()">
+  <div class="inapp-notif-top">
+    <span id="inappNotifCategory" style="color:#7DD3FC;">NOTIFICA</span>
+    <span style="color:#94A3B8; font-size:10.5px;">Tocca per chiudere</span>
+  </div>
+  <div id="inappNotifTitle" class="inapp-notif-title"></div>
+  <div id="inappNotifBody" class="inapp-notif-body"></div>
+</div>
+
+<div id="drawer" class="drawer">
+  <div class="drawer-item" onclick="switchView('home')"><span>🏠 Bacheca Principale</span></div>
+  <div class="drawer-item" onclick="openTopic('EMERGENZE')"><span>🚨 Chat Emergenze</span></div>
+  <div class="drawer-item" onclick="openTopic('MANUALI E PROCEDURE')"><span>📘 Manuali & PDF</span></div>
+  <div class="drawer-item" onclick="switchView('suonerie')"><span>🔔 Suonerie & Notifiche App</span></div>
+  <div class="drawer-item" onclick="switchView('profilo')"><span>🪪 Profilo Operatore</span></div>
+  <div class="drawer-item" onclick="switchView('privacy')"><span>🔒 Trattamento Privacy</span></div>
+  <div id="drawerAdminApprovals" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('approvazioni')"><span>✅ Approvazione Nuovi Utenti</span></div>
+  <div id="drawerAdminBoard" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('bacheca')"><span>📋 Gestione bacheca</span></div>
+  <div id="drawerAdminUsers" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('utenti')"><span>👥 Gestione Utenti & Ruoli</span></div>
+  <div id="drawerAdminReports" class="drawer-item drawer-admin" style="display:none;" onclick="switchView('segnalazioni')"><span>🚩 Segnalazioni & Accessi</span></div>
+  <div class="drawer-item" onclick="logoutToLogin()"><span>🚪 Esci / Cambia Utente</span></div>
+  <div class="drawer-item" onclick="resetDemo()"><span>🔄 Ripristina Stato Vuoto</span></div>
+</div>
+
+<!-- SCHERMATA UTENTE BANNATO -->
+<!-- ... existing code ... -->
+<!-- VISTA 1: HOME -->
+<div id="view-home" class="view active">
+  <div id="pwaInstallBar" class="pwa-install-bar">
+    <div>
+      <div style="font-size:12px; font-weight:800; color:#BAE6FD;">📲 Installa App su Android / Desktop</div>
+      <div id="pwaInstallHint" style="font-size:11px; color:#CBD5E1;">Aggiungi alla schermata Home per uso rapido e notifiche</div>
+    </div>
+    <button type="button" id="pwaInstallBtn" class="pwa-install-btn" onclick="triggerPwaInstall()">Installa App</button>
+  </div>
+
+  <div class="composer">
+<!-- ... existing code ... -->
+<!-- VISTA SUONERIE E NOTIFICHE APP / ANDROID -->
+<div id="view-suonerie" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#7DD3FC;">🔔 SUONERIE & NOTIFICHE APP</span>
+    <span id="notifPermStatus" style="font-size:11px; color:#94A3B8;">Browser</span>
+  </div>
+
+  <div class="form-card">
+    <h3>📲 Installazione PWA & Notifiche Dispositivo</h3>
+    <div class="drive-note">
+      Su <strong>Android (Chrome)</strong> puoi installare l'app tramite il pulsante <strong>Installa App</strong> oppure dal menu del browser <em>"Aggiungi a schermata Home"</em>. Attiva anche i permessi di notifica del dispositivo per ricevere avvisi di sistema.
+    </div>
+    <div class="ringtone-preview-row">
+      <button type="button" class="test-sound-btn" onclick="requestDeviceNotificationPermission()">🔔 Attiva Notifiche Dispositivo</button>
+      <button type="button" class="mini-btn switch-user" onclick="triggerPwaInstall()">📲 Installa / Guida Android</button>
+    </div>
+  </div>
+
+  <div class="form-card" style="border-color:#EF4444;">
+    <h3 style="color:#FCA5A5;">🚨 Suoneria Specifica EMERGENZE</h3>
+    <div class="field">
+      <label>Seleziona suoneria per nuovi post / allerte in Emergenze</label>
+      <select id="selEmergencyTone" onchange="updateSoundSetting('emergencyTone', this.value)">
+        <option value="sirena_vvf">Allarme Emergenza Sirena VVF</option>
+        <option value="doppio_impulso">Doppio Impulso Critico</option>
+        <option value="tono_urgenza">Tono Urgenza Operativa</option>
+        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+        <option value="silent">Silenzioso</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Carica file audio Emergenze dal dispositivo</label>
+      <input type="file" id="emergencyAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'emergency')">
+      <span id="emergencyCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+    </div>
+    <div class="ringtone-preview-row">
+      <button type="button" class="test-sound-btn" onclick="previewRingtone('emergency')">▶️ Prova Suoneria Emergenze</button>
+    </div>
+  </div>
+
+  <div class="form-card" style="border-color:#38BDF8;">
+    <h3 style="color:#7DD3FC;">💬 Suoneria Specifica ALTRE CHAT / POST</h3>
+    <div class="field">
+      <label>Seleziona suoneria per nuovi post su Allerte PC, Eventi, Logistica, Discussioni o Manuali</label>
+      <select id="selChatTone" onchange="updateSoundSetting('chatTone', this.value)">
+        <option value="chat_soft">Notifica Chat Soft</option>
+        <option value="chime_operativo">Chime Operativo</option>
+        <option value="ping_messaggio">Ping Messaggio</option>
+        <option value="custom">File audio personalizzato dal telefono (MP3/WAV/OGG)</option>
+        <option value="silent">Silenzioso</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Carica file audio Altre Chat dal dispositivo</label>
+      <input type="file" id="chatAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'chat')">
+      <span id="chatCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+    </div>
+    <div class="ringtone-preview-row">
+      <button type="button" class="test-sound-btn" onclick="previewRingtone('chat')">▶️ Prova Suoneria Altre Chat</button>
+    </div>
+  </div>
+
+  <div class="form-card" style="border-color:#EAB308;">
+    <h3 style="color:#FDE047;">🛡️ Avvisi Amministratori (Segnalazioni vs Nuovi Utenti)</h3>
+    <div class="drive-note">
+      Per gli <strong>Amministratori / Founder</strong>: le <strong>nuove segnalazioni</strong> usano un avviso molto più silenziato, discreto e tranquillo, mentre le <strong>richieste di accesso / ingresso di nuovi utenti</strong> suonano con un segnale distinto e dedicato.
+    </div>
+    <div class="field">
+      <label>Notifica nuove SEGNALAZIONI (modalità tranquilla / silenziata)</label>
+      <select id="selAdminReportMode" onchange="updateSoundSetting('adminReportMode', this.value)">
+        <option value="quiet_chime">Molto silenziata — Soft Admin Chime (volume basso)</option>
+        <option value="whisper_tick">Discreta — Tocchi soffusi appena percettibili</option>
+        <option value="silent">Completamente muta (solo badge / banner discreto)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Suoneria nuove RICHIESTE UTENTI (suono distinto)</label>
+      <select id="selNewUserTone" onchange="updateSoundSetting('newUserTone', this.value)">
+        <option value="new_user_distinct">Nuovo Utente in Attesa (melodia ascendente dedicata)</option>
+        <option value="door_chime">Segnale Ingresso Operatore (doppio accordo distinto)</option>
+        <option value="custom">File audio personalizzato Nuovi Utenti</option>
+        <option value="silent">Silenzioso</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>File audio personalizzato Nuovi Utenti (facoltativo)</label>
+      <input type="file" id="newUserAudioFile" accept="audio/*,.mp3,.wav,.ogg" onchange="handleCustomRingtoneUpload(event, 'newUser')">
+      <span id="newUserCustomAudioLabel" style="font-size:11px; color:#94A3B8;">Nessun file audio personalizzato caricato</span>
+    </div>
+    <div class="ringtone-preview-row">
+      <button type="button" class="mini-btn" onclick="previewRingtone('adminReport')">🤫 Prova Segnalazione Silenziata</button>
+      <button type="button" class="test-sound-btn" onclick="previewRingtone('newUser')">👤 Prova Suoneria Nuovo Utente</button>
+    </div>
+  </div>
+
+  <div class="form-card">
+    <h3>🧪 Test Rapido Notifiche & Suoni</h3>
+    <div class="sim-grid">
+      <button type="button" class="del-btn" style="padding:9px;" onclick="simulateIncomingPost('EMERGENZE')">🚨 Simula Post Emergenze</button>
+      <button type="button" class="photo-btn" style="padding:9px;" onclick="simulateIncomingPost('DISCUSSIONE OPERATIVA')">💬 Simula Post Altra Chat</button>
+      <button type="button" class="mini-btn" style="padding:9px;" onclick="simulateAdminReport()">🤫 Simula Segnalazione (Admin)</button>
+      <button type="button" class="approve-btn" style="padding:9px;" onclick="simulateNewUserRequest()">👤 Simula Richiesta Utente</button>
+    </div>
+  </div>
+</div>
+
+<!-- VISTA ADMIN: APPROVAZIONE NUOVI UTENTI -->
+<!-- ... existing code ... -->
+<!-- VISTA 5 (ADMIN): SEGNALAZIONI & RICHIESTE ACCESSO -->
+<div id="view-segnalazioni" class="view">
+  <div class="subbar">
+    <button class="back-btn" onclick="switchView('home')">← Indietro</button>
+    <span class="subbar-title" style="color:#FDE047;">🚩 SEGNALAZIONI & ACCESSI</span>
+    <span style="font-size:11px; color:#94A3B8;">Solo Admin</span>
+  </div>
+  <div class="drive-note">
+    Coda revisione segnalazioni (con avviso silenziato) e richieste di ingresso nuovi utenti (con suoneria dedicata). All'avvio la sezione è vuota.
+  </div>
+  <div class="sim-grid">
+    <button type="button" class="mini-btn" onclick="simulateAdminReport()">🤫 Simula Nuova Segnalazione</button>
+    <button type="button" class="approve-btn" onclick="simulateNewUserRequest()">👤 Simula Richiesta Nuovo Utente</button>
+  </div>
+  <div id="pendingAccessSection" style="display:flex; flex-direction:column; gap:10px;"></div>
+  <div id="reportsList" style="display:flex; flex-direction:column; gap:10px;"></div>
+</div>
+
+<!-- VISTA 3: PROFILO UTENTE -->
+<!-- ... existing code ... -->
+<script>
+// ... existing code ...
+const STORAGE_KEY = "coord_interforze_v8_empty_founder";
+
+const DEFAULT_DATA = {
+  selectedCat: "EMERGENZE",
+  currentTopic: "EMERGENZE",
+  activeUserId: "u_michele",
+  loggedIn: true,
+  soundSettings: {
+    emergencyTone: "sirena_vvf",
+    chatTone: "chat_soft",
+    adminReportMode: "quiet_chime",
+    newUserTone: "new_user_distinct",
+    customEmergencyAudio: "",
+    customEmergencyName: "",
+    customChatAudio: "",
+    customChatName: "",
+    customNewUserAudio: "",
+    customNewUserName: ""
+  },
+  users: [
+<!-- ... existing code ... -->
+function persist() {
+  enforceFounderIntegrity();
+  if (!state.soundSettings) {
+    state.soundSettings = JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+  }
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
+}
+
+/* PWA: MANIFEST DINAMICO & SERVICE WORKER */
+let deferredPwaPrompt = null;
+
+function setupPwaManifestAndServiceWorker() {
+  try {
+    const svgIcon = `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 192 192"><rect width="192" height="192" rx="36" fill="#991B1B"/><path d="M96 28L154 62v58c0 34-25 52-58 60-33-8-58-26-58-60V62l58-34z" fill="#DC2626" stroke="#FACC15" stroke-width="6"/><text x="96" y="110" text-anchor="middle" fill="#FFFFFF" font-size="40" font-weight="900" font-family="sans-serif">VVF</text></svg>`;
+    const iconDataUrl = "data:image/svg+xml;charset=utf-8," + encodeURIComponent(svgIcon);
+    const manifestObj = {
+      name: "Coordinamento Interforze — VVF Bolbeno Zuclo",
+      short_name: "VVF Bolbeno Zuclo",
+      start_url: "./",
+      display: "standalone",
+      background_color: "#0E131A",
+      theme_color: "#991B1B",
+      orientation: "portrait",
+      icons: [
+        { src: iconDataUrl, sizes: "192x192", type: "image/svg+xml", purpose: "any" },
+        { src: iconDataUrl, sizes: "512x512", type: "image/svg+xml", purpose: "any maskable" }
+      ]
+    };
+    const manifestBlob = new Blob([JSON.stringify(manifestObj)], { type: "application/manifest+json" });
+    const manifestUrl = URL.createObjectURL(manifestBlob);
+    let linkEl = document.querySelector('link[rel="manifest"]');
+    if (!linkEl) {
+      linkEl = document.createElement("link");
+      linkEl.rel = "manifest";
+      document.head.appendChild(linkEl);
+    }
+    linkEl.href = manifestUrl;
+
+    if ("serviceWorker" in navigator && (window.location.protocol === "https:" || window.location.hostname === "localhost" || window.location.hostname === "127.0.0.1")) {
+      const swCode = `
+        const CACHE_NAME = 'vvf-bolbeno-zuclo-pwa-v1';
+        self.addEventListener('install', event => {
+          self.skipWaiting();
+          event.waitUntil(caches.open(CACHE_NAME).then(cache => cache.addAll(['./']).catch(() => {})));
+        });
+        self.addEventListener('activate', event => {
+          event.waitUntil(self.clients.claim());
+        });
+        self.addEventListener('fetch', event => {
+          if (event.request.method !== 'GET') return;
+          event.respondWith(
+            caches.match(event.request).then(cached => cached || fetch(event.request).catch(() => cached))
+          );
+        });
+      `;
+      const swBlob = new Blob([swCode], { type: "application/javascript" });
+      const swUrl = URL.createObjectURL(swBlob);
+      navigator.serviceWorker.register(swUrl).catch(() => {});
+    }
+  } catch (err) {}
+}
+
+window.addEventListener("beforeinstallprompt", (e) => {
+  e.preventDefault();
+  deferredPwaPrompt = e;
+  updatePwaInstallBar();
+});
+
+function updatePwaInstallBar() {
+  const bar = document.getElementById("pwaInstallBar");
+  if (!bar) return;
+  const isStandalone = window.matchMedia("(display-mode: standalone)").matches || window.navigator.standalone === true;
+  if (isStandalone) {
+    bar.classList.remove("visible");
+    return;
+  }
+  bar.classList.add("visible");
+}
+
+function triggerPwaInstall() {
+  if (deferredPwaPrompt) {
+    deferredPwaPrompt.prompt();
+    deferredPwaPrompt.userChoice.then(() => {
+      deferredPwaPrompt = null;
+      updatePwaInstallBar();
+    });
+    return;
+  }
+  showToast("Su Android: apri il menu (⋮) in alto a destra e seleziona 'Installa app' o 'Aggiungi a schermata Home'");
+}
+
+/* AUDIO & SUONERIE DIFFERENZIATE (WEB AUDIO + FILE AUDIO UTENTE) */
+let sharedAudioCtx = null;
+let customAudioPlayer = null;
+
+function getAudioContext() {
+  const AudioCtx = window.AudioContext || window.webkitAudioContext;
+  if (!AudioCtx) return null;
+  if (!sharedAudioCtx) {
+    sharedAudioCtx = new AudioCtx();
+  }
+  if (sharedAudioCtx.state === "suspended") {
+    sharedAudioCtx.resume().catch(() => {});
+  }
+  return sharedAudioCtx;
+}
+
+function playToneNotes(notes, baseGain = 0.25) {
+  try {
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    let cursor = ctx.currentTime + 0.02;
+    notes.forEach(n => {
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.type = n.type || "sine";
+      osc.frequency.setValueAtTime(n.freq, cursor);
+      if (n.slideTo) {
+        osc.frequency.linearRampToValueAtTime(n.slideTo, cursor + n.dur);
+      }
+      const peak = Math.max(0.005, (n.gain !== undefined ? n.gain : 1) * baseGain);
+      gain.gain.setValueAtTime(0.0001, cursor);
+      gain.gain.linearRampToValueAtTime(peak, cursor + 0.015);
+      gain.gain.exponentialRampToValueAtTime(0.0001, cursor + n.dur);
+      osc.connect(gain);
+      gain.connect(ctx.destination);
+      osc.start(cursor);
+      osc.stop(cursor + n.dur + 0.02);
+      cursor += n.dur + (n.gap || 0.04);
+    });
+  } catch (err) {}
+}
+
+function playCustomAudioFile(dataUrl, volume = 0.85) {
+  try {
+    if (!dataUrl) return false;
+    if (customAudioPlayer) {
+      customAudioPlayer.pause();
+    }
+    customAudioPlayer = new Audio(dataUrl);
+    customAudioPlayer.volume = Math.max(0, Math.min(1, volume));
+    customAudioPlayer.play().catch(() => {});
+    return true;
+  } catch (err) {
+    return false;
+  }
+}
+
+function playRingtoneByKind(kind) {
+  const cfg = state.soundSettings || DEFAULT_DATA.soundSettings;
+  if (kind === "emergency") {
+    const tone = cfg.emergencyTone || "sirena_vvf";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customEmergencyAudio) {
+      playCustomAudioFile(cfg.customEmergencyAudio, 0.95);
+      return;
+    }
+    if (tone === "doppio_impulso") {
+      playToneNotes([
+        { freq: 920, dur: 0.16, gap: 0.06, type: "sawtooth", gain: 0.9 },
+        { freq: 920, dur: 0.16, gap: 0.14, type: "sawtooth", gain: 0.9 },
+        { freq: 1180, dur: 0.22, gap: 0.06, type: "sawtooth", gain: 1.0 },
+        { freq: 1180, dur: 0.22, gap: 0.04, type: "sawtooth", gain: 1.0 }
+      ], 0.32);
+    } else if (tone === "tono_urgenza") {
+      playToneNotes([
+        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 1046, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 784, dur: 0.18, gap: 0.04, type: "square", gain: 0.85 },
+        { freq: 1046, dur: 0.30, gap: 0.04, type: "square", gain: 0.95 }
+      ], 0.28);
+    } else {
+      playToneNotes([
+        { freq: 620, slideTo: 1120, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
+        { freq: 1120, slideTo: 620, dur: 0.42, gap: 0.05, type: "sawtooth", gain: 0.95 },
+        { freq: 620, slideTo: 1120, dur: 0.38, gap: 0.04, type: "sawtooth", gain: 1.0 }
+      ], 0.34);
+    }
+    return;
+  }
+
+  if (kind === "chat") {
+    const tone = cfg.chatTone || "chat_soft";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customChatAudio) {
+      playCustomAudioFile(cfg.customChatAudio, 0.75);
+      return;
+    }
+    if (tone === "chime_operativo") {
+      playToneNotes([
+        { freq: 587.33, dur: 0.14, gap: 0.03, type: "triangle", gain: 0.7 },
+        { freq: 880, dur: 0.22, gap: 0.04, type: "triangle", gain: 0.75 }
+      ], 0.22);
+    } else if (tone === "ping_messaggio") {
+      playToneNotes([
+        { freq: 1046.5, dur: 0.11, gap: 0.04, type: "sine", gain: 0.65 },
+        { freq: 1318.5, dur: 0.16, gap: 0.04, type: "sine", gain: 0.65 }
+      ], 0.2);
+    } else {
+      playToneNotes([
+        { freq: 523.25, dur: 0.18, gap: 0.04, type: "sine", gain: 0.55 },
+        { freq: 659.25, dur: 0.22, gap: 0.04, type: "sine", gain: 0.55 }
+      ], 0.18);
+    }
+    return;
+  }
+
+  if (kind === "adminReport") {
+    const mode = cfg.adminReportMode || "quiet_chime";
+    if (mode === "silent") return;
+    if (mode === "whisper_tick") {
+      playToneNotes([
+        { freq: 440, dur: 0.08, gap: 0.06, type: "sine", gain: 0.22 }
+      ], 0.06);
+    } else {
+      playToneNotes([
+        { freq: 392, dur: 0.24, gap: 0.05, type: "sine", gain: 0.25 },
+        { freq: 440, dur: 0.28, gap: 0.04, type: "sine", gain: 0.22 }
+      ], 0.08);
+    }
+    return;
+  }
+
+  if (kind === "newUser") {
+    const tone = cfg.newUserTone || "new_user_distinct";
+    if (tone === "silent") return;
+    if (tone === "custom" && cfg.customNewUserAudio) {
+      playCustomAudioFile(cfg.customNewUserAudio, 0.85);
+      return;
+    }
+    if (tone === "door_chime") {
+      playToneNotes([
+        { freq: 659.25, dur: 0.16, gap: 0.05, type: "triangle", gain: 0.8 },
+        { freq: 493.88, dur: 0.26, gap: 0.06, type: "triangle", gain: 0.8 },
+        { freq: 783.99, dur: 0.24, gap: 0.04, type: "triangle", gain: 0.85 }
+      ], 0.25);
+    } else {
+      playToneNotes([
+        { freq: 440, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
+        { freq: 554.37, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.8 },
+        { freq: 659.25, dur: 0.14, gap: 0.04, type: "triangle", gain: 0.85 },
+        { freq: 880, dur: 0.28, gap: 0.04, type: "triangle", gain: 0.9 }
+      ], 0.26);
+    }
+  }
+}
+
+let inAppNotifTimer = null;
+
+function closeInAppNotif() {
+  const b = document.getElementById("inappNotifBanner");
+  if (b) b.classList.remove("open");
+}
+
+function triggerNotificationAlert({ categoryLabel, title, body, soundKind, bannerStyle }) {
+  playRingtoneByKind(soundKind);
+
+  const banner = document.getElementById("inappNotifBanner");
+  const catEl = document.getElementById("inappNotifCategory");
+  const titleEl = document.getElementById("inappNotifTitle");
+  const bodyEl = document.getElementById("inappNotifBody");
+
+  if (banner && catEl && titleEl && bodyEl) {
+    banner.className = "inapp-notif-banner open" + (bannerStyle ? " " + bannerStyle : "");
+    catEl.textContent = categoryLabel || "NOTIFICA";
+    titleEl.textContent = title || "Nuovo aggiornamento";
+    bodyEl.textContent = body || "";
+    if (inAppNotifTimer) clearTimeout(inAppNotifTimer);
+    inAppNotifTimer = setTimeout(() => {
+      banner.classList.remove("open");
+    }, 4500);
+  }
+
+  try {
+    if ("Notification" in window && Notification.permission === "granted") {
+      new Notification(title || "Coordinamento Interforze", {
+        body: body || "",
+        silent: soundKind === "adminReport"
+      });
+    }
+  } catch (err) {}
+}
+
+function requestDeviceNotificationPermission() {
+  if (!("Notification" in window)) {
+    return showToast("Notifiche browser non supportate: attive notifiche in-app e suoni", true);
+  }
+  Notification.requestPermission().then(perm => {
+    renderSoundSettingsView();
+    if (perm === "granted") {
+      showToast("Notifiche del dispositivo attivate!");
+    } else {
+      showToast("Permesso non concesso: resteranno attive le notifiche interne con suoni", true);
+    }
+  });
+}
+
+function updateSoundSetting(key, val) {
+  state.soundSettings = state.soundSettings || JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+  state.soundSettings[key] = val;
+  persist();
+  renderSoundSettingsView();
+  showToast("Impostazione suoneria salvata");
+}
+
+function handleCustomRingtoneUpload(e, targetKind) {
+  const file = e.target.files[0];
+  if (!file) return;
+  const reader = new FileReader();
+  reader.onload = function(evt) {
+    state.soundSettings = state.soundSettings || JSON.parse(JSON.stringify(DEFAULT_DATA.soundSettings));
+    if (targetKind === "emergency") {
+      state.soundSettings.customEmergencyAudio = evt.target.result;
+      state.soundSettings.customEmergencyName = file.name;
+      state.soundSettings.emergencyTone = "custom";
+    } else if (targetKind === "chat") {
+      state.soundSettings.customChatAudio = evt.target.result;
+      state.soundSettings.customChatName = file.name;
+      state.soundSettings.chatTone = "custom";
+    } else if (targetKind === "newUser") {
+      state.soundSettings.customNewUserAudio = evt.target.result;
+      state.soundSettings.customNewUserName = file.name;
+      state.soundSettings.newUserTone = "custom";
+    }
+    persist();
+    renderSoundSettingsView();
+    showToast(`File audio "${file.name}" impostato`);
+  };
+  reader.readAsDataURL(file);
+  e.target.value = "";
+}
+
+function previewRingtone(kind) {
+  playRingtoneByKind(kind);
+  const labels = {
+    emergency: "Anteprima suoneria EMERGENZE",
+    chat: "Anteprima suoneria ALTRE CHAT",
+    adminReport: "Anteprima avviso SEGNALAZIONE silenziato (Admin)",
+    newUser: "Anteprima suoneria NUOVO UTENTE (Admin)"
+  };
+  showToast(labels[kind] || "Riproduzione anteprima");
+}
+
+function renderSoundSettingsView() {
+  const cfg = state.soundSettings || DEFAULT_DATA.soundSettings;
+  const sEm = document.getElementById("selEmergencyTone");
+  const sCh = document.getElementById("selChatTone");
+  const sAd = document.getElementById("selAdminReportMode");
+  const sNu = document.getElementById("selNewUserTone");
+  if (sEm) sEm.value = cfg.emergencyTone || "sirena_vvf";
+  if (sCh) sCh.value = cfg.chatTone || "chat_soft";
+  if (sAd) sAd.value = cfg.adminReportMode || "quiet_chime";
+  if (sNu) sNu.value = cfg.newUserTone || "new_user_distinct";
+
+  const emLbl = document.getElementById("emergencyCustomAudioLabel");
+  const chLbl = document.getElementById("chatCustomAudioLabel");
+  const nuLbl = document.getElementById("newUserCustomAudioLabel");
+  if (emLbl) emLbl.textContent = cfg.customEmergencyName ? `File caricato: ${cfg.customEmergencyName} ✓` : "Nessun file audio personalizzato caricato";
+  if (chLbl) chLbl.textContent = cfg.customChatName ? `File caricato: ${cfg.customChatName} ✓` : "Nessun file audio personalizzato caricato";
+  if (nuLbl) nuLbl.textContent = cfg.customNewUserName ? `File caricato: ${cfg.customNewUserName} ✓` : "Nessun file audio personalizzato caricato";
+
+  const permTag = document.getElementById("notifPermStatus");
+  if (permTag && "Notification" in window) {
+    permTag.textContent = Notification.permission === "granted" ? "Attive ✓" : (Notification.permission === "denied" ? "Bloccate" : "Da attivare");
+  }
+}
+
+function simulateIncomingPost(topicName) {
+  const isEm = topicName === "EMERGENZE";
+  triggerNotificationAlert({
+    categoryLabel: isEm ? "🚨 NUOVO POST EMERGENZE" : `💬 NUOVO POST • ${topicName}`,
+    title: isEm ? "Allerta Emergenza — Test Notifica" : `Nuovo messaggio su ${topicName}`,
+    body: isEm ? "Suoneria dedicata alle Emergenze attiva." : `Suoneria dedicata alle Altre Chat attiva per ${topicName}.`,
+    soundKind: isEm ? "emergency" : "chat",
+    bannerStyle: isEm ? "emergency" : ""
+  });
+}
+
+function simulateAdminReport() {
+  state.reports = state.reports || [];
+  state.reports.unshift({
+    id: Date.now(),
+    topic: "DISCUSSIONE OPERATIVA",
+    postId: 0,
+    postTitle: "Post segnalato (simulazione admin)",
+    reportedBy: "Moderatore",
+    reason: "Controllo discreto segnalazione — avviso silenziato.",
+    status: "pending"
+  });
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "🤫 NUOVA SEGNALAZIONE (AVVISO TRANQUILLO)",
+    title: "Nuova segnalazione in coda",
+    body: "Avviso discreto a volume ridotto per gli amministratori.",
+    soundKind: "adminReport",
+    bannerStyle: "quiet-report"
+  });
+  if (document.getElementById("view-segnalazioni").classList.contains("active")) {
+    renderReportsAdmin();
+  }
+}
+
+function simulateNewUserRequest() {
+  state.pendingRegistrations = state.pendingRegistrations || [];
+  state.pendingRegistrations.unshift({
+    id: "reg_" + Date.now(),
+    nome: "Operatore",
+    cognome: "In Attesa",
+    tel: "333000111",
+    enteTipo: "Vigili del Fuoco",
+    corpoVVF: "VVF Bolbeno-Zuclo",
+    sede: "",
+    matricola: "MAT-TEST",
+    badgeImg: "",
+    privacyAccepted: true,
+    submittedAt: "Adesso"
+  });
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
+    title: "Nuovo utente in attesa di approvazione",
+    body: "Suoneria dedicata distinta dalle segnalazioni silenziate.",
+    soundKind: "newUser",
+    bannerStyle: "new-user"
+  });
+  if (document.getElementById("view-segnalazioni").classList.contains("active")) {
+    renderReportsAdmin();
+  }
+  if (document.getElementById("view-approvazioni").classList.contains("active")) {
+    renderPendingApprovals();
+  }
+}
+// ... existing code ...
+function submitUserRegistration() {
+  const nome = (document.getElementById("regNome").value || "").trim();
+  const cognome = (document.getElementById("regCognome").value || "").trim();
+  const tel = (document.getElementById("regTel").value || "").trim();
+  const enteTipo = document.getElementById("regEnteTipo").value;
+  const corpoVVF = enteTipo === "Vigili del Fuoco" ? document.getElementById("regVvfCorpo").value : "";
+  const sede = enteTipo !== "Vigili del Fuoco" ? (document.getElementById("regSede").value || "").trim() : "";
+  const matricola = (document.getElementById("regMatricola").value || "").trim();
+  const privacyOk = !!document.getElementById("regPrivacyAccept").checked;
+
+  if (!nome) return showToast("Inserisci almeno il Nome per registrarti", true);
+  if (!tel) return showToast("Inserisci il Numero di telefono", true);
+  if (!matricola) return showToast("Inserisci il numero del tesserino / codice matricola riportato sotto", true);
+  if (!regBadgeTempDataUrl) return showToast("Allega la foto del tesserino prima di inviare la richiesta", true);
+  if (enteTipo !== "Vigili del Fuoco" && !sede) return showToast("Indica la sede di appartenenza", true);
+  if (!privacyOk) return showToast("Devi accettare il Trattamento della Privacy per proseguire", true);
+
+  state.pendingRegistrations = state.pendingRegistrations || [];
+  state.pendingRegistrations.unshift({
+    id: "reg_" + Date.now(),
+    nome,
+    cognome,
+    tel,
+    enteTipo,
+    corpoVVF,
+    sede,
+    matricola,
+    badgeImg: regBadgeTempDataUrl,
+    privacyAccepted: true,
+    submittedAt: "Adesso"
+  });
+
+  document.getElementById("regNome").value = "";
+  document.getElementById("regCognome").value = "";
+  document.getElementById("regTel").value = "";
+  document.getElementById("regMatricola").value = "";
+  document.getElementById("regSede").value = "";
+  document.getElementById("regBadgeFile").value = "";
+  document.getElementById("regBadgePreview").src = "";
+  document.getElementById("regBadgePreview").style.display = "none";
+  document.getElementById("regBadgeStatus").textContent = "Obbligatorio: allega foto chiara del tesserino";
+  document.getElementById("regPrivacyAccept").checked = false;
+  regBadgeTempDataUrl = "";
+
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "👤 NUOVA RICHIESTA DI INGRESSO UTENTE",
+    title: `Richiesta ingresso: ${nome} ${cognome}`.trim(),
+    body: `Ente: ${enteTipo} • Matricola: ${matricola}`,
+    soundKind: "newUser",
+    bannerStyle: "new-user"
+  });
+  setAuthTab("login");
+  showToast("Richiesta inviata! Attendi l'approvazione di un amministratore per accedere");
+}
+// ... existing code ...
+  state.topics[cat].unshift(newPost);
+  const ch = state.channels.find(c => c.name === cat);
+  if (ch) { ch.time = "Adesso"; ch.unread += 1; }
+  inp.value = "";
+  clearQuickPhoto();
+  persist();
+  renderHome();
+  triggerNotificationAlert({
+    categoryLabel: cat === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${cat}`,
+    title: `Nuovo post in ${cat}`,
+    body: `${newPost.author}: ${finalTitle}`,
+    soundKind: cat === "EMERGENZE" ? "emergency" : "chat",
+    bannerStyle: cat === "EMERGENZE" ? "emergency" : ""
+  });
+  showToast("Pubblicato in " + cat);
+}
+
+function addTopicPost() {
+  const inp = document.getElementById("newTopicPostInput");
+  const txt = inp.value.trim();
+  if (!txt) return showToast("Scrivi un messaggio prima di pubblicare", true);
+
+  const topic = state.currentTopic;
+  if (!state.topics[topic]) state.topics[topic] = [];
+  if (topic === "EMERGENZE") {
+    state.topics["EMERGENZE"].forEach(e => e.highlight = false);
+  }
+  const created = createPostObject(txt, topic === "EMERGENZE");
+  state.topics[topic].unshift(created);
+  const ch = state.channels.find(c => c.name === topic);
+  if (ch) { ch.time = "Adesso"; ch.unread += 1; }
+  inp.value = "";
+  persist();
+  renderTopic();
+  triggerNotificationAlert({
+    categoryLabel: topic === "EMERGENZE" ? "🚨 EMERGENZE" : `💬 ${topic}`,
+    title: `Nuovo post in ${topic}`,
+    body: `${created.author}: ${txt}`,
+    soundKind: topic === "EMERGENZE" ? "emergency" : "chat",
+    bannerStyle: topic === "EMERGENZE" ? "emergency" : ""
+  });
+  showToast("Post aggiunto in " + topic);
+}
+// ... existing code ...
+  const user = getCurrentUser();
+  const isMod = isModeratorForForum(topic);
+  const roleLabel = isFounderUser(user) ? "Founder/Admin" : (isAdmin() ? "Admin" : (isMod ? `Moderatore ${topic}` : "Utente"));
+  state.reports.unshift({
+    id: Date.now(),
+    topic,
+    postId: ev.id,
+    postTitle: ev.title,
+    reportedBy: `${user.nome} ${user.cognome || ""} (${roleLabel})`.trim(),
+    reason: reasonTxt,
+    status: "pending"
+  });
+  openFlagBoxPostId = null;
+  persist();
+  syncChrome();
+  triggerNotificationAlert({
+    categoryLabel: "🤫 NUOVA SEGNALAZIONE (AVVISO TRANQUILLO)",
+    title: `Segnalazione su ${topic}`,
+    body: reasonTxt,
+    soundKind: "adminReport",
+    bannerStyle: "quiet-report"
+  });
+  renderTopic();
+  showToast("Segnalazione inviata agli amministratori con motivazione");
+}
+// ... existing code ...
+/* ADMIN: SEGNALAZIONI & RICHIESTE ACCESSO */
+function renderReportsAdmin() {
+  if (!isAdmin()) return;
+  const pendWrap = document.getElementById("pendingAccessSection");
+  const wrap = document.getElementById("reportsList");
+  if (pendWrap) {
+    const pendList = state.pendingRegistrations || [];
+    pendWrap.innerHTML = pendList.length
+      ? `<div class="form-card" style="border-color:#10B981;"><h3 style="color:#6EE7B7;">👤 Richieste Accesso Nuovi Utenti (${pendList.length})</h3><div style="font-size:12px; color:#CBD5E1;">Vai su <strong>Approvazione Nuovi Utenti</strong> dal menu per visionare tesserino e approvare/rifiutare.</div></div>`
+      : "";
+  }
+  wrap.innerHTML = "";
+  const reps = state.reports || [];
+  if (reps.length === 0) {
+    wrap.innerHTML = `<div style="text-align:center; color:#64748B; font-size:13px; padding:24px;">Nessuna segnalazione o richiesta presente.</div>`;
+    return;
+  }
+
+  reps.forEach(r => {
+    const badgeClass = r.status === "approved" ? "approved" : (r.status === "rejected" ? "rejected" : "");
+    const badgeText = r.status === "approved" ? "APPROVATA" : (r.status === "rejected" ? "NON APPROVATA" : "IN ATTESA");
+
+    const card = document.createElement("div");
+    card.className = "report-card";
+    card.innerHTML = `
+      <div class="ev-top">
+        <div>
+          <div class="ev-title">${r.postTitle}</div>
+          <div class="ev-author">Forum: <strong>${r.topic}</strong> • Segnalato da ${r.reportedBy}</div>
+        </div>
+        <span class="report-badge ${badgeClass}">${badgeText}</span>
+      </div>
+      <div style="font-size:12px; color:#CBD5E1;">${r.reason}</div>
+      <div class="user-btns">
+        <button class="approve-btn" onclick="decideReport(${r.id}, 'approved')">✓ Approva (rimuovi post)</button>
+        <button class="reject-btn" onclick="decideReport(${r.id}, 'rejected')">✕ Non approvare</button>
+      </div>
+    `;
+    wrap.appendChild(card);
+  });
+}
+// ... existing code ...
+setupPwaManifestAndServiceWorker();
+enforceFounderIntegrity();
+syncChrome();
+updatePwaInstallBar();
+renderSoundSettingsView();
+if (state.loggedIn) {
+  renderHome();
+} else {
+  switchView("login");
+}
+</script>
+</body>
+</html>
